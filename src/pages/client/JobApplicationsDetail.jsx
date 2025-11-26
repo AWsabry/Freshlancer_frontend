@@ -373,7 +373,7 @@ const JobApplicationsDetail = () => {
                         <div>
                           <p className="text-xs text-gray-500">Proposed Budget</p>
                           <p className="font-bold text-green-600 text-lg">
-                            ${application.proposedBudget?.amount}
+                            {application.proposedBudget?.currency} {application.proposedBudget?.amount}
                           </p>
                         </div>
                         <div>
