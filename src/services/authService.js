@@ -132,4 +132,9 @@ export const authService = {
 
     return response;
   },
+
+  // Get platform statistics
+  getPlatformStats: async () => {
+    return api.get('/users/platform-stats');
+  },
 };

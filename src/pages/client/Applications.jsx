@@ -128,8 +128,7 @@ const Applications = () => {
                       </h3>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          ${job.budget?.min} - ${job.budget?.max}
+                          {job.budget?.currency} {job.budget?.min} - {job.budget?.max}
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />

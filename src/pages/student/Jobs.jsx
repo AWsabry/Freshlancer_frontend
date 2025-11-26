@@ -164,8 +164,7 @@ const Jobs = () => {
     { value: 'Other', label: 'Other' },
   ];
 
-  const applicationsRemaining =
-    subscription?.applicationLimitPerMonth - subscription?.applicationsUsedThisMonth;
+    console.log('Jobs Data:', subscription);
 
   if (isLoading) {
     return <Loading text="Loading jobs..." />;
@@ -177,7 +176,7 @@ const Jobs = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Browse Jobs</h1>
         <p className="text-gray-600">
-          Find your next opportunity • {subscription?.plan === 'premium' ? 'Unlimited' : applicationsRemaining} applications remaining
+          Find your next opportunity via Freshlancer
         </p>
       </div>
 
@@ -269,15 +268,6 @@ const Jobs = () => {
           )}
         </form>
       </div>
-
-      {/* Application Limit Warning */}
-      {subscription?.plan !== 'premium' && applicationsRemaining < 3 && (
-        <Alert
-          type="warning"
-          message={`You have only ${applicationsRemaining} application${applicationsRemaining !== 1 ? 's' : ''} remaining this month. Upgrade to Premium for unlimited applications!`}
-          className="mb-6"
-        />
-      )}
 
       {/* Job Feed */}
       <div className="space-y-4">

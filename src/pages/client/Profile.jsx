@@ -90,7 +90,7 @@ const Profile = () => {
     updateMutation.mutate(formData);
   };
 
-  if (loadingUser || loadingPoints || loadingHistory) {
+  if (loadingUser) {
     return <Loading text="Loading profile..." />;
   }
 
@@ -273,51 +273,57 @@ const Profile = () => {
 
       {/* Points Balance */}
       <Card title="Points Balance">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl border border-primary-200">
-            <div className="flex items-center gap-3 mb-2">
-              <Coins className="w-6 h-6 text-primary-600" />
-              <p className="text-sm font-medium text-primary-900">Available Points</p>
+        {loadingPoints ? (
+          <div className="flex items-center justify-center py-12">
+            <Loading text="Loading points balance..." />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl border border-primary-200">
+              <div className="flex items-center gap-3 mb-2">
+                <Coins className="w-6 h-6 text-primary-600" />
+                <p className="text-sm font-medium text-primary-900">Available Points</p>
+              </div>
+              <p className="text-4xl font-bold text-primary-600">
+                {points?.pointsRemaining || 0}
+              </p>
+              <Button
+                variant="primary"
+                size="sm"
+                className="mt-4"
+                onClick={() => navigate('/client/packages')}
+              >
+                <Package className="w-4 h-4 mr-2" />
+                Buy More Points
+              </Button>
             </div>
-            <p className="text-4xl font-bold text-primary-600">
-              {points?.pointsRemaining || 0}
-            </p>
-            <Button
-              variant="primary"
-              size="sm"
-              className="mt-4"
-              onClick={() => navigate('/client/packages')}
+
+            <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-3 mb-2">
+                <Eye className="w-6 h-6 text-gray-600" />
+                <p className="text-sm font-medium text-gray-700">Points Used</p>
+              </div>
+              <p className="text-4xl font-bold text-gray-900">{points?.pointsUsed || 0}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Used to unlock {points?.unlockedStudentsCount || 0} profiles
+              </p>
+            </div>
+
+            <div
+              className="p-6 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-primary-300 transition"
+              onClick={() => navigate('/client/unlocked-students')}
             >
-              <Package className="w-4 h-4 mr-2" />
-              Buy More Points
-            </Button>
-          </div>
-
-          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <Eye className="w-6 h-6 text-gray-600" />
-              <p className="text-sm font-medium text-gray-700">Points Used</p>
+              <div className="flex items-center gap-3 mb-2">
+                <User className="w-6 h-6 text-gray-600" />
+                <p className="text-sm font-medium text-gray-700">Unlocked Profiles</p>
+              </div>
+              <p className="text-4xl font-bold text-gray-900">
+                {points?.unlockedStudentsCount || 0}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">10 points per profile</p>
             </div>
-            <p className="text-4xl font-bold text-gray-900">{points?.pointsUsed || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Used to unlock {points?.unlockedStudentsCount || 0} profiles
-            </p>
           </div>
-
-          <div
-            className="p-6 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-primary-300 transition"
-            onClick={() => navigate('/client/unlocked-students')}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <User className="w-6 h-6 text-gray-600" />
-              <p className="text-sm font-medium text-gray-700">Unlocked Profiles</p>
-            </div>
-            <p className="text-4xl font-bold text-gray-900">
-              {points?.unlockedStudentsCount || 0}
-            </p>
-            <p className="text-sm text-gray-500 mt-2">10 points per profile</p>
-          </div>
-        </div>
+        )}
       </Card>
 
       {/* Recent Packages */}
@@ -330,7 +336,11 @@ const Profile = () => {
           </Button>
         }
       >
-        {packages.length === 0 ? (
+        {loadingHistory ? (
+          <div className="flex items-center justify-center py-12">
+            <Loading text="Loading package history..." />
+          </div>
+        ) : packages.length === 0 ? (
           <Alert
             type="info"
             message="You haven't purchased any points packages yet. Purchase a package to start unlocking student profiles."

@@ -22,6 +22,7 @@ import StudentApplications from './pages/student/Applications';
 import StudentApplicationDetails from './pages/student/ApplicationDetails';
 import StudentSubscription from './pages/student/Subscription';
 import StudentPayment from './pages/student/Payment';
+import StudentPaymentUSD from './pages/student/PaymentUSD';
 import StudentNotifications from './pages/student/Notifications';
 import StudentProfile from './pages/student/Profile';
 import StudentReviews from './pages/student/Reviews';
@@ -85,6 +86,7 @@ function App() {
         <Route path="applications/:id" element={<StudentApplicationDetails />} />
         <Route path="subscription" element={<StudentSubscription />} />
         <Route path="payment" element={<StudentPayment />} />
+        <Route path="payment-usd" element={<StudentPaymentUSD />} />
         <Route path="notifications" element={<StudentNotifications />} />
         <Route path="profile" element={<StudentProfile />} />
         <Route path="reviews" element={<StudentReviews />} />

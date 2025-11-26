@@ -23,6 +23,7 @@ import {
   Filter,
   SortAsc,
   SortDesc,
+  Crown,
 } from 'lucide-react';
 
 const JobApplicationsDetail = () => {
@@ -36,6 +37,7 @@ const JobApplicationsDetail = () => {
   const [filterNationality, setFilterNationality] = useState('');
   const [filterExperience, setFilterExperience] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterPremium, setFilterPremium] = useState('');
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -51,7 +53,7 @@ const JobApplicationsDetail = () => {
     isLoading: loadingApplications,
     error: applicationsError,
   } = useQuery({
-    queryKey: ['jobApplications', jobId, sortBy, sortOrder, filterNationality, filterExperience, filterStatus, page],
+    queryKey: ['jobApplications', jobId, sortBy, sortOrder, filterNationality, filterExperience, filterStatus, filterPremium, page],
     queryFn: () =>
       applicationService.getJobApplications(jobId, {
         sortBy,
@@ -59,6 +61,7 @@ const JobApplicationsDetail = () => {
         nationality: filterNationality,
         experienceLevel: filterExperience,
         status: filterStatus,
+        subscriptionTier: filterPremium,
         page,
         limit,
       }),
@@ -221,7 +224,7 @@ const JobApplicationsDetail = () => {
           <Filter className="w-5 h-5 text-gray-600" />
           <h3 className="font-bold text-gray-900">Filters & Sorting</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Nationality Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -261,6 +264,26 @@ const JobApplicationsDetail = () => {
               <option value="Beginner">Beginner</option>
               <option value="Intermediate">Intermediate</option>
               <option value="Advanced">Advanced</option>
+              <option value="Expert">Expert</option>
+            </select>
+          </div>
+
+          {/* Subscription Tier Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Account Type
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={filterPremium}
+              onChange={(e) => {
+                setFilterPremium(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All Students</option>
+              <option value="premium">Premium Only</option>
+              <option value="free">Free Only</option>
             </select>
           </div>
 
@@ -333,6 +356,7 @@ const JobApplicationsDetail = () => {
             {applications.map((application) => {
               const isUnlocked = application.contactUnlockedByClient;
               const student = application.student;
+              const isPremium = student?.studentProfile?.subscriptionTier === 'premium';
 
               return (
                 <div
@@ -356,15 +380,31 @@ const JobApplicationsDetail = () => {
                                 <User className="w-6 h-6 text-primary-600" />
                               )}
                             </div>
-                            <div>
-                              <h3 className="font-bold text-gray-900">{student?.name}</h3>
-                              <p className="text-sm text-gray-600">{student?.email}</p>
+                            <div className="flex items-center gap-2">
+                              <div>
+                                <h3 className="font-bold text-gray-900">{student?.name}</h3>
+                                <p className="text-sm text-gray-600">{student?.email}</p>
+                              </div>
+                              {isPremium && (
+                                <Badge variant="warning" className="flex items-center gap-1">
+                                  <Crown className="w-3 h-3" />
+                                  Premium
+                                </Badge>
+                              )}
                             </div>
                           </>
                         ) : (
                           <>
                             <Lock className="w-5 h-5 text-gray-400" />
-                            <p className="text-gray-500">Contact Locked</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-gray-500">Contact Locked</p>
+                              {isPremium && (
+                                <Badge variant="warning" className="flex items-center gap-1">
+                                  <Crown className="w-3 h-3" />
+                                  Premium
+                                </Badge>
+                              )}
+                            </div>
                           </>
                         )}
                       </div>

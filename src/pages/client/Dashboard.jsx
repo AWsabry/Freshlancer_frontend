@@ -1,11 +1,20 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { authService } from '../../services/authService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
-import { Plus, Briefcase, Users, Package, Receipt } from 'lucide-react';
+import Loading from '../../components/common/Loading';
+import { Plus, Briefcase, Users, Package, Receipt, UserCheck, Building } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+
+  // Fetch platform statistics
+  const { data: statsData, isLoading: loadingStats } = useQuery({
+    queryKey: ['platformStats'],
+    queryFn: () => authService.getPlatformStats(),
+  });
 
   const quickActions = [
     {
@@ -45,11 +54,33 @@ const Dashboard = () => {
     },
   ];
 
+  const stats = statsData?.data;
+  console.log('Platform Stats:', statsData);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Your Dashboard</h1>
         <p className="text-gray-600">Manage your job postings and connect with talented students</p>
+      </div>
+
+      {/* Platform Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-primary-100 rounded-full">
+              <Users className="w-8 h-8 text-primary-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Students</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {loadingStats ? '...' : stats?.totalStudents?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Available on the platform</p>
+            </div>
+          </div>
+        </Card>
+
       </div>
 
       {/* Quick Actions */}

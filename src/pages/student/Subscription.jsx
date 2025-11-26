@@ -71,13 +71,24 @@ const Subscription = () => {
   const monthlyPrice = pricing?.plans?.premium?.billingCycles?.monthly?.price?.amount || 9.99;
 
   const handleUpgrade = () => {
-    // Navigate to payment page with currency and amount
-    navigate('/student/payment', {
-      state: {
-        currency: selectedCurrency,
-        amount: monthlyPrice,
-      },
-    });
+    // Navigate to payment page based on selected currency
+    if (selectedCurrency === 'USD') {
+      // Navigate to PayPal payment page for USD
+      navigate('/student/payment-usd', {
+        state: {
+          currency: 'USD',
+          amount: monthlyPrice,
+        },
+      });
+    } else {
+      // Navigate to Paymob payment page for EGP
+      navigate('/student/payment', {
+        state: {
+          currency: selectedCurrency,
+          amount: monthlyPrice,
+        },
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -130,12 +141,14 @@ const Subscription = () => {
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
                 <button
-                  disabled
-                  className="px-6 py-2 rounded-md font-medium transition-all border text-gray-400 border-transparent cursor-not-allowed opacity-60"
-                  title="USD payments not yet available"
+                  onClick={() => setSelectedCurrency('USD')}
+                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
+                    selectedCurrency === 'USD'
+                      ? 'bg-primary-500 text-[#8904aa] border-primary-500 shadow-md'
+                      : 'text-gray-700 border-transparent hover:bg-gray-100'
+                  }`}
                 >
                   USD ($)
-                  <span className="text-xs block">Coming soon</span>
                 </button>
                 <button
                   onClick={() => setSelectedCurrency('EGP')}
@@ -150,7 +163,9 @@ const Subscription = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 text-center mt-3">
-              Currently, we only accept payments in Egyptian Pounds (EGP) through Paymob.
+              {selectedCurrency === 'USD'
+                ? 'Pay securely with PayPal in US Dollars'
+                : 'Pay securely with Paymob in Egyptian Pounds'}
             </p>
           </Card>
 
