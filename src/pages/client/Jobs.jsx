@@ -188,14 +188,7 @@ const Jobs = () => {
                 ? "You haven't posted any jobs yet."
                 : `No ${statusFilter === 'all' ? '' : statusFilter} jobs found.`}
             </p>
-            {jobs.length === 0 && (
-              <Button
-                variant="primary"
-                onClick={() => navigate('/client/jobs/new')}
-              >
-                Post Your First Job
-              </Button>
-            )}
+
           </div>
         </Card>
       ) : (

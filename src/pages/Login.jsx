@@ -30,7 +30,28 @@ const Login = () => {
         navigate('/student/dashboard');
       }
     } catch (err) {
-      setError(err.message || 'Invalid email or password');
+      // Extract user-friendly error message
+      let errorMessage = 'Unable to sign in. Please try again.';
+
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      // Handle network errors
+      if (!err.response && err.message === 'Network Error') {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+      }
+
+      // Handle 401/403 errors with generic message
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        if (!err.response.data?.message || err.response.data.message.includes('invalid') || err.response.data.message.includes('Invalid')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

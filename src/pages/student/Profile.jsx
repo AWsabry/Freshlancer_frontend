@@ -34,12 +34,182 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
+// Country to Currency mapping
+const COUNTRY_CURRENCY_MAP = {
+  // Americas
+  'United States': 'USD',
+  'Canada': 'USD',
+  'Mexico': 'USD',
+  'Brazil': 'USD',
+  'Argentina': 'USD',
+  'Chile': 'USD',
+  'Colombia': 'USD',
+  'Peru': 'USD',
+  'Venezuela': 'USD',
+  'Ecuador': 'USD',
+  'Bolivia': 'USD',
+  'Paraguay': 'USD',
+  'Uruguay': 'USD',
+  'Costa Rica': 'USD',
+  'Panama': 'USD',
+  'Guatemala': 'USD',
+  'Honduras': 'USD',
+  'El Salvador': 'USD',
+  'Nicaragua': 'USD',
+  'Belize': 'USD',
+  'Jamaica': 'USD',
+  'Cuba': 'USD',
+  'Haiti': 'USD',
+  'Dominican Republic': 'USD',
+  'Bahamas': 'USD',
+  'Barbados': 'USD',
+  'Trinidad and Tobago': 'USD',
+  'Guyana': 'USD',
+  'Suriname': 'USD',
+
+  // Middle East
+  'Saudi Arabia': 'SAR',
+  'United Arab Emirates': 'AED',
+  'Kuwait': 'KWD',
+  'Qatar': 'QAR',
+  'Bahrain': 'BHD',
+  'Oman': 'OMR',
+  'Jordan': 'JOD',
+  'Lebanon': 'LBP',
+  'Israel': 'ILS',
+  'Palestine': 'ILS',
+  'Syria': 'USD',
+  'Iraq': 'USD',
+  'Iran': 'USD',
+  'Yemen': 'USD',
+
+  // North Africa
+  'Egypt': 'EGP',
+  'Morocco': 'MAD',
+  'Tunisia': 'TND',
+  'Algeria': 'DZD',
+  'Libya': 'USD',
+  'Mauritania': 'USD',
+  'Sudan': 'USD',
+
+  // Sub-Saharan Africa
+  'South Africa': 'ZAR',
+  'Nigeria': 'NGN',
+  'Kenya': 'KES',
+  'Ghana': 'GHS',
+  'Uganda': 'UGX',
+  'Tanzania': 'TZS',
+  'Ethiopia': 'ETB',
+  'Rwanda': 'USD',
+  'Senegal': 'USD',
+  'Ivory Coast': 'USD',
+  'Cameroon': 'USD',
+  'Zimbabwe': 'USD',
+  'Zambia': 'USD',
+  'Mozambique': 'USD',
+  'Botswana': 'USD',
+  'Namibia': 'USD',
+  'Angola': 'USD',
+  'Congo': 'USD',
+  'Mali': 'USD',
+  'Burkina Faso': 'USD',
+  'Benin': 'USD',
+  'Togo': 'USD',
+  'Malawi': 'USD',
+  'Madagascar': 'USD',
+
+  // Europe - Non-Euro
+  'United Kingdom': 'GBP',
+  'Switzerland': 'CHF',
+  'Sweden': 'SEK',
+  'Norway': 'NOK',
+  'Denmark': 'DKK',
+  'Poland': 'PLN',
+  'Czech Republic': 'CZK',
+  'Hungary': 'HUF',
+  'Romania': 'RON',
+  'Bulgaria': 'BGN',
+  'Croatia': 'HRK',
+  'Russia': 'RUB',
+  'Ukraine': 'UAH',
+  'Serbia': 'USD',
+  'Bosnia and Herzegovina': 'USD',
+  'Albania': 'USD',
+  'North Macedonia': 'USD',
+  'Moldova': 'USD',
+  'Belarus': 'USD',
+  'Iceland': 'USD',
+
+  // Europe - Euro Zone
+  'Germany': 'EUR',
+  'France': 'EUR',
+  'Italy': 'EUR',
+  'Spain': 'EUR',
+  'Netherlands': 'EUR',
+  'Belgium': 'EUR',
+  'Austria': 'EUR',
+  'Greece': 'EUR',
+  'Portugal': 'EUR',
+  'Ireland': 'EUR',
+  'Finland': 'EUR',
+  'Slovakia': 'EUR',
+  'Slovenia': 'EUR',
+  'Lithuania': 'EUR',
+  'Latvia': 'EUR',
+  'Estonia': 'EUR',
+  'Cyprus': 'EUR',
+  'Malta': 'EUR',
+  'Luxembourg': 'EUR',
+  'Montenegro': 'EUR',
+  'Kosovo': 'EUR',
+
+  // Asia
+  'Turkey': 'TRY',
+  'China': 'USD',
+  'Japan': 'USD',
+  'South Korea': 'USD',
+  'India': 'USD',
+  'Pakistan': 'USD',
+  'Bangladesh': 'USD',
+  'Indonesia': 'USD',
+  'Philippines': 'USD',
+  'Vietnam': 'USD',
+  'Thailand': 'USD',
+  'Malaysia': 'USD',
+  'Singapore': 'USD',
+  'Myanmar': 'USD',
+  'Cambodia': 'USD',
+  'Laos': 'USD',
+  'Nepal': 'USD',
+  'Sri Lanka': 'USD',
+  'Afghanistan': 'USD',
+  'Mongolia': 'USD',
+  'Kazakhstan': 'USD',
+  'Uzbekistan': 'USD',
+  'Turkmenistan': 'USD',
+  'Kyrgyzstan': 'USD',
+  'Tajikistan': 'USD',
+  'Armenia': 'USD',
+  'Azerbaijan': 'USD',
+  'Georgia': 'USD',
+
+  // Oceania
+  'Australia': 'USD',
+  'New Zealand': 'USD',
+  'Fiji': 'USD',
+  'Papua New Guinea': 'USD',
+  'Solomon Islands': 'USD',
+  'Vanuatu': 'USD',
+  'Samoa': 'USD',
+  'Tonga': 'USD',
+};
+
 const Profile = () => {
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const fileInputRef = useRef(null);
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
 
   // Fetch user profile
   const { data: userData, isLoading } = useQuery({
@@ -49,6 +219,20 @@ const Profile = () => {
 
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
+
+  // Watch country field to auto-update currency
+  const watchedCountry = watch('location.country');
+
+  // Auto-update currency when country changes
+  React.useEffect(() => {
+    if (watchedCountry && COUNTRY_CURRENCY_MAP[watchedCountry]) {
+      const currency = COUNTRY_CURRENCY_MAP[watchedCountry];
+      setValue('studentProfile.hourlyRate.currency', currency);
+    } else if (watchedCountry) {
+      // Default to USD if country not in map
+      setValue('studentProfile.hourlyRate.currency', 'USD');
+    }
+  }, [watchedCountry, setValue]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -84,7 +268,7 @@ const Profile = () => {
         setValue('studentProfile.availability', studentProfile.availability || 'Available');
         setValue('studentProfile.hourlyRate.min', studentProfile.hourlyRate?.min || '');
         setValue('studentProfile.hourlyRate.max', studentProfile.hourlyRate?.max || '');
-        setValue('studentProfile.hourlyRate.currency', studentProfile.hourlyRate?.currency || 'Decide Your Currency');
+        setValue('studentProfile.hourlyRate.currency', studentProfile.hourlyRate?.currency || 'USD');
         setValue('studentProfile.socialLinks.github', studentProfile.socialLinks?.github || '');
         setValue('studentProfile.socialLinks.linkedin', studentProfile.socialLinks?.linkedin || '');
         setValue('studentProfile.socialLinks.website', studentProfile.socialLinks?.website || '');
@@ -712,19 +896,87 @@ const Profile = () => {
                 {...register('gender')}
                 error={errors.gender?.message}
                 options={[
-                  { value: '', label: 'Select gender' },
                   { value: 'Male', label: 'Male' },
                   { value: 'Female', label: 'Female' },
-                  { value: 'Other', label: 'Other' },
-                  { value: 'Prefer not to say', label: 'Prefer not to say' },
                 ]}
               />
 
-              <Input
+              <Select
                 label="Nationality"
                 {...register('nationality')}
                 error={errors.nationality?.message}
-                placeholder="Enter your nationality"
+                options={[
+                  { value: 'Egyptian', label: 'Egyptian' },
+                  { value: 'Saudi Arabian', label: 'Saudi Arabian' },
+                  { value: 'Emirati', label: 'Emirati' },
+                  { value: 'Kuwaiti', label: 'Kuwaiti' },
+                  { value: 'Qatari', label: 'Qatari' },
+                  { value: 'Bahraini', label: 'Bahraini' },
+                  { value: 'Omani', label: 'Omani' },
+                  { value: 'Jordanian', label: 'Jordanian' },
+                  { value: 'Lebanese', label: 'Lebanese' },
+                  { value: 'Palestinian', label: 'Palestinian' },
+                  { value: 'Syrian', label: 'Syrian' },
+                  { value: 'Iraqi', label: 'Iraqi' },
+                  { value: 'Yemeni', label: 'Yemeni' },
+                  { value: 'Libyan', label: 'Libyan' },
+                  { value: 'Tunisian', label: 'Tunisian' },
+                  { value: 'Algerian', label: 'Algerian' },
+                  { value: 'Moroccan', label: 'Moroccan' },
+                  { value: 'Sudanese', label: 'Sudanese' },
+                  { value: 'American', label: 'American' },
+                  { value: 'British', label: 'British' },
+                  { value: 'Canadian', label: 'Canadian' },
+                  { value: 'Australian', label: 'Australian' },
+                  { value: 'German', label: 'German' },
+                  { value: 'French', label: 'French' },
+                  { value: 'Italian', label: 'Italian' },
+                  { value: 'Spanish', label: 'Spanish' },
+                  { value: 'Dutch', label: 'Dutch' },
+                  { value: 'Belgian', label: 'Belgian' },
+                  { value: 'Swiss', label: 'Swiss' },
+                  { value: 'Austrian', label: 'Austrian' },
+                  { value: 'Swedish', label: 'Swedish' },
+                  { value: 'Norwegian', label: 'Norwegian' },
+                  { value: 'Danish', label: 'Danish' },
+                  { value: 'Finnish', label: 'Finnish' },
+                  { value: 'Polish', label: 'Polish' },
+                  { value: 'Czech', label: 'Czech' },
+                  { value: 'Hungarian', label: 'Hungarian' },
+                  { value: 'Romanian', label: 'Romanian' },
+                  { value: 'Bulgarian', label: 'Bulgarian' },
+                  { value: 'Greek', label: 'Greek' },
+                  { value: 'Turkish', label: 'Turkish' },
+                  { value: 'Russian', label: 'Russian' },
+                  { value: 'Ukrainian', label: 'Ukrainian' },
+                  { value: 'Indian', label: 'Indian' },
+                  { value: 'Pakistani', label: 'Pakistani' },
+                  { value: 'Bangladeshi', label: 'Bangladeshi' },
+                  { value: 'Chinese', label: 'Chinese' },
+                  { value: 'Japanese', label: 'Japanese' },
+                  { value: 'South Korean', label: 'South Korean' },
+                  { value: 'Filipino', label: 'Filipino' },
+                  { value: 'Indonesian', label: 'Indonesian' },
+                  { value: 'Malaysian', label: 'Malaysian' },
+                  { value: 'Thai', label: 'Thai' },
+                  { value: 'Vietnamese', label: 'Vietnamese' },
+                  { value: 'Singaporean', label: 'Singaporean' },
+                  { value: 'Brazilian', label: 'Brazilian' },
+                  { value: 'Mexican', label: 'Mexican' },
+                  { value: 'Argentine', label: 'Argentine' },
+                  { value: 'Chilean', label: 'Chilean' },
+                  { value: 'Colombian', label: 'Colombian' },
+                  { value: 'Peruvian', label: 'Peruvian' },
+                  { value: 'Venezuelan', label: 'Venezuelan' },
+                  { value: 'South African', label: 'South African' },
+                  { value: 'Nigerian', label: 'Nigerian' },
+                  { value: 'Kenyan', label: 'Kenyan' },
+                  { value: 'Ghanaian', label: 'Ghanaian' },
+                  { value: 'Ethiopian', label: 'Ethiopian' },
+                  { value: 'Tanzanian', label: 'Tanzanian' },
+                  { value: 'Ugandan', label: 'Ugandan' },
+                  { value: 'Other', label: 'Other' },
+                ]}
               />
             </div>
           </div>
@@ -733,11 +985,204 @@ const Profile = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+              <Select
                 label="Country"
                 {...register('location.country')}
                 error={errors.location?.country?.message}
-                placeholder="Enter your country"
+                options={[
+                  { value: 'Afghanistan', label: 'Afghanistan' },
+                  { value: 'Albania', label: 'Albania' },
+                  { value: 'Algeria', label: 'Algeria' },
+                  { value: 'Andorra', label: 'Andorra' },
+                  { value: 'Angola', label: 'Angola' },
+                  { value: 'Argentina', label: 'Argentina' },
+                  { value: 'Armenia', label: 'Armenia' },
+                  { value: 'Australia', label: 'Australia' },
+                  { value: 'Austria', label: 'Austria' },
+                  { value: 'Azerbaijan', label: 'Azerbaijan' },
+                  { value: 'Bahamas', label: 'Bahamas' },
+                  { value: 'Bahrain', label: 'Bahrain' },
+                  { value: 'Bangladesh', label: 'Bangladesh' },
+                  { value: 'Barbados', label: 'Barbados' },
+                  { value: 'Belarus', label: 'Belarus' },
+                  { value: 'Belgium', label: 'Belgium' },
+                  { value: 'Belize', label: 'Belize' },
+                  { value: 'Benin', label: 'Benin' },
+                  { value: 'Bhutan', label: 'Bhutan' },
+                  { value: 'Bolivia', label: 'Bolivia' },
+                  { value: 'Bosnia and Herzegovina', label: 'Bosnia and Herzegovina' },
+                  { value: 'Botswana', label: 'Botswana' },
+                  { value: 'Brazil', label: 'Brazil' },
+                  { value: 'Brunei', label: 'Brunei' },
+                  { value: 'Bulgaria', label: 'Bulgaria' },
+                  { value: 'Burkina Faso', label: 'Burkina Faso' },
+                  { value: 'Burundi', label: 'Burundi' },
+                  { value: 'Cambodia', label: 'Cambodia' },
+                  { value: 'Cameroon', label: 'Cameroon' },
+                  { value: 'Canada', label: 'Canada' },
+                  { value: 'Cape Verde', label: 'Cape Verde' },
+                  { value: 'Central African Republic', label: 'Central African Republic' },
+                  { value: 'Chad', label: 'Chad' },
+                  { value: 'Chile', label: 'Chile' },
+                  { value: 'China', label: 'China' },
+                  { value: 'Colombia', label: 'Colombia' },
+                  { value: 'Comoros', label: 'Comoros' },
+                  { value: 'Congo', label: 'Congo' },
+                  { value: 'Costa Rica', label: 'Costa Rica' },
+                  { value: 'Croatia', label: 'Croatia' },
+                  { value: 'Cuba', label: 'Cuba' },
+                  { value: 'Cyprus', label: 'Cyprus' },
+                  { value: 'Czech Republic', label: 'Czech Republic' },
+                  { value: 'Denmark', label: 'Denmark' },
+                  { value: 'Djibouti', label: 'Djibouti' },
+                  { value: 'Dominica', label: 'Dominica' },
+                  { value: 'Dominican Republic', label: 'Dominican Republic' },
+                  { value: 'Ecuador', label: 'Ecuador' },
+                  { value: 'Egypt', label: 'Egypt' },
+                  { value: 'El Salvador', label: 'El Salvador' },
+                  { value: 'Equatorial Guinea', label: 'Equatorial Guinea' },
+                  { value: 'Eritrea', label: 'Eritrea' },
+                  { value: 'Estonia', label: 'Estonia' },
+                  { value: 'Ethiopia', label: 'Ethiopia' },
+                  { value: 'Fiji', label: 'Fiji' },
+                  { value: 'Finland', label: 'Finland' },
+                  { value: 'France', label: 'France' },
+                  { value: 'Gabon', label: 'Gabon' },
+                  { value: 'Gambia', label: 'Gambia' },
+                  { value: 'Georgia', label: 'Georgia' },
+                  { value: 'Germany', label: 'Germany' },
+                  { value: 'Ghana', label: 'Ghana' },
+                  { value: 'Greece', label: 'Greece' },
+                  { value: 'Grenada', label: 'Grenada' },
+                  { value: 'Guatemala', label: 'Guatemala' },
+                  { value: 'Guinea', label: 'Guinea' },
+                  { value: 'Guinea-Bissau', label: 'Guinea-Bissau' },
+                  { value: 'Guyana', label: 'Guyana' },
+                  { value: 'Haiti', label: 'Haiti' },
+                  { value: 'Honduras', label: 'Honduras' },
+                  { value: 'Hungary', label: 'Hungary' },
+                  { value: 'Iceland', label: 'Iceland' },
+                  { value: 'India', label: 'India' },
+                  { value: 'Indonesia', label: 'Indonesia' },
+                  { value: 'Iran', label: 'Iran' },
+                  { value: 'Iraq', label: 'Iraq' },
+                  { value: 'Ireland', label: 'Ireland' },
+                  { value: 'Israel', label: 'Israel' },
+                  { value: 'Italy', label: 'Italy' },
+                  { value: 'Jamaica', label: 'Jamaica' },
+                  { value: 'Japan', label: 'Japan' },
+                  { value: 'Jordan', label: 'Jordan' },
+                  { value: 'Kazakhstan', label: 'Kazakhstan' },
+                  { value: 'Kenya', label: 'Kenya' },
+                  { value: 'Kiribati', label: 'Kiribati' },
+                  { value: 'Kuwait', label: 'Kuwait' },
+                  { value: 'Kyrgyzstan', label: 'Kyrgyzstan' },
+                  { value: 'Laos', label: 'Laos' },
+                  { value: 'Latvia', label: 'Latvia' },
+                  { value: 'Lebanon', label: 'Lebanon' },
+                  { value: 'Lesotho', label: 'Lesotho' },
+                  { value: 'Liberia', label: 'Liberia' },
+                  { value: 'Libya', label: 'Libya' },
+                  { value: 'Liechtenstein', label: 'Liechtenstein' },
+                  { value: 'Lithuania', label: 'Lithuania' },
+                  { value: 'Luxembourg', label: 'Luxembourg' },
+                  { value: 'Madagascar', label: 'Madagascar' },
+                  { value: 'Malawi', label: 'Malawi' },
+                  { value: 'Malaysia', label: 'Malaysia' },
+                  { value: 'Maldives', label: 'Maldives' },
+                  { value: 'Mali', label: 'Mali' },
+                  { value: 'Malta', label: 'Malta' },
+                  { value: 'Marshall Islands', label: 'Marshall Islands' },
+                  { value: 'Mauritania', label: 'Mauritania' },
+                  { value: 'Mauritius', label: 'Mauritius' },
+                  { value: 'Mexico', label: 'Mexico' },
+                  { value: 'Micronesia', label: 'Micronesia' },
+                  { value: 'Moldova', label: 'Moldova' },
+                  { value: 'Monaco', label: 'Monaco' },
+                  { value: 'Mongolia', label: 'Mongolia' },
+                  { value: 'Montenegro', label: 'Montenegro' },
+                  { value: 'Morocco', label: 'Morocco' },
+                  { value: 'Mozambique', label: 'Mozambique' },
+                  { value: 'Myanmar', label: 'Myanmar' },
+                  { value: 'Namibia', label: 'Namibia' },
+                  { value: 'Nauru', label: 'Nauru' },
+                  { value: 'Nepal', label: 'Nepal' },
+                  { value: 'Netherlands', label: 'Netherlands' },
+                  { value: 'New Zealand', label: 'New Zealand' },
+                  { value: 'Nicaragua', label: 'Nicaragua' },
+                  { value: 'Niger', label: 'Niger' },
+                  { value: 'Nigeria', label: 'Nigeria' },
+                  { value: 'North Korea', label: 'North Korea' },
+                  { value: 'North Macedonia', label: 'North Macedonia' },
+                  { value: 'Norway', label: 'Norway' },
+                  { value: 'Oman', label: 'Oman' },
+                  { value: 'Pakistan', label: 'Pakistan' },
+                  { value: 'Palau', label: 'Palau' },
+                  { value: 'Palestine', label: 'Palestine' },
+                  { value: 'Panama', label: 'Panama' },
+                  { value: 'Papua New Guinea', label: 'Papua New Guinea' },
+                  { value: 'Paraguay', label: 'Paraguay' },
+                  { value: 'Peru', label: 'Peru' },
+                  { value: 'Philippines', label: 'Philippines' },
+                  { value: 'Poland', label: 'Poland' },
+                  { value: 'Portugal', label: 'Portugal' },
+                  { value: 'Qatar', label: 'Qatar' },
+                  { value: 'Romania', label: 'Romania' },
+                  { value: 'Russia', label: 'Russia' },
+                  { value: 'Rwanda', label: 'Rwanda' },
+                  { value: 'Saint Kitts and Nevis', label: 'Saint Kitts and Nevis' },
+                  { value: 'Saint Lucia', label: 'Saint Lucia' },
+                  { value: 'Saint Vincent and the Grenadines', label: 'Saint Vincent and the Grenadines' },
+                  { value: 'Samoa', label: 'Samoa' },
+                  { value: 'San Marino', label: 'San Marino' },
+                  { value: 'Sao Tome and Principe', label: 'Sao Tome and Principe' },
+                  { value: 'Saudi Arabia', label: 'Saudi Arabia' },
+                  { value: 'Senegal', label: 'Senegal' },
+                  { value: 'Serbia', label: 'Serbia' },
+                  { value: 'Seychelles', label: 'Seychelles' },
+                  { value: 'Sierra Leone', label: 'Sierra Leone' },
+                  { value: 'Singapore', label: 'Singapore' },
+                  { value: 'Slovakia', label: 'Slovakia' },
+                  { value: 'Slovenia', label: 'Slovenia' },
+                  { value: 'Solomon Islands', label: 'Solomon Islands' },
+                  { value: 'Somalia', label: 'Somalia' },
+                  { value: 'South Africa', label: 'South Africa' },
+                  { value: 'South Korea', label: 'South Korea' },
+                  { value: 'South Sudan', label: 'South Sudan' },
+                  { value: 'Spain', label: 'Spain' },
+                  { value: 'Sri Lanka', label: 'Sri Lanka' },
+                  { value: 'Sudan', label: 'Sudan' },
+                  { value: 'Suriname', label: 'Suriname' },
+                  { value: 'Sweden', label: 'Sweden' },
+                  { value: 'Switzerland', label: 'Switzerland' },
+                  { value: 'Syria', label: 'Syria' },
+                  { value: 'Taiwan', label: 'Taiwan' },
+                  { value: 'Tajikistan', label: 'Tajikistan' },
+                  { value: 'Tanzania', label: 'Tanzania' },
+                  { value: 'Thailand', label: 'Thailand' },
+                  { value: 'Timor-Leste', label: 'Timor-Leste' },
+                  { value: 'Togo', label: 'Togo' },
+                  { value: 'Tonga', label: 'Tonga' },
+                  { value: 'Trinidad and Tobago', label: 'Trinidad and Tobago' },
+                  { value: 'Tunisia', label: 'Tunisia' },
+                  { value: 'Turkey', label: 'Turkey' },
+                  { value: 'Turkmenistan', label: 'Turkmenistan' },
+                  { value: 'Tuvalu', label: 'Tuvalu' },
+                  { value: 'Uganda', label: 'Uganda' },
+                  { value: 'Ukraine', label: 'Ukraine' },
+                  { value: 'United Arab Emirates', label: 'United Arab Emirates' },
+                  { value: 'United Kingdom', label: 'United Kingdom' },
+                  { value: 'United States', label: 'United States' },
+                  { value: 'Uruguay', label: 'Uruguay' },
+                  { value: 'Uzbekistan', label: 'Uzbekistan' },
+                  { value: 'Vanuatu', label: 'Vanuatu' },
+                  { value: 'Vatican City', label: 'Vatican City' },
+                  { value: 'Venezuela', label: 'Venezuela' },
+                  { value: 'Vietnam', label: 'Vietnam' },
+                  { value: 'Yemen', label: 'Yemen' },
+                  { value: 'Zambia', label: 'Zambia' },
+                  { value: 'Zimbabwe', label: 'Zimbabwe' },
+                ]}
               />
 
               <Input
@@ -781,7 +1226,6 @@ const Profile = () => {
                   {...register('studentProfile.experienceLevel')}
                   error={errors.studentProfile?.experienceLevel?.message}
                   options={[
-                    { value: '', label: 'Select experience level' },
                     { value: 'Beginner', label: 'Beginner' },
                     { value: 'Intermediate', label: 'Intermediate' },
                     { value: 'Advanced', label: 'Advanced' },
@@ -807,53 +1251,23 @@ const Profile = () => {
                   options={[
                     { value: 'Available', label: 'Available' },
                     { value: 'Busy', label: 'Busy' },
-                    { value: 'Not Available', label: 'Not Available' },
                   ]}
                 />
 
-                <Select
-                  label="Currency"
-                  {...register('studentProfile.hourlyRate.currency')}
-                  error={errors.studentProfile?.hourlyRate?.currency?.message}
-                  options={[
-                    { value: 'USD', label: 'USD ($) - US Dollar' },
-                    { value: 'EUR', label: 'EUR (€) - Euro' },
-                    { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
-                    { value: 'GBP', label: 'GBP (£) - British Pound' },
-                    { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
-                    { value: 'SAR', label: 'SAR (﷼) - Saudi Riyal' },
-                    { value: 'QAR', label: 'QAR (﷼) - Qatari Riyal' },
-                    { value: 'KWD', label: 'KWD (د.ك) - Kuwaiti Dinar' },
-                    { value: 'BHD', label: 'BHD (.د.ب) - Bahraini Dinar' },
-                    { value: 'OMR', label: 'OMR (﷼) - Omani Rial' },
-                    { value: 'JOD', label: 'JOD (د.ا) - Jordanian Dinar' },
-                    { value: 'LBP', label: 'LBP (ل.ل) - Lebanese Pound' },
-                    { value: 'ILS', label: 'ILS (₪) - Israeli Shekel' },
-                    { value: 'TRY', label: 'TRY (₺) - Turkish Lira' },
-                    { value: 'ZAR', label: 'ZAR (R) - South African Rand' },
-                    { value: 'MAD', label: 'MAD (د.م.) - Moroccan Dirham' },
-                    { value: 'TND', label: 'TND (د.ت) - Tunisian Dinar' },
-                    { value: 'DZD', label: 'DZD (د.ج) - Algerian Dinar' },
-                    { value: 'NGN', label: 'NGN (₦) - Nigerian Naira' },
-                    { value: 'KES', label: 'KES (KSh) - Kenyan Shilling' },
-                    { value: 'GHS', label: 'GHS (₵) - Ghanaian Cedi' },
-                    { value: 'UGX', label: 'UGX (USh) - Ugandan Shilling' },
-                    { value: 'TZS', label: 'TZS (TSh) - Tanzanian Shilling' },
-                    { value: 'ETB', label: 'ETB (Br) - Ethiopian Birr' },
-                    { value: 'CHF', label: 'CHF (Fr) - Swiss Franc' },
-                    { value: 'SEK', label: 'SEK (kr) - Swedish Krona' },
-                    { value: 'NOK', label: 'NOK (kr) - Norwegian Krone' },
-                    { value: 'DKK', label: 'DKK (kr) - Danish Krone' },
-                    { value: 'PLN', label: 'PLN (zł) - Polish Zloty' },
-                    { value: 'CZK', label: 'CZK (Kč) - Czech Koruna' },
-                    { value: 'HUF', label: 'HUF (Ft) - Hungarian Forint' },
-                    { value: 'RON', label: 'RON (lei) - Romanian Leu' },
-                    { value: 'BGN', label: 'BGN (лв) - Bulgarian Lev' },
-                    { value: 'HRK', label: 'HRK (kn) - Croatian Kuna' },
-                    { value: 'RUB', label: 'RUB (₽) - Russian Ruble' },
-                    { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
-                  ]}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Currency (Auto-set based on country)
+                  </label>
+                  <Input
+                    {...register('studentProfile.hourlyRate.currency')}
+                    disabled
+                    className="bg-gray-100 cursor-not-allowed"
+                    placeholder="Select country first"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Currency is automatically set based on your selected country
+                  </p>
+                </div>
 
                 <Input
                   label="Hourly Rate (Min)"

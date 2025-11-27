@@ -20,29 +20,29 @@
   }
 
   .student-theme {
-    --color-primary-50: 249 241 252;
-    --color-primary-100: 243 226 249;
-    --color-primary-200: 233 197 242;
-    --color-primary-300: 216 154 232;
-    --color-primary-400: 194 107 218;
-    --color-primary-500: 168 65 203;
-    --color-primary-600: 137 4 170;
-    --color-primary-700: 107 3 132;
-    --color-primary-800: 82 2 101;
-    --color-primary-900: 58 1 72;
+    --color-primary-50: 224 247 248;
+    --color-primary-100: 204 242 243;
+    --color-primary-200: 163 230 232;
+    --color-primary-300: 102 213 217;
+    --color-primary-400: 58 192 197;
+    --color-primary-500: 37 170 173;
+    --color-primary-600: 30 136 138;
+    --color-primary-700: 23 102 104;
+    --color-primary-800: 15 68 69;
+    --color-primary-900: 8 34 35;
   }
 
   .client-theme {
-    --color-primary-50: 242 239 255;
-    --color-primary-100: 218 212 255;
-    --color-primary-200: 188 176 255;
-    --color-primary-300: 157 139 255;
-    --color-primary-400: 126 102 255;
-    --color-primary-500: 87 55 255;
-    --color-primary-600: 47 0 192;
-    --color-primary-700: 36 0 143;
-    --color-primary-800: 26 0 102;
-    --color-primary-900: 17 0 64;
+    --color-primary-50: 224 237 245;
+    --color-primary-100: 204 225 240;
+    --color-primary-200: 163 201 225;
+    --color-primary-300: 102 164 200;
+    --color-primary-400: 58 136 180;
+    --color-primary-500: 21 107 160;
+    --color-primary-600: 17 86 128;
+    --color-primary-700: 13 64 96;
+    --color-primary-800: 8 43 64;
+    --color-primary-900: 4 21 32;
   }
 }
 

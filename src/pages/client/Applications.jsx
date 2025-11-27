@@ -108,9 +108,7 @@ const Applications = () => {
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-600 mb-4">No applications received yet.</p>
-            <Button variant="primary" onClick={() => navigate('/client/jobs/new')}>
-              Post a Job
-            </Button>
+     
           </div>
         </Card>
       ) : (

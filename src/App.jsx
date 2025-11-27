@@ -4,6 +4,9 @@ import { useAuthStore } from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 
+// Public pages
+import Landing from './pages/Landing';
+
 // Auth pages
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -56,13 +59,31 @@ import AdminReviews from './pages/admin/Reviews';
 import AdminNotifications from './pages/admin/Notifications';
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+
+  // Determine dashboard path based on user role
+  const getDashboardPath = () => {
+    if (!user) return '/login';
+    switch (user.role) {
+      case 'student':
+        return '/student/dashboard';
+      case 'client':
+        return '/client/dashboard';
+      case 'admin':
+        return '/admin/dashboard';
+      default:
+        return '/login';
+    }
+  };
 
   return (
     <Routes>
+      {/* Landing Page - Accessible to everyone */}
+      <Route path="/" element={<Landing />} />
+
       {/* Public routes */}
-      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
-      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/" />} />
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to={getDashboardPath()} />} />
+      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to={getDashboardPath()} />} />
 
       {/* Payment callback routes - public but require authentication to function properly */}
       <Route path="/payment/processing" element={<PaymentProcessing />} />
@@ -139,8 +160,7 @@ function App() {
         <Route path="notifications" element={<AdminNotifications />} />
       </Route>
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to={isAuthenticated ? '/student/dashboard' : '/login'} />} />
+      {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
