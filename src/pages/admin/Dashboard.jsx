@@ -13,6 +13,7 @@ import {
   UserCheck,
   Clock,
   TrendingUp,
+  Crown,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -87,6 +88,27 @@ const Dashboard = () => {
       icon: Clock,
       color: 'bg-yellow-500',
       onClick: () => navigate('/admin/applications?status=pending'),
+    },
+    {
+      title: 'Total Subscribed',
+      value: stats.totalSubscriptions || 0,
+      icon: Users,
+      color: 'bg-cyan-500',
+      onClick: () => navigate('/admin/student-packages'),
+    },
+    {
+      title: 'Premium Users',
+      value: stats.premiumSubscriptions || 0,
+      icon: Crown,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/student-packages?plan=premium'),
+    },
+    {
+      title: 'Free Users',
+      value: stats.freeSubscriptions || 0,
+      icon: UserCheck,
+      color: 'bg-gray-500',
+      onClick: () => navigate('/admin/student-packages?plan=free'),
     },
   ];
 

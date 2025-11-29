@@ -17,7 +17,7 @@ const JobForm = () => {
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
     defaultValues: {
       skillsRequired: [],
       budgetCurrency: 'USD',
@@ -32,25 +32,39 @@ const JobForm = () => {
     queryKey: ['job', id],
     queryFn: () => jobService.getJob(id),
     enabled: isEditing,
-    onSuccess: (data) => {
-      const job = data.data.jobPost;
-      setSkills(job.skillsRequired || []);
-      Object.keys(job).forEach((key) => {
-        if (key === 'budget') {
-          setValue('budgetMin', job.budget?.min);
-          setValue('budgetMax', job.budget?.max);
-          setValue('budgetCurrency', job.budget?.currency || 'USD');
-        } else if (key === 'deadline') {
-          // Convert deadline to YYYY-MM-DD format for date input
-          const date = new Date(job.deadline);
-          const formattedDate = date.toISOString().split('T')[0];
-          setValue('deadline', formattedDate);
-        } else if (key !== 'skillsRequired') {
-          setValue(key, job[key]);
-        }
-      });
-    },
   });
+
+  // Populate form when job data is loaded
+  React.useEffect(() => {
+    if (jobData?.data?.jobPost && isEditing) {
+      const job = jobData.data.jobPost;
+      
+      // Set skills
+      setSkills(job.skillsRequired || []);
+      
+      // Prepare form data
+      const formData = {
+        title: job.title || '',
+        description: job.description || '',
+        category: job.category || '',
+        budgetMin: job.budget?.min || '',
+        budgetMax: job.budget?.max || '',
+        budgetCurrency: job.budget?.currency || 'USD',
+        projectDuration: job.projectDuration || '',
+        experienceLevel: job.experienceLevel || '',
+      };
+
+      // Convert deadline to YYYY-MM-DD format for date input
+      if (job.deadline) {
+        const date = new Date(job.deadline);
+        const formattedDate = date.toISOString().split('T')[0];
+        formData.deadline = formattedDate;
+      }
+
+      // Reset form with all job data
+      reset(formData);
+    }
+  }, [jobData, isEditing, reset]);
 
   // Create/Update mutation
   const saveMutation = useMutation({
@@ -63,7 +77,35 @@ const JobForm = () => {
       navigate('/client/jobs');
     },
     onError: (error) => {
-      alert(error.message || `Failed to ${isEditing ? 'update' : 'create'} job`);
+      // Make error messages user-friendly
+      let errorMessage = `We couldn't ${isEditing ? 'update' : 'create'} your job post. Please check your information and try again.`;
+      
+      if (error.response?.data?.message) {
+        const backendMessage = error.response.data.message;
+        
+        // Convert technical messages to user-friendly ones
+        if (backendMessage.includes('title')) {
+          errorMessage = 'Please enter a valid job title (5-100 characters)';
+        } else if (backendMessage.includes('description')) {
+          errorMessage = 'Please provide a detailed job description (at least 20 characters)';
+        } else if (backendMessage.includes('budget')) {
+          errorMessage = 'Please check your budget amounts. Maximum must be greater than or equal to minimum.';
+        } else if (backendMessage.includes('deadline')) {
+          errorMessage = 'If you set a deadline, it must be a future date.';
+        } else if (backendMessage.includes('skills')) {
+          errorMessage = 'Please add at least one required skill for this job.';
+        } else if (backendMessage.includes('category')) {
+          errorMessage = 'Please select a valid job category.';
+        } else if (backendMessage.includes('experience')) {
+          errorMessage = 'Please select a valid experience level.';
+        } else {
+          errorMessage = backendMessage;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     },
   });
 
@@ -71,12 +113,12 @@ const JobForm = () => {
     console.log('Form Data:', data);
     // Validate skills
     if (skills.length === 0) {
-      alert('Please add at least one required skill');
+      alert('Please add at least one required skill for this job');
       return;
     }
 
     if (skills.length > 10) {
-      alert('Maximum 10 skills allowed');
+      alert('You can add up to 10 skills maximum. Please remove some skills to continue.');
       return;
     }
 
@@ -91,10 +133,13 @@ const JobForm = () => {
         currency: data.budgetCurrency || 'USD',
       },
       projectDuration: data.projectDuration,
-      deadline: data.deadline,
       experienceLevel: data.experienceLevel,
-      applicationType: data.applicationType || 'open',
     };
+
+    // Only include deadline if provided (not empty string)
+    if (data.deadline && data.deadline.trim() !== '') {
+      jobData.deadline = data.deadline;
+    }
 
     saveMutation.mutate(jobData);
   };
@@ -136,7 +181,7 @@ const JobForm = () => {
             label="Job Title"
             placeholder="e.g., Full-Stack Web Developer"
             error={errors.title?.message}
-            {...register('title', { required: 'Title is required' })}
+            {...register('title', { required: 'Please enter a job title' })}
           />
 
           <div>
@@ -147,7 +192,7 @@ const JobForm = () => {
               rows="10"
               placeholder="Describe the project, requirements, deliverables..."
               className="input"
-              {...register('description', { required: 'Description is required' })}
+              {...register('description', { required: 'Please describe the job and what you need' })}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
@@ -166,7 +211,7 @@ const JobForm = () => {
               { value: 'Other', label: 'Other' },
             ]}
             error={errors.category?.message}
-            {...register('category', { required: 'Category is required' })}
+            {...register('category', { required: 'Please select a job category' })}
           />
 
           <div>
@@ -213,8 +258,8 @@ const JobForm = () => {
               step="0.01"
               error={errors.budgetMin?.message}
               {...register('budgetMin', {
-                required: 'Min budget is required',
-                min: { value: 1, message: 'Budget must be at least 1' },
+                required: 'Please enter a minimum budget',
+                min: { value: 1, message: 'Minimum budget must be at least 1' },
               })}
             />
 
@@ -225,10 +270,10 @@ const JobForm = () => {
               step="0.01"
               error={errors.budgetMax?.message}
               {...register('budgetMax', {
-                required: 'Max budget is required',
+                required: 'Please enter a maximum budget',
                 validate: (value) =>
                   parseFloat(value) >= parseFloat(watch('budgetMin')) ||
-                  'Max budget must be greater than min',
+                  'Maximum budget must be greater than or equal to minimum budget',
               })}
             />
 
@@ -273,7 +318,7 @@ const JobForm = () => {
                 { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
               ]}
               error={errors.budgetCurrency?.message}
-              {...register('budgetCurrency', { required: 'Currency is required' })}
+              {...register('budgetCurrency', { required: 'Please select a currency' })}
             />
           </div>
 
@@ -288,20 +333,21 @@ const JobForm = () => {
               { value: 'More than 3 months', label: 'More than 3 months' },
             ]}
             error={errors.projectDuration?.message}
-            {...register('projectDuration', { required: 'Project duration is required' })}
+            {...register('projectDuration', { required: 'Please select the expected project duration' })}
           />
 
           <Input
-            label="Deadline"
+            label="Deadline (Optional)"
             type="date"
             error={errors.deadline?.message}
             {...register('deadline', {
-              required: 'Deadline is required',
               validate: (value) => {
+                // Only validate if a deadline is provided
+                if (!value) return true;
                 const selectedDate = new Date(value);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                return selectedDate > today || 'Deadline must be in the future';
+                return selectedDate > today || 'If you set a deadline, it must be in the future';
               },
             })}
           />
@@ -315,17 +361,8 @@ const JobForm = () => {
               { value: 'Expert', label: 'Expert' },
             ]}
             error={errors.experienceLevel?.message}
-            {...register('experienceLevel', { required: 'Experience level is required' })}
+            {...register('experienceLevel', { required: 'Please select the required experience level' })}
           />
-{/* 
-          <Select
-            label="Application Type"
-            options={[
-              { value: 'open', label: 'Open to All Students' },
-              { value: 'invite-only', label: 'Invite Only' },
-            ]}
-            {...register('applicationType')}
-          /> */}
 
           <div className="flex gap-3 pt-6 border-t">
             <Button

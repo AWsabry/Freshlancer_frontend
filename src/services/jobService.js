@@ -37,11 +37,6 @@ export const jobService = {
     return api.patch(`/jobs/${id}/close`, data);
   },
 
-  // Invite student to job
-  inviteStudent: async (jobId, studentId) => {
-    return api.post(`/jobs/${jobId}/invite`, { studentId });
-  },
-
   // Search jobs
   searchJobs: async (query, params) => {
     return api.get('/jobs/search', { params: { q: query, ...params } });

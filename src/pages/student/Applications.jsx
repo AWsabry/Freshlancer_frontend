@@ -170,20 +170,22 @@ const Applications = () => {
             )}
 
           {/* Company Info - Only for Premium Users */}
-          {isPremium && application.jobPost?.client && (
+          {isPremium && application.jobPost?.client && !application.jobPost.client.message && (
             <p className="text-gray-600 mb-3 flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
               {application.jobPost.client.clientProfile?.companyName ||
-               application.jobPost.client.email}
+               application.jobPost.client.email ||
+               application.jobPost.client.name ||
+               'N/A'}
             </p>
           )}
 
           {/* Premium Upgrade Message for Free Users */}
-          {!isPremium && (
+          {(!isPremium || (application.jobPost?.client && application.jobPost.client.message)) && (
             <p className="text-gray-600 mb-3 flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
               <span className="text-sm text-gray-500 italic">
-                Upgrade to Premium to see Client's Email
+                {application.jobPost?.client?.message || 'Premium members only'}
               </span>
             </p>
           )}
@@ -227,24 +229,21 @@ const Applications = () => {
             )}
 
             {/* Job Budget Range - Only for Premium Users */}
-            {isPremium && application.jobPost?.budget && (
+            {isPremium && application.jobPost?.budget && !application.jobPost.budget.message ? (
               <div className="flex items-center gap-2 text-gray-600">
                 <div>
                   <p className="text-xs text-gray-500">Job Budget</p>
                   <p className="font-semibold text-sm">
-                    {application.jobPost.budget.currency} ${application.jobPost.budget.min} - ${application.jobPost.budget.max}
+                    {application.jobPost.budget.currency} {application.jobPost.budget.min} - {application.jobPost.budget.max}
                   </p>
                 </div>
               </div>
-            )}
-
-            {/* Premium Upgrade for Budget - Free Users */}
-            {!isPremium && (
+            ) : (
               <div className="flex items-center gap-2 text-gray-600">
                 <div>
                   <p className="text-xs text-gray-500">Job Budget</p>
                   <p className="font-semibold text-sm text-gray-400 italic">
-                    Premium Only
+                    {application.jobPost?.budget?.message || 'Premium members only'}
                   </p>
                 </div>
               </div>

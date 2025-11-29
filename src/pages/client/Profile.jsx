@@ -42,18 +42,27 @@ const Profile = () => {
       const response = await authService.getMe();
       return response.data?.user;
     },
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 0, // Always consider data stale to fetch fresh data
   });
 
   // Fetch points balance
   const { data: pointsData, isLoading: loadingPoints } = useQuery({
     queryKey: ['pointsBalance'],
     queryFn: () => packageService.getPointsBalance(),
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
   });
 
   // Fetch package history
   const { data: historyData, isLoading: loadingHistory } = useQuery({
     queryKey: ['packageHistory'],
     queryFn: () => packageService.getPackageHistory(),
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
   });
 
   // Update profile mutation
@@ -92,6 +101,16 @@ const Profile = () => {
 
   if (loadingUser) {
     return <Loading text="Loading profile..." />;
+  }
+
+  // Check if user data is available
+  if (!userData) {
+    return (
+      <Alert
+        type="error"
+        message="Failed to load profile data. Please refresh the page."
+      />
+    );
   }
 
   const user = userData;

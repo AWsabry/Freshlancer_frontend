@@ -24,7 +24,6 @@ import {
   Code,
   Palette,
   FileText,
-  TrendingUpIcon,
   LayoutDashboard
 } from 'lucide-react';
 
@@ -112,42 +111,42 @@ const Landing = () => {
       title: 'Quality Freelance Jobs',
       description: 'Access thousands of vetted freelance opportunities from verified clients across web development, design, writing, marketing, and more',
       keywords: 'freelance jobs, student jobs, online work',
-      gradient: 'from-blue-500 to-cyan-500'
+      color: 'bg-blue-600'
     },
     {
       icon: <Users className="w-6 h-6" />,
       title: 'Skilled Student Freelancers',
       description: 'Hire talented university students with fresh ideas and competitive rates for your projects in programming, graphic design, content creation',
       keywords: 'hire students, student talent, freelance students',
-      gradient: 'from-purple-500 to-pink-500'
+      color: 'bg-[#25aaad]'
     },
     {
       icon: <Shield className="w-6 h-6" />,
       title: 'Secure Payment Protection',
       description: 'Industry-leading secure payment system with escrow protection, verified profiles, and fraud prevention for safe transactions',
       keywords: 'secure payments, payment protection, safe freelancing',
-      gradient: 'from-green-500 to-emerald-500'
+      color: 'bg-green-600'
     },
     {
       icon: <Clock className="w-6 h-6" />,
       title: 'Fast Hiring Process',
       description: 'Find and hire qualified student freelancers in under 24 hours with our streamlined matching algorithm and instant communication',
       keywords: 'quick hiring, fast recruitment, instant hire',
-      gradient: 'from-orange-500 to-red-500'
+      color: 'bg-orange-600'
     },
     {
       icon: <Star className="w-6 h-6" />,
       title: 'Top-Rated Platform',
       description: 'Trusted review and rating system with 95% client satisfaction rate, helping you choose the best freelancers for your needs',
       keywords: 'top rated, best freelance platform, trusted marketplace',
-      gradient: 'from-yellow-500 to-orange-500'
+      color: 'bg-yellow-600'
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
       title: 'Career Growth Opportunities',
       description: 'Students build professional portfolios, gain real-world experience, and develop in-demand skills while earning money online',
       keywords: 'career growth, portfolio building, skill development',
-      gradient: 'from-indigo-500 to-purple-500'
+      color: 'bg-indigo-600'
     }
   ];
 
@@ -202,7 +201,7 @@ const Landing = () => {
     { name: 'Graphic Design', icon: <Palette className="w-5 h-5" />, color: 'bg-pink-500' },
     { name: 'UI/UX Design', icon: <Palette className="w-5 h-5" />, color: 'bg-indigo-500' },
     { name: 'Content Writing', icon: <FileText className="w-5 h-5" />, color: 'bg-green-500' },
-    { name: 'Digital Marketing', icon: <TrendingUpIcon className="w-5 h-5" />, color: 'bg-orange-500' },
+    { name: 'Digital Marketing', icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-500' },
     { name: 'Academic Tasks', icon: <MessageCircle className="w-5 h-5" />, color: 'bg-cyan-500' },
     { name: 'Video Editing', icon: <Play className="w-5 h-5" />, color: 'bg-red-500' },
     { name: 'Data Entry', icon: <FileText className="w-5 h-5" />, color: 'bg-gray-500' },
@@ -234,13 +233,13 @@ const Landing = () => {
         })}
       </script>
 
-      {/* Modern Navigation Bar */}
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-lg bg-white/90" role="navigation" aria-label="Main navigation">
+      {/* Professional Navigation Bar */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo Space - 180x50px recommended */}
             <div className="flex items-center">
-              <div className="w-[180px] h-[50px] bg-gradient-to-r from-[#25aaad] to-[#156ba0] rounded-lg flex items-center justify-center">
+              <div className="w-[180px] h-[50px] bg-[#156ba0] rounded-lg flex items-center justify-center">
                 {/* Replace with actual logo image */}
                 <Briefcase className="w-8 h-8 text-white" aria-hidden="true" />
                 <span className="ml-2 text-2xl font-bold text-white">Freshlancer</span>
@@ -248,9 +247,9 @@ const Landing = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-700 hover:text-[#25aaad] font-medium transition-colors">Features</a>
-              <a href="#how-it-works" className="text-gray-700 hover:text-[#25aaad] font-medium transition-colors">How It Works</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-[#25aaad] font-medium transition-colors">Testimonials</a>
+              <a href="#features" className="text-gray-700 hover:text-[#156ba0] font-medium transition-colors">Features</a>
+              <a href="#how-it-works" className="text-gray-700 hover:text-[#156ba0] font-medium transition-colors">How It Works</a>
+              <a href="#testimonials" className="text-gray-700 hover:text-[#156ba0] font-medium transition-colors">Testimonials</a>
             </div>
 
             <div className="flex items-center gap-4">
@@ -262,7 +261,7 @@ const Landing = () => {
                   <Button
                     onClick={() => navigate(getDashboardPath())}
                     aria-label="Go to your dashboard"
-                    className="bg-gradient-to-r from-[#25aaad] to-[#156ba0] text-white hover:shadow-lg transition-all"
+                    className="bg-[#156ba0] text-white hover:bg-[#0f4a6f] transition-all"
                   >
                     <LayoutDashboard className="w-4 h-4 mr-2" aria-hidden="true" />
                     Go to Dashboard
@@ -274,14 +273,14 @@ const Landing = () => {
                     variant="outline"
                     onClick={() => navigate('/login')}
                     aria-label="Sign in to your account"
-                    className="border-gray-300 text-gray-700 hover:border-[#25aaad] hover:text-[#25aaad]"
+                    className="border-gray-300 text-gray-700 hover:border-[#156ba0] hover:text-[#156ba0]"
                   >
                     Sign In
                   </Button>
                   <Button
                     onClick={() => navigate('/register')}
                     aria-label="Create a free account"
-                    className="bg-gradient-to-r from-[#25aaad] to-[#156ba0] text-white hover:shadow-lg transition-all"
+                    className="bg-[#156ba0] text-white hover:bg-[#0f4a6f] transition-all"
                   >
                     Get Started Free
                   </Button>
@@ -292,13 +291,13 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Modern Asymmetric Design */}
-      <header className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Hero Section - Professional Design */}
+      <header className="relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <article className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#25aaad]/10 to-[#156ba0]/10 rounded-full text-sm font-medium text-[#156ba0] border border-[#25aaad]/20">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#156ba0]/10 rounded-md text-sm font-medium text-[#156ba0] border border-[#156ba0]/20">
                 <Zap className="w-4 h-4" aria-hidden="true" />
                 <span>Top-Rated Student Freelance Marketplace 2025</span>
               </div>
@@ -306,7 +305,7 @@ const Landing = () => {
               <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Hire Talented
                 <br />
-                <span className="bg-gradient-to-r from-[#25aaad] to-[#156ba0] bg-clip-text text-transparent">
+                <span className="text-[#156ba0]">
                   Student Freelancers
                 </span>
               </h2>
@@ -321,7 +320,7 @@ const Landing = () => {
                   <Button
                     size="lg"
                     onClick={() => navigate(getDashboardPath())}
-                    className="bg-gradient-to-r from-[#25aaad] to-[#156ba0] text-white hover:shadow-xl transition-all text-lg px-8 py-4"
+                    className="bg-[#156ba0] text-white hover:bg-[#0f4a6f] transition-all text-lg px-8 py-4"
                     aria-label="Go to your dashboard"
                   >
                     <LayoutDashboard className="w-5 h-5 mr-2" aria-hidden="true" />
@@ -333,7 +332,7 @@ const Landing = () => {
                     <Button
                       size="lg"
                       onClick={() => navigate('/register')}
-                      className="bg-gradient-to-r from-[#25aaad] to-[#156ba0] text-white hover:shadow-xl transition-all text-lg px-8 py-4"
+                      className="bg-[#156ba0] text-white hover:bg-[#0f4a6f] transition-all text-lg px-8 py-4"
                       aria-label="Start finding freelance jobs or hiring students"
                     >
                       Start Now - 100% Free
@@ -343,7 +342,7 @@ const Landing = () => {
                       variant="outline"
                       size="lg"
                       onClick={() => navigate('/login')}
-                      className="border-2 border-gray-300 text-gray-700 hover:border-[#25aaad] hover:text-[#25aaad] text-lg px-8 py-4"
+                      className="border-2 border-gray-300 text-gray-700 hover:border-[#156ba0] hover:text-[#156ba0] text-lg px-8 py-4"
                       aria-label="Sign in to existing account"
                     >
                       Sign In
@@ -366,18 +365,14 @@ const Landing = () => {
 
             {/* Right Image Space - 600x500px recommended */}
             <div className="relative">
-              <div className="w-full h-[500px] bg-gradient-to-br from-[#25aaad]/10 to-[#156ba0]/10 rounded-3xl flex items-center justify-center border border-[#25aaad]/20 shadow-2xl">
+              <div className="w-full h-[500px] bg-[#156ba0]/5 rounded-lg flex items-center justify-center border border-gray-200 shadow-lg">
                 {/* Replace with actual hero image */}
                 <div className="text-center space-y-4">
-                  <Globe className="w-32 h-32 text-[#25aaad] mx-auto" />
+                  <Globe className="w-32 h-32 text-[#156ba0] mx-auto" />
                   <p className="text-gray-500 font-medium">Hero Image</p>
                   <p className="text-sm text-gray-400">Recommended: 600x500px</p>
                 </div>
               </div>
-
-              {/* Floating elements */}
-              <div className="absolute -top-6 -right-6 w-32 h-32 bg-gradient-to-br from-[#25aaad] to-[#156ba0] rounded-3xl opacity-20 blur-2xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-gradient-to-br from-[#156ba0] to-[#25aaad] rounded-3xl opacity-20 blur-2xl"></div>
             </div>
           </div>
 
@@ -386,12 +381,12 @@ const Landing = () => {
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all"
+                className="bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all"
               >
-                <div className="text-[#25aaad] mb-3">
+                <div className="text-[#156ba0] mb-3">
                   {stat.icon}
                 </div>
-                <div className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-[#25aaad] to-[#156ba0] bg-clip-text text-transparent mb-2">
+                <div className="text-3xl lg:text-4xl font-bold text-[#156ba0] mb-2">
                   {stat.number}
                 </div>
                 <div className="text-sm text-gray-600">{stat.label}</div>
@@ -406,7 +401,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="features-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Why Choose <span className="bg-gradient-to-r from-[#25aaad] to-[#156ba0] bg-clip-text text-transparent">Freshlancer</span>?
+              Why Choose <span className="text-[#156ba0]">Freshlancer</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Everything you need to succeed in the student freelance marketplace
@@ -417,9 +412,9 @@ const Landing = () => {
             {features.map((feature, index) => (
               <article
                 key={index}
-                className="group bg-white p-8 rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-2xl transition-all duration-300"
+                className="group bg-white p-8 rounded-lg border border-gray-200 hover:border-[#156ba0] hover:shadow-lg transition-all"
               >
-                <div className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform`}>
+                <div className={`w-14 h-14 ${feature.color} rounded-lg flex items-center justify-center text-white mb-6 transition-transform`}>
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -435,7 +430,7 @@ const Landing = () => {
       </section>
 
       {/* Job Categories Section */}
-      <section className="py-24 bg-gradient-to-br from-gray-50 to-white" aria-labelledby="categories-heading">
+      <section className="py-24 bg-gray-50" aria-labelledby="categories-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="categories-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
@@ -450,12 +445,12 @@ const Landing = () => {
             {jobCategories.map((category, index) => (
               <div
                 key={index}
-                className="group bg-white p-6 rounded-xl border border-gray-100 hover:border-[#25aaad] hover:shadow-lg transition-all cursor-pointer"
+                className="group bg-white p-6 rounded-lg border border-gray-200 hover:border-[#156ba0] hover:shadow-md transition-all cursor-pointer"
               >
-                <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform`}>
+                <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center text-white mb-3 transition-transform`}>
                   {category.icon}
                 </div>
-                <h3 className="font-semibold text-gray-900 group-hover:text-[#25aaad] transition-colors">
+                <h3 className="font-semibold text-gray-900 group-hover:text-[#156ba0] transition-colors">
                   {category.name}
                 </h3>
               </div>
@@ -473,12 +468,10 @@ const Landing = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* For Students Card */}
-            <article className="relative bg-white rounded-3xl overflow-hidden border-2 border-[#25aaad]/20 hover:border-[#25aaad] transition-all shadow-xl hover:shadow-2xl">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#25aaad]/10 to-transparent rounded-full -mr-32 -mt-32"></div>
-
+            <article className="relative bg-white rounded-lg overflow-hidden border-2 border-[#25aaad] hover:border-[#25aaad] transition-all shadow-lg hover:shadow-xl">
               <div className="relative p-10">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#25aaad] to-[#1a8b8d] rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="w-16 h-16 bg-[#25aaad] rounded-lg flex items-center justify-center shadow-md">
                     <Award className="w-8 h-8 text-white" aria-hidden="true" />
                   </div>
                   <div>
@@ -501,7 +494,7 @@ const Landing = () => {
                 </ul>
 
                 {/* Image Space for Students - 400x300px */}
-                <div className="w-full h-[300px] bg-gradient-to-br from-[#25aaad]/10 to-[#25aaad]/5 rounded-2xl mb-6 flex items-center justify-center border border-[#25aaad]/20">
+                <div className="w-full h-[300px] bg-[#25aaad]/10 rounded-lg mb-6 flex items-center justify-center border border-[#25aaad]/30">
                   <div className="text-center space-y-2">
                     <Users className="w-20 h-20 text-[#25aaad] mx-auto" />
                     <p className="text-gray-500 font-medium">Student Image</p>
@@ -510,7 +503,7 @@ const Landing = () => {
                 </div>
 
                 <Button
-                  className="w-full bg-gradient-to-r from-[#25aaad] to-[#1a8b8d] text-white hover:shadow-xl text-lg py-6"
+                  className="w-full bg-[#25aaad] text-white hover:bg-[#1a8b8d] text-lg py-6"
                   onClick={() => navigate('/register')}
                   aria-label="Join as student freelancer"
                 >
@@ -521,12 +514,10 @@ const Landing = () => {
             </article>
 
             {/* For Clients Card */}
-            <article className="relative bg-white rounded-3xl overflow-hidden border-2 border-[#156ba0]/20 hover:border-[#156ba0] transition-all shadow-xl hover:shadow-2xl">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#156ba0]/10 to-transparent rounded-full -mr-32 -mt-32"></div>
-
+            <article className="relative bg-white rounded-lg overflow-hidden border-2 border-[#156ba0] hover:border-[#156ba0] transition-all shadow-lg hover:shadow-xl">
               <div className="relative p-10">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#156ba0] to-[#0f4a6f] rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="w-16 h-16 bg-[#156ba0] rounded-lg flex items-center justify-center shadow-md">
                     <Search className="w-8 h-8 text-white" aria-hidden="true" />
                   </div>
                   <div>
@@ -549,7 +540,7 @@ const Landing = () => {
                 </ul>
 
                 {/* Image Space for Clients - 400x300px */}
-                <div className="w-full h-[300px] bg-gradient-to-br from-[#156ba0]/10 to-[#156ba0]/5 rounded-2xl mb-6 flex items-center justify-center border border-[#156ba0]/20">
+                <div className="w-full h-[300px] bg-[#156ba0]/10 rounded-lg mb-6 flex items-center justify-center border border-[#156ba0]/30">
                   <div className="text-center space-y-2">
                     <Briefcase className="w-20 h-20 text-[#156ba0] mx-auto" />
                     <p className="text-gray-500 font-medium">Client Image</p>
@@ -558,7 +549,7 @@ const Landing = () => {
                 </div>
 
                 <Button
-                  className="w-full bg-gradient-to-r from-[#156ba0] to-[#0f4a6f] text-white hover:shadow-xl text-lg py-6"
+                  className="w-full bg-[#156ba0] text-white hover:bg-[#0f4a6f] text-lg py-6"
                   onClick={() => navigate('/register')}
                   aria-label="Hire student talent"
                 >
@@ -572,7 +563,7 @@ const Landing = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-gradient-to-br from-gray-50 to-white" aria-labelledby="testimonials-heading">
+      <section id="testimonials" className="py-24 bg-gray-50" aria-labelledby="testimonials-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="testimonials-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
@@ -587,7 +578,7 @@ const Landing = () => {
             {testimonials.map((testimonial, index) => (
               <article
                 key={index}
-                className="bg-white p-8 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all"
+                className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all"
               >
                 <div className="flex items-center gap-1 mb-6">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -600,7 +591,7 @@ const Landing = () => {
                 </blockquote>
 
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#25aaad] to-[#156ba0] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-14 h-14 bg-[#156ba0] rounded-full flex items-center justify-center text-white font-bold text-lg">
                     {testimonial.avatar}
                   </div>
                   <div>
@@ -629,10 +620,10 @@ const Landing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             {/* Connection lines */}
-            <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-1 bg-gradient-to-r from-[#25aaad] to-[#156ba0] -z-10"></div>
+            <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-1 bg-gray-300 -z-10"></div>
 
             <article className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#25aaad] to-[#156ba0] rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-[#156ba0] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
                 1
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
@@ -644,7 +635,7 @@ const Landing = () => {
             </article>
 
             <article className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#25aaad] to-[#156ba0] rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-[#156ba0] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
                 2
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
@@ -656,7 +647,7 @@ const Landing = () => {
             </article>
 
             <article className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#25aaad] to-[#156ba0] rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-[#156ba0] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
                 3
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
@@ -671,7 +662,7 @@ const Landing = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-gradient-to-br from-gray-50 to-white" aria-labelledby="faq-heading">
+      <section className="py-24 bg-gray-50" aria-labelledby="faq-heading">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 id="faq-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16 text-center">
             Frequently Asked Questions
@@ -696,7 +687,7 @@ const Landing = () => {
                 a: 'We use secure escrow payment systems (Paymob for EGP, PayPal for USD) to protect both parties. Funds are held securely and released upon project completion, ensuring safe transactions for students and clients.'
               }
             ].map((faq, index) => (
-              <article key={index} className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all">
+              <article key={index} className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   {faq.q}
                 </h3>
@@ -710,10 +701,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-[#25aaad] to-[#156ba0] relative overflow-hidden" aria-labelledby="cta-heading">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full -ml-48 -mb-48"></div>
+      <section className="py-24 bg-[#156ba0] relative overflow-hidden" aria-labelledby="cta-heading">
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Globe className="w-20 h-20 text-white mx-auto mb-8" aria-hidden="true" />
@@ -757,7 +745,7 @@ const Landing = () => {
             <div className="md:col-span-2">
               <div className="flex items-center mb-6">
                 {/* Logo Space - 180x50px */}
-                <div className="w-[180px] h-[50px] bg-gradient-to-r from-[#25aaad] to-[#156ba0] rounded-lg flex items-center justify-center">
+                <div className="w-[180px] h-[50px] bg-[#156ba0] rounded-lg flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-white" aria-hidden="true" />
                   <span className="ml-2 text-xl font-bold text-white">Freshlancer</span>
                 </div>

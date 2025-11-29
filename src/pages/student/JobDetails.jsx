@@ -173,20 +173,16 @@ const JobDetails = () => {
           {job.budget && (
             <div>
               <p className="text-sm text-gray-600 mb-1">Budget</p>
-              {isPremium ? (
+              {isPremium && !job.budget.message ? (
                 <div className="flex items-center gap-1 text-lg font-semibold text-green-600">
+                  <DollarSign className="w-5 h-5" />
                   {job.budget.currency} {job.budget.min} - {job.budget.max}
                 </div>
               ) : (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => navigate('/student/subscription')}
-                  className="flex items-center gap-1"
-                >
+                <div className="flex items-center gap-1 text-sm text-gray-500 italic">
                   <DollarSign className="w-4 h-4" />
-                  Subscribe to see budget
-                </Button>
+                  {job.budget.message || 'Premium members only'}
+                </div>
               )}
             </div>
           )}

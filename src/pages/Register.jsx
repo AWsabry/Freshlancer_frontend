@@ -9,21 +9,31 @@ import Alert from '../components/common/Alert';
 
 // Country to Currency mapping
 const COUNTRY_CURRENCY_MAP = {
+  // Americas
   'United States': 'USD', 'Canada': 'USD', 'Mexico': 'USD', 'Brazil': 'USD',
   'Argentina': 'USD', 'Chile': 'USD', 'Colombia': 'USD', 'Peru': 'USD',
+  // Middle East
   'Egypt': 'EGP', 'Saudi Arabia': 'SAR', 'United Arab Emirates': 'AED',
   'Kuwait': 'KWD', 'Qatar': 'QAR', 'Bahrain': 'BHD', 'Oman': 'OMR',
-  'Jordan': 'JOD', 'Lebanon': 'LBP', 'Israel': 'ILS', 'Turkey': 'TRY',
+  'Jordan': 'JOD', 'Lebanon': 'LBP', 'Palestine': 'USD', 'Turkey': 'TRY',
+  // Africa
   'South Africa': 'ZAR', 'Morocco': 'MAD', 'Tunisia': 'TND', 'Algeria': 'DZD',
   'Nigeria': 'NGN', 'Kenya': 'KES', 'Ghana': 'GHS', 'Uganda': 'UGX',
-  'Tanzania': 'TZS', 'Ethiopia': 'ETB', 'United Kingdom': 'GBP',
-  'Switzerland': 'CHF', 'Sweden': 'SEK', 'Norway': 'NOK', 'Denmark': 'DKK',
-  'Poland': 'PLN', 'Czech Republic': 'CZK', 'Hungary': 'HUF',
-  'Romania': 'RON', 'Bulgaria': 'BGN', 'Croatia': 'HRK',
-  'Russia': 'RUB', 'Ukraine': 'UAH',
-  'Germany': 'EUR', 'France': 'EUR', 'Italy': 'EUR', 'Spain': 'EUR',
-  'Netherlands': 'EUR', 'Belgium': 'EUR', 'Austria': 'EUR', 'Greece': 'EUR',
-  'Portugal': 'EUR', 'Ireland': 'EUR', 'Finland': 'EUR', 'Slovakia': 'EUR',
+  'Tanzania': 'TZS', 'Ethiopia': 'ETB',
+  // Europe
+  'United Kingdom': 'GBP', 'Switzerland': 'CHF', 'Sweden': 'SEK', 'Norway': 'NOK', 
+  'Denmark': 'DKK', 'Poland': 'PLN', 'Czech Republic': 'CZK', 'Hungary': 'HUF',
+  'Romania': 'RON', 'Bulgaria': 'BGN', 'Croatia': 'HRK', 'Russia': 'RUB', 
+  'Ukraine': 'UAH', 'Germany': 'EUR', 'France': 'EUR', 'Italy': 'EUR', 
+  'Spain': 'EUR', 'Netherlands': 'EUR', 'Belgium': 'EUR', 'Austria': 'EUR', 
+  'Greece': 'EUR', 'Portugal': 'EUR', 'Ireland': 'EUR', 'Finland': 'EUR', 
+  'Slovakia': 'EUR',
+  // Asia
+  'China': 'USD', 'Japan': 'USD', 'South Korea': 'USD', 'India': 'USD',
+  'Pakistan': 'USD', 'Bangladesh': 'USD', 'Indonesia': 'USD', 'Philippines': 'USD',
+  'Vietnam': 'USD', 'Thailand': 'USD', 'Malaysia': 'USD', 'Singapore': 'USD',
+  // Oceania
+  'Australia': 'USD', 'New Zealand': 'USD',
 };
 
 // Country to Phone Code mapping
@@ -32,8 +42,8 @@ const COUNTRY_PHONE_CODE_MAP = {
   'Argentina': '+54', 'Chile': '+56', 'Colombia': '+57', 'Peru': '+51',
   'Egypt': '+20', 'Saudi Arabia': '+966', 'United Arab Emirates': '+971',
   'Kuwait': '+965', 'Qatar': '+974', 'Bahrain': '+973', 'Oman': '+968',
-  'Jordan': '+962', 'Lebanon': '+961', 'Israel': '+972', 'Palestine': '+970',
-  'Turkey': '+90', 'South Africa': '+27', 'Morocco': '+212', 'Tunisia': '+216',
+  'Jordan': '+962', 'Lebanon': '+961', 'Palestine': '+970', 'Turkey': '+90',
+  'South Africa': '+27', 'Morocco': '+212', 'Tunisia': '+216',
   'Algeria': '+213', 'Nigeria': '+234', 'Kenya': '+254', 'Ghana': '+233',
   'Uganda': '+256', 'Tanzania': '+255', 'Ethiopia': '+251',
   'United Kingdom': '+44', 'Switzerland': '+41', 'Sweden': '+46',
@@ -47,6 +57,223 @@ const COUNTRY_PHONE_CODE_MAP = {
   'Indonesia': '+62', 'Philippines': '+63', 'Vietnam': '+84', 'Thailand': '+66',
   'Malaysia': '+60', 'Singapore': '+65', 'Australia': '+61', 'New Zealand': '+64',
 };
+
+// Country options for dropdown
+const COUNTRY_OPTIONS = [
+  { value: 'Afghanistan', label: 'Afghanistan' },
+  { value: 'Albania', label: 'Albania' },
+  { value: 'Algeria', label: 'Algeria' },
+  { value: 'Argentina', label: 'Argentina' },
+  { value: 'Australia', label: 'Australia' },
+  { value: 'Austria', label: 'Austria' },
+  { value: 'Bahrain', label: 'Bahrain' },
+  { value: 'Bangladesh', label: 'Bangladesh' },
+  { value: 'Belgium', label: 'Belgium' },
+  { value: 'Brazil', label: 'Brazil' },
+  { value: 'Bulgaria', label: 'Bulgaria' },
+  { value: 'Canada', label: 'Canada' },
+  { value: 'Chile', label: 'Chile' },
+  { value: 'China', label: 'China' },
+  { value: 'Colombia', label: 'Colombia' },
+  { value: 'Croatia', label: 'Croatia' },
+  { value: 'Czech Republic', label: 'Czech Republic' },
+  { value: 'Denmark', label: 'Denmark' },
+  { value: 'Egypt', label: 'Egypt' },
+  { value: 'Ethiopia', label: 'Ethiopia' },
+  { value: 'Finland', label: 'Finland' },
+  { value: 'France', label: 'France' },
+  { value: 'Germany', label: 'Germany' },
+  { value: 'Ghana', label: 'Ghana' },
+  { value: 'Greece', label: 'Greece' },
+  { value: 'Hungary', label: 'Hungary' },
+  { value: 'India', label: 'India' },
+  { value: 'Indonesia', label: 'Indonesia' },
+  { value: 'Ireland', label: 'Ireland' },
+  { value: 'Italy', label: 'Italy' },
+  { value: 'Japan', label: 'Japan' },
+  { value: 'Jordan', label: 'Jordan' },
+  { value: 'Kenya', label: 'Kenya' },
+  { value: 'Kuwait', label: 'Kuwait' },
+  { value: 'Lebanon', label: 'Lebanon' },
+  { value: 'Malaysia', label: 'Malaysia' },
+  { value: 'Mexico', label: 'Mexico' },
+  { value: 'Morocco', label: 'Morocco' },
+  { value: 'Netherlands', label: 'Netherlands' },
+  { value: 'New Zealand', label: 'New Zealand' },
+  { value: 'Nigeria', label: 'Nigeria' },
+  { value: 'Norway', label: 'Norway' },
+  { value: 'Oman', label: 'Oman' },
+  { value: 'Pakistan', label: 'Pakistan' },
+  { value: 'Palestine', label: 'Palestine' },
+  { value: 'Peru', label: 'Peru' },
+  { value: 'Philippines', label: 'Philippines' },
+  { value: 'Poland', label: 'Poland' },
+  { value: 'Portugal', label: 'Portugal' },
+  { value: 'Qatar', label: 'Qatar' },
+  { value: 'Romania', label: 'Romania' },
+  { value: 'Russia', label: 'Russia' },
+  { value: 'Saudi Arabia', label: 'Saudi Arabia' },
+  { value: 'Singapore', label: 'Singapore' },
+  { value: 'Slovakia', label: 'Slovakia' },
+  { value: 'South Africa', label: 'South Africa' },
+  { value: 'South Korea', label: 'South Korea' },
+  { value: 'Spain', label: 'Spain' },
+  { value: 'Sweden', label: 'Sweden' },
+  { value: 'Switzerland', label: 'Switzerland' },
+  { value: 'Tanzania', label: 'Tanzania' },
+  { value: 'Thailand', label: 'Thailand' },
+  { value: 'Tunisia', label: 'Tunisia' },
+  { value: 'Turkey', label: 'Turkey' },
+  { value: 'Uganda', label: 'Uganda' },
+  { value: 'Ukraine', label: 'Ukraine' },
+  { value: 'United Arab Emirates', label: 'United Arab Emirates' },
+  { value: 'United Kingdom', label: 'United Kingdom' },
+  { value: 'United States', label: 'United States' },
+  { value: 'Vietnam', label: 'Vietnam' },
+];
+
+// Nationality options for dropdown
+const NATIONALITY_OPTIONS = [
+  { value: 'Egyptian', label: 'Egyptian' },
+  { value: 'Saudi Arabian', label: 'Saudi Arabian' },
+  { value: 'Emirati', label: 'Emirati' },
+  { value: 'Kuwaiti', label: 'Kuwaiti' },
+  { value: 'Qatari', label: 'Qatari' },
+  { value: 'Bahraini', label: 'Bahraini' },
+  { value: 'Omani', label: 'Omani' },
+  { value: 'Jordanian', label: 'Jordanian' },
+  { value: 'Lebanese', label: 'Lebanese' },
+  { value: 'Palestinian', label: 'Palestinian' },
+  { value: 'Syrian', label: 'Syrian' },
+  { value: 'Iraqi', label: 'Iraqi' },
+  { value: 'Yemeni', label: 'Yemeni' },
+  { value: 'Libyan', label: 'Libyan' },
+  { value: 'Tunisian', label: 'Tunisian' },
+  { value: 'Algerian', label: 'Algerian' },
+  { value: 'Moroccan', label: 'Moroccan' },
+  { value: 'Sudanese', label: 'Sudanese' },
+  { value: 'American', label: 'American' },
+  { value: 'British', label: 'British' },
+  { value: 'Canadian', label: 'Canadian' },
+  { value: 'Australian', label: 'Australian' },
+  { value: 'German', label: 'German' },
+  { value: 'French', label: 'French' },
+  { value: 'Italian', label: 'Italian' },
+  { value: 'Spanish', label: 'Spanish' },
+  { value: 'Dutch', label: 'Dutch' },
+  { value: 'Belgian', label: 'Belgian' },
+  { value: 'Swiss', label: 'Swiss' },
+  { value: 'Austrian', label: 'Austrian' },
+  { value: 'Swedish', label: 'Swedish' },
+  { value: 'Norwegian', label: 'Norwegian' },
+  { value: 'Danish', label: 'Danish' },
+  { value: 'Finnish', label: 'Finnish' },
+  { value: 'Polish', label: 'Polish' },
+  { value: 'Czech', label: 'Czech' },
+  { value: 'Hungarian', label: 'Hungarian' },
+  { value: 'Romanian', label: 'Romanian' },
+  { value: 'Bulgarian', label: 'Bulgarian' },
+  { value: 'Greek', label: 'Greek' },
+  { value: 'Turkish', label: 'Turkish' },
+  { value: 'Russian', label: 'Russian' },
+  { value: 'Ukrainian', label: 'Ukrainian' },
+  { value: 'Indian', label: 'Indian' },
+  { value: 'Pakistani', label: 'Pakistani' },
+  { value: 'Bangladeshi', label: 'Bangladeshi' },
+  { value: 'Chinese', label: 'Chinese' },
+  { value: 'Japanese', label: 'Japanese' },
+  { value: 'South Korean', label: 'South Korean' },
+  { value: 'Filipino', label: 'Filipino' },
+  { value: 'Indonesian', label: 'Indonesian' },
+  { value: 'Malaysian', label: 'Malaysian' },
+  { value: 'Thai', label: 'Thai' },
+  { value: 'Vietnamese', label: 'Vietnamese' },
+  { value: 'Singaporean', label: 'Singaporean' },
+  { value: 'Brazilian', label: 'Brazilian' },
+  { value: 'Mexican', label: 'Mexican' },
+  { value: 'Argentine', label: 'Argentine' },
+  { value: 'Chilean', label: 'Chilean' },
+  { value: 'Colombian', label: 'Colombian' },
+  { value: 'Peruvian', label: 'Peruvian' },
+  { value: 'Venezuelan', label: 'Venezuelan' },
+  { value: 'South African', label: 'South African' },
+  { value: 'Nigerian', label: 'Nigerian' },
+  { value: 'Kenyan', label: 'Kenyan' },
+  { value: 'Ghanaian', label: 'Ghanaian' },
+  { value: 'Ethiopian', label: 'Ethiopian' },
+  { value: 'Tanzanian', label: 'Tanzanian' },
+  { value: 'Ugandan', label: 'Ugandan' },
+  { value: 'Other', label: 'Other' },
+];
+
+// Country code options for phone number
+const COUNTRY_CODE_OPTIONS = [
+  { value: '+1', label: '+1 (US/Canada)' },
+  { value: '+20', label: '+20 (Egypt)' },
+  { value: '+27', label: '+27 (South Africa)' },
+  { value: '+30', label: '+30 (Greece)' },
+  { value: '+31', label: '+31 (Netherlands)' },
+  { value: '+32', label: '+32 (Belgium)' },
+  { value: '+33', label: '+33 (France)' },
+  { value: '+34', label: '+34 (Spain)' },
+  { value: '+36', label: '+36 (Hungary)' },
+  { value: '+39', label: '+39 (Italy)' },
+  { value: '+40', label: '+40 (Romania)' },
+  { value: '+41', label: '+41 (Switzerland)' },
+  { value: '+43', label: '+43 (Austria)' },
+  { value: '+44', label: '+44 (UK)' },
+  { value: '+45', label: '+45 (Denmark)' },
+  { value: '+46', label: '+46 (Sweden)' },
+  { value: '+47', label: '+47 (Norway)' },
+  { value: '+48', label: '+48 (Poland)' },
+  { value: '+49', label: '+49 (Germany)' },
+  { value: '+51', label: '+51 (Peru)' },
+  { value: '+52', label: '+52 (Mexico)' },
+  { value: '+54', label: '+54 (Argentina)' },
+  { value: '+55', label: '+55 (Brazil)' },
+  { value: '+56', label: '+56 (Chile)' },
+  { value: '+57', label: '+57 (Colombia)' },
+  { value: '+60', label: '+60 (Malaysia)' },
+  { value: '+61', label: '+61 (Australia)' },
+  { value: '+62', label: '+62 (Indonesia)' },
+  { value: '+63', label: '+63 (Philippines)' },
+  { value: '+64', label: '+64 (New Zealand)' },
+  { value: '+65', label: '+65 (Singapore)' },
+  { value: '+66', label: '+66 (Thailand)' },
+  { value: '+81', label: '+81 (Japan)' },
+  { value: '+82', label: '+82 (South Korea)' },
+  { value: '+84', label: '+84 (Vietnam)' },
+  { value: '+86', label: '+86 (China)' },
+  { value: '+90', label: '+90 (Turkey)' },
+  { value: '+91', label: '+91 (India)' },
+  { value: '+92', label: '+92 (Pakistan)' },
+  { value: '+212', label: '+212 (Morocco)' },
+  { value: '+213', label: '+213 (Algeria)' },
+  { value: '+216', label: '+216 (Tunisia)' },
+  { value: '+233', label: '+233 (Ghana)' },
+  { value: '+234', label: '+234 (Nigeria)' },
+  { value: '+251', label: '+251 (Ethiopia)' },
+  { value: '+254', label: '+254 (Kenya)' },
+  { value: '+255', label: '+255 (Tanzania)' },
+  { value: '+256', label: '+256 (Uganda)' },
+  { value: '+351', label: '+351 (Portugal)' },
+  { value: '+353', label: '+353 (Ireland)' },
+  { value: '+358', label: '+358 (Finland)' },
+  { value: '+359', label: '+359 (Bulgaria)' },
+  { value: '+385', label: '+385 (Croatia)' },
+  { value: '+420', label: '+420 (Czech Republic)' },
+  { value: '+421', label: '+421 (Slovakia)' },
+  { value: '+880', label: '+880 (Bangladesh)' },
+  { value: '+961', label: '+961 (Lebanon)' },
+  { value: '+962', label: '+962 (Jordan)' },
+  { value: '+965', label: '+965 (Kuwait)' },
+  { value: '+966', label: '+966 (Saudi Arabia)' },
+  { value: '+970', label: '+970 (Palestine)' },
+  { value: '+971', label: '+971 (UAE)' },
+  { value: '+973', label: '+973 (Bahrain)' },
+  { value: '+974', label: '+974 (Qatar)' },
+  { value: '+968', label: '+968 (Oman)' },
+];
 
 const Register = () => {
   const navigate = useNavigate();
@@ -64,19 +291,33 @@ const Register = () => {
   const password = watch('password');
   const selectedRole = watch('role');
   const watchedCountry = watch('country');
+  const countryOfStudy = watch('countryOfStudy');
+  const phoneCountryCode = watch('phoneCountryCode');
+  const phoneNumber = watch('phoneNumber');
+
+  // Auto-detect currency when country of study changes
+  useEffect(() => {
+    if (countryOfStudy && COUNTRY_CURRENCY_MAP[countryOfStudy]) {
+      const currency = COUNTRY_CURRENCY_MAP[countryOfStudy];
+      setValue('currency', currency);
+    } else if (countryOfStudy) {
+      // Default to USD if country not in map
+      setValue('currency', 'USD');
+    }
+  }, [countryOfStudy, setValue]);
 
   // Handle first step - basic info validation
   const handleContinue = (data) => {
     setError('');
     // Validate basic fields are filled
     if (!data.name || !data.email || !data.password || !data.passwordConfirm || !data.role) {
-      setError('Please fill in all required fields');
+      setError('Please complete all required fields to continue');
       return;
     }
 
     // Check password match
     if (data.password !== data.passwordConfirm) {
-      setError('Passwords do not match');
+      setError('The passwords you entered do not match. Please try again.');
       return;
     }
 
@@ -108,11 +349,39 @@ const Register = () => {
 
       // Add role-specific fields
       if (data.role === 'student') {
+        // Phone and nationality are required for students
+        // Combine country code and phone number
+        const fullPhoneNumber = data.phoneCountryCode && data.phoneNumber 
+          ? `${data.phoneCountryCode}${data.phoneNumber}` 
+          : data.phone || data.phoneNumber;
+        userData.phone = fullPhoneNumber;
+        userData.nationality = data.nationality;
+        
+        // Store country of study in location.country
+        if (data.countryOfStudy) {
+          userData.location = {
+            country: data.countryOfStudy,
+          };
+        }
+        
+        // Determine currency based on country of study
+        const currency = data.countryOfStudy && COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
+          ? COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
+          : 'USD'; // Default to USD if country not found
+        
         userData.studentProfile = {
-          university: data.university,
-          major: data.major,
-          graduationYear: parseInt(data.graduationYear),
+          university: data.university?.trim() || '',
+          major: data.major?.trim() || '',
+          graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
+          hourlyRate: {
+            currency: currency,
+          },
         };
+        
+        // Remove graduationYear if it's invalid
+        if (isNaN(userData.studentProfile.graduationYear) || userData.studentProfile.graduationYear < 1900 || userData.studentProfile.graduationYear > 2100) {
+          delete userData.studentProfile.graduationYear;
+        }
       } else if (data.role === 'client') {
         userData.clientProfile = {
           companyName: data.companyName || '',
@@ -134,17 +403,33 @@ const Register = () => {
       }
     } catch (err) {
       // Extract user-friendly error message
-      let errorMessage = 'Registration failed. Please try again.';
+      let errorMessage = 'We couldn\'t create your account. Please check your information and try again.';
 
       if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message) {
+        // Make backend error messages more user-friendly
+        const backendMessage = err.response.data.message;
+        
+        // Convert technical messages to user-friendly ones
+        if (backendMessage.includes('already registered') || backendMessage.includes('already exists')) {
+          errorMessage = 'This email address is already registered. Please sign in or use a different email.';
+        } else if (backendMessage.includes('Phone number is required')) {
+          errorMessage = 'Please enter your phone number to continue.';
+        } else if (backendMessage.includes('Nationality is required')) {
+          errorMessage = 'Please select your nationality to continue.';
+        } else if (backendMessage.includes('password')) {
+          errorMessage = 'There was an issue with your password. Please make sure it\'s at least 8 characters long.';
+        } else if (backendMessage.includes('email')) {
+          errorMessage = 'Please enter a valid email address.';
+        } else {
+          errorMessage = backendMessage;
+        }
+      } else if (err.message && err.message !== 'Network Error') {
         errorMessage = err.message;
       }
 
       // Handle network errors
       if (!err.response && err.message === 'Network Error') {
-        errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        errorMessage = 'Unable to connect to our servers. Please check your internet connection and try again.';
       }
 
       setError(errorMessage);
@@ -182,7 +467,7 @@ const Register = () => {
                   label="Full Name"
                   placeholder="John Doe"
                   error={errors.name?.message}
-                  {...register('name', { required: 'Name is required' })}
+                  {...register('name', { required: 'Please enter your full name' })}
                 />
               </div>
 
@@ -193,10 +478,10 @@ const Register = () => {
                   placeholder="your@email.com"
                   error={errors.email?.message}
                   {...register('email', {
-                    required: 'Email is required',
+                    required: 'Please enter your email address',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address',
+                      message: 'Please enter a valid email address (e.g., name@example.com)',
                     },
                   })}
                 />
@@ -207,13 +492,13 @@ const Register = () => {
                 type="password"
                 placeholder="••••••••"
                 error={errors.password?.message}
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 8,
-                    message: 'Password must be at least 8 characters',
-                  },
-                })}
+                  {...register('password', {
+                    required: 'Please create a password',
+                    minLength: {
+                      value: 8,
+                      message: 'Your password must be at least 8 characters long',
+                    },
+                  })}
               />
 
               <Input
@@ -221,10 +506,10 @@ const Register = () => {
                 type="password"
                 placeholder="••••••••"
                 error={errors.passwordConfirm?.message}
-                {...register('passwordConfirm', {
-                  required: 'Please confirm your password',
-                  validate: (value) => value === password || 'Passwords do not match',
-                })}
+                  {...register('passwordConfirm', {
+                    required: 'Please confirm your password',
+                    validate: (value) => value === password || 'The passwords you entered do not match. Please try again.',
+                  })}
               />
 
               <div className="md:col-span-2">
@@ -232,7 +517,7 @@ const Register = () => {
                   label="I am a..."
                   options={roleOptions}
                   error={errors.role?.message}
-                  {...register('role', { required: 'Please select your role' })}
+                  {...register('role', { required: 'Please select whether you\'re a student or client' })}
                 />
               </div>
             </div>
@@ -241,11 +526,73 @@ const Register = () => {
           {step === 2 && role === 'student' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number *
+                </label>
+                <div className="flex gap-2">
+                  <div className="w-1/3">
+                    <Select
+                      placeholder="Code"
+                      error={errors.phoneCountryCode?.message}
+                      {...register('phoneCountryCode', { 
+                        required: 'Please select your country code',
+                      })}
+                      options={COUNTRY_CODE_OPTIONS}
+                    />
+                  </div>
+                  <div className="w-2/3">
+                    <Input
+                      type="tel"
+                      placeholder="1234567890"
+                      error={errors.phoneNumber?.message}
+                      {...register('phoneNumber', { 
+                        required: 'Please enter your phone number',
+                        pattern: {
+                          value: /^[0-9]{7,15}$/,
+                          message: 'Please enter a valid phone number with 7 to 15 digits',
+                        },
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <Select
+                  label="Nationality"
+                  placeholder="Select your nationality"
+                  error={errors.nationality?.message}
+                  {...register('nationality', { 
+                    required: 'Please select your nationality',
+                  })}
+                  options={NATIONALITY_OPTIONS}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Select
+                  label="Country of Study"
+                  placeholder="Select country of study"
+                  error={errors.countryOfStudy?.message}
+                  {...register('countryOfStudy', { 
+                    required: 'Please select the country where you study',
+                  })}
+                  options={COUNTRY_OPTIONS}
+                />
+          
+                {countryOfStudy && !COUNTRY_CURRENCY_MAP[countryOfStudy] && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Your payment currency will be set to US Dollars (USD)
+                  </p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
                 <Input
                   label="University"
                   placeholder="University of..."
                   error={errors.university?.message}
-                  {...register('university', { required: 'University is required' })}
+                  {...register('university', { required: 'Please enter your university name' })}
                 />
               </div>
 
@@ -253,7 +600,7 @@ const Register = () => {
                 label="Major"
                 placeholder="Computer Science"
                 error={errors.major?.message}
-                {...register('major', { required: 'Major is required' })}
+                  {...register('major', { required: 'Please enter your field of study or major' })}
               />
 
               <Input
@@ -261,13 +608,13 @@ const Register = () => {
                 type="number"
                 placeholder="2025"
                 error={errors.graduationYear?.message}
-                {...register('graduationYear', {
-                  required: 'Graduation year is required',
-                  min: {
-                    value: new Date().getFullYear(),
-                    message: 'Please enter a valid year',
-                  },
-                })}
+                  {...register('graduationYear', {
+                    required: 'Please enter your expected graduation year',
+                    min: {
+                      value: new Date().getFullYear(),
+                      message: 'Please enter a valid graduation year',
+                    },
+                  })}
               />
             </div>
           )}

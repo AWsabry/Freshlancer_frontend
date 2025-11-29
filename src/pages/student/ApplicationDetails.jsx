@@ -278,22 +278,19 @@ const ApplicationDetails = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
               {/* Job Budget - Only for Premium Users */}
-              {isPremium && job.budget && (
+              {isPremium && job.budget && !job.budget.message ? (
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Job Budget</p>
                   <div className="flex items-center gap-1 font-semibold text-gray-900">
                     <DollarSign className="w-5 h-5" />
-                    {job.budget.currency} ${job.budget.min} - ${job.budget.max}
+                    {job.budget.currency} {job.budget.min} - {job.budget.max}
                   </div>
                 </div>
-              )}
-
-              {/* Premium Upgrade for Budget - Free Users */}
-              {!isPremium && (
+              ) : (
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Job Budget</p>
                   <div className="flex items-center gap-1 font-semibold text-gray-400">
-                    <span className="text-sm italic">Premium Only</span>
+                    <span className="text-sm italic">{job.budget?.message || 'Premium members only'}</span>
                   </div>
                 </div>
               )}

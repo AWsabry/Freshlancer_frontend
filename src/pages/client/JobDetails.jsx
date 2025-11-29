@@ -186,15 +186,6 @@ const JobDetails = () => {
             </div>
           )}
 
-          {job.applicationType && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Application Type</h3>
-              <p className="text-gray-700">
-                {job.applicationType === 'open' ? 'Open to All Students' : 'Invite Only'}
-              </p>
-            </div>
-          )}
-
           {job.projectDuration && (
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">Project Duration</h3>

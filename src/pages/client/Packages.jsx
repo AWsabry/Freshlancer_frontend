@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { packageService } from '../../services/packageService';
@@ -6,7 +6,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
-import { Eye, Zap, TrendingUp, CheckCircle, CreditCard } from 'lucide-react';
+import { Eye, Zap, TrendingUp, CheckCircle, CreditCard, Package, Star, Crown, Flame } from 'lucide-react';
 
 const Packages = () => {
   const queryClient = useQueryClient();
@@ -19,78 +19,74 @@ const Packages = () => {
   //   queryFn: () => packageService.getActivePackage(),
   // });
 
-  const { data: pointsBalance, isLoading } = useQuery({
+  const { data: pointsBalance, isLoading: loadingPoints } = useQuery({
     queryKey: ['pointsBalance'],
     queryFn: () => packageService.getPointsBalance(),
+  });
+
+  // Fetch packages from API
+  const { data: packagesData, isLoading: loadingPackages } = useQuery({
+    queryKey: ['availablePackages'],
+    queryFn: () => packageService.getAvailablePackages(),
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const balance = pointsBalance?.data;
   const currentPoints = balance?.pointsRemaining || 0;
 
-  // Points packages with USD and EGP pricing
-  const getPackagesForCurrency = (currency) => {
-    const rates = {
-      USD: 1,
-      EGP: 49.5, // Conversion rate
-    };
-
-    const basePackages = [
-      {
-        name: '500 Points',
-        type: 'basic',
-        basePrice: 9.99,
-        points: 500,
-        icon: Eye,
-        color: 'blue',
-        description: 'Perfect for small projects',
-        features: [
-          '50 student profile unlocks',
-          'Valid lifetime',
-          // 'Email support',
-        ],
-      },
-      {
-        name: '1000 Points',
-        type: 'professional',
-        basePrice: 14.99,
-        points: 1000,
-        icon: Zap,
-        color: 'primary',
-        popular: true,
-        description: 'Most popular choice',
-        features: [
-          '100 student profile unlocks',
-          'Valid lifetime',
-          // 'Priority email support',
-        ],
-      },
-      {
-        name: '2000 Points',
-        type: 'enterprise',
-        basePrice: 21.99,
-        points: 2000,
-        icon: TrendingUp,
-        color: 'purple',
-        description: 'For large Access',
-        // savings: '17% savings',
-        features: [
-          '200 student profile unlocks',
-          'Valid lifetime',
-          // 'Priority support',
-          // '17% cost savings',
-          // 'Dedicated account manager',
-        ],
-      },
-    ];
-
-    return basePackages.map((pkg) => ({
-      ...pkg,
-      price: Math.round(pkg.basePrice * rates[currency] * 100) / 100,
-      currency,
-    }));
+  // Icon mapping
+  const iconMap = {
+    Eye,
+    Zap,
+    TrendingUp,
+    Package,
+    Star,
+    Crown,
   };
 
-  const packages = getPackagesForCurrency(selectedCurrency);
+  // Currency conversion rate
+  const USD_TO_EGP_RATE = 49.5;
+
+  // Process packages from API
+  const packages = useMemo(() => {
+    if (!packagesData?.data?.packagesArray) return [];
+
+    const packagesArray = packagesData.data.packagesArray;
+    const rates = {
+      USD: 1,
+      EGP: USD_TO_EGP_RATE,
+    };
+
+    return packagesArray
+      .filter(pkg => pkg.isActive) // Only show active packages
+      .map((pkg) => {
+        const IconComponent = iconMap[pkg.icon] || Package;
+        const price = Math.round(pkg.priceUSD * rates[selectedCurrency] * 100) / 100;
+
+        return {
+          _id: pkg._id,
+          name: pkg.name,
+          type: pkg.type,
+          points: pkg.pointsTotal,
+          basePrice: pkg.priceUSD,
+          price,
+          currency: selectedCurrency,
+          icon: IconComponent,
+          color: pkg.color || 'primary',
+          description: pkg.description,
+          features: pkg.features || [],
+          popular: pkg.popular || false,
+          hot: pkg.hot || false,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by displayOrder if available, otherwise by points
+        return a.points - b.points;
+      });
+  }, [packagesData, selectedCurrency]);
+
+  const isLoading = loadingPoints || loadingPackages;
 
   const handlePurchase = (packageData) => {
     navigate('/client/payment', {
@@ -98,6 +94,7 @@ const Packages = () => {
         currency: selectedCurrency,
         amount: packageData.price,
         packageType: packageData.type,
+        packageId: packageData._id,
         packageName: packageData.name,
         points: packageData.points,
       },
@@ -158,16 +155,34 @@ const Packages = () => {
       {/* Points Packages */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Buy Points Packages</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {packages.map((pkg) => {
+        {packages.length === 0 ? (
+          <Card>
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600">No packages available at the moment.</p>
+            </div>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {packages.map((pkg) => {
             const Icon = pkg.icon;
             return (
               <Card
-                key={pkg.type}
+                key={pkg._id || pkg.type}
                 className={`relative ${
                   pkg.popular ? 'border-2 border-primary-500 shadow-lg' : ''
                 }`}
               >
+                {/* Hot indicator */}
+                {pkg.hot && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <Badge variant="error" className="flex items-center gap-1">
+                      <Flame className="w-4 h-4" />
+                      Hot
+                    </Badge>
+                  </div>
+                )}
+                {/* Popular badge */}
                 {pkg.popular && (
                   <div className="absolute top-4 right-4">
                     <Badge variant="success">Most Popular</Badge>
@@ -181,7 +196,15 @@ const Packages = () => {
                         ? 'bg-blue-100'
                         : pkg.color === 'primary'
                         ? 'bg-primary-100'
-                        : 'bg-purple-100'
+                        : pkg.color === 'purple'
+                        ? 'bg-purple-100'
+                        : pkg.color === 'green'
+                        ? 'bg-green-100'
+                        : pkg.color === 'red'
+                        ? 'bg-red-100'
+                        : pkg.color === 'yellow'
+                        ? 'bg-yellow-100'
+                        : 'bg-gray-100'
                     }`}
                   >
                     <Icon
@@ -190,7 +213,15 @@ const Packages = () => {
                           ? 'text-blue-600'
                           : pkg.color === 'primary'
                           ? 'text-primary-600'
-                          : 'text-purple-600'
+                          : pkg.color === 'purple'
+                          ? 'text-purple-600'
+                          : pkg.color === 'green'
+                          ? 'text-green-600'
+                          : pkg.color === 'red'
+                          ? 'text-red-600'
+                          : pkg.color === 'yellow'
+                          ? 'text-yellow-600'
+                          : 'text-gray-600'
                       }`}
                     />
                   </div>
@@ -229,7 +260,8 @@ const Packages = () => {
               </Card>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* How it Works */}

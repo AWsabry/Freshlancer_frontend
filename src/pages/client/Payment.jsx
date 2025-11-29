@@ -15,7 +15,7 @@ const Payment = () => {
 
   // Get payment details from navigation state
   // Force EGP currency as it's the only supported currency for Paymob
-  const { amount, packageType, packageName, points } = location.state || {};
+  const { amount, packageType, packageId, packageName, points } = location.state || {};
   const currency = 'EGP'; // Always use EGP - Paymob only supports EGP
 
   // Promocode state
@@ -121,6 +121,7 @@ const Payment = () => {
       points,
       packageName,
       packageType,
+      packageId,
     }));
 
     // Store coupon info if applied
@@ -132,6 +133,7 @@ const Payment = () => {
     const paymentData = {
       amount: total,
       currency: currency,
+      packageId: packageId, // Include packageId if available
     };
     console.log('Processing payment with data:', paymentData);
 

@@ -38,16 +38,26 @@ export const authService = {
     return response;
   },
 
-  // Logout
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  // Logout - clear all storage and sessions
+  logout: async () => {
+    // Clear all localStorage items
+    localStorage.clear();
 
+    // Clear all sessionStorage items
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.clear();
     }
 
+    // Clear all cookies
     clearAllCookies();
+
+    // Call backend logout endpoint to clear server-side session
+    try {
+      await api.get('/users/logout');
+    } catch (error) {
+      // Ignore errors - we still want to clear client-side state
+      console.warn('Backend logout call failed, but continuing with client-side cleanup');
+    }
   },
 
   // Get current user from localStorage

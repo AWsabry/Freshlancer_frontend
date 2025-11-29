@@ -31,6 +31,7 @@ import {
   Save,
   Upload,
   Trash2,
+  GraduationCap,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
@@ -220,20 +221,6 @@ const Profile = () => {
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
 
-  // Watch country field to auto-update currency
-  const watchedCountry = watch('location.country');
-
-  // Auto-update currency when country changes
-  React.useEffect(() => {
-    if (watchedCountry && COUNTRY_CURRENCY_MAP[watchedCountry]) {
-      const currency = COUNTRY_CURRENCY_MAP[watchedCountry];
-      setValue('studentProfile.hourlyRate.currency', currency);
-    } else if (watchedCountry) {
-      // Default to USD if country not in map
-      setValue('studentProfile.hourlyRate.currency', 'USD');
-    }
-  }, [watchedCountry, setValue]);
-
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: (data) => authService.updateProfile(data),
@@ -262,6 +249,8 @@ const Profile = () => {
       setValue('location.timezone', user.location?.timezone || '');
 
       if (studentProfile) {
+        setValue('studentProfile.university', studentProfile.university || '');
+        setValue('studentProfile.universityLink', studentProfile.universityLink || '');
         setValue('studentProfile.bio', studentProfile.bio || '');
         setValue('studentProfile.experienceLevel', studentProfile.experienceLevel || '');
         setValue('studentProfile.yearsOfExperience', studentProfile.yearsOfExperience || 0);
@@ -511,6 +500,26 @@ const Profile = () => {
           {studentProfile && (
             <Card title="Professional Details">
               <div className="space-y-4">
+                {studentProfile.university && (
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
+                      <BookOpen className="w-4 h-4" />
+                      University
+                    </label>
+                    <p className="text-gray-900">{studentProfile.university}</p>
+                  </div>
+                )}
+
+                {studentProfile.graduationYear && (
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
+                      <Calendar className="w-4 h-4" />
+                      Expected Graduation
+                    </label>
+                    <p className="text-gray-900">{studentProfile.graduationYear}</p>
+                  </div>
+                )}
+
                 {studentProfile.experienceLevel && (
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
@@ -589,33 +598,43 @@ const Profile = () => {
           )}
 
           {/* Education */}
-          {studentProfile?.education && studentProfile.education.length > 0 && (
-            <Card title="Education">
+          {(studentProfile?.university || studentProfile?.graduationYear) && (
+            <Card>
+              <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
+                <GraduationCap className="w-6 h-6 text-primary-600" />
+                Education
+              </h3>
               <div className="space-y-4">
-                {studentProfile.education.map((edu, index) => (
-                  <div key={index} className="border-l-4 border-primary-500 pl-4 py-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{edu.degree}</h3>
-                        <p className="text-gray-700">{edu.institution}</p>
-                        {edu.fieldOfStudy && (
-                          <p className="text-sm text-gray-600">{edu.fieldOfStudy}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        {edu.graduationYear && (
-                          <Badge variant="secondary">{edu.graduationYear}</Badge>
-                        )}
-                        {edu.isCurrentlyStudying && (
-                          <Badge variant="info" className="ml-2">Currently Studying</Badge>
+                {/* University and Expected Graduation Year */}
+                <div className="border-l-4 border-primary-500 pl-4 py-2 bg-primary-50 rounded-r-lg">
+                  {studentProfile.university && (
+                    <div className="mb-2">
+                      <p className="text-sm text-gray-600 mb-1">University</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-lg text-gray-900">{studentProfile.university}</p>
+                        {studentProfile.universityLink && (
+                          <a
+                            href={studentProfile.universityLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                            title="Visit university website"
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                          </a>
                         )}
                       </div>
                     </div>
-                    {edu.gpa && (
-                      <p className="text-sm text-gray-600 mt-1">GPA: {edu.gpa}</p>
-                    )}
-                  </div>
-                ))}
+                  )}
+                  {studentProfile.graduationYear && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary-600" />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-semibold">Expected Graduation:</span> {studentProfile.graduationYear}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
           )}
@@ -901,11 +920,14 @@ const Profile = () => {
                 ]}
               />
 
-              <Select
-                label="Nationality"
-                {...register('nationality')}
-                error={errors.nationality?.message}
-                options={[
+              <div>
+                <Select
+                  label="Nationality"
+                  {...register('nationality')}
+                  error={errors.nationality?.message}
+                  disabled={true}
+                  className="bg-gray-100 cursor-not-allowed"
+                  options={[
                   { value: 'Egyptian', label: 'Egyptian' },
                   { value: 'Saudi Arabian', label: 'Saudi Arabian' },
                   { value: 'Emirati', label: 'Emirati' },
@@ -978,6 +1000,8 @@ const Profile = () => {
                   { value: 'Other', label: 'Other' },
                 ]}
               />
+                <p className="text-xs text-gray-500 mt-1">Nationality cannot be changed after registration</p>
+              </div>
             </div>
           </div>
 
@@ -985,11 +1009,14 @@ const Profile = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                label="Country"
-                {...register('location.country')}
-                error={errors.location?.country?.message}
-                options={[
+              <div>
+                <Select
+                  label="Country of Study"
+                  {...register('location.country')}
+                  error={errors.location?.country?.message}
+                  disabled={true}
+                  className="bg-gray-100 cursor-not-allowed"
+                  options={[
                   { value: 'Afghanistan', label: 'Afghanistan' },
                   { value: 'Albania', label: 'Albania' },
                   { value: 'Algeria', label: 'Algeria' },
@@ -1184,6 +1211,8 @@ const Profile = () => {
                   { value: 'Zimbabwe', label: 'Zimbabwe' },
                 ]}
               />
+                <p className="text-xs text-gray-500 mt-1">Country of study cannot be changed after registration</p>
+              </div>
 
               <Input
                 label="City"
@@ -1205,6 +1234,30 @@ const Profile = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
             <div className="grid grid-cols-1 gap-4">
+              <div className="col-span-full">
+                <Input
+                  label="University"
+                  placeholder="University of..."
+                  error={errors.studentProfile?.university?.message}
+                  {...register('studentProfile.university')}
+                />
+              </div>
+
+              <div className="col-span-full">
+                <Input
+                  label="University Website (Optional)"
+                  type="url"
+                  placeholder="https://university.edu"
+                  error={errors.studentProfile?.universityLink?.message}
+                  {...register('studentProfile.universityLink', {
+                    pattern: {
+                      value: /^https?:\/\/.+/,
+                      message: 'Please enter a valid URL starting with http:// or https://',
+                    },
+                  })}
+                />
+              </div>
+
               <div className="col-span-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Bio

@@ -624,19 +624,23 @@ const Users = () => {
                       )}
                     </div>
                   </div>
-                  {selectedUser?.studentProfile?.education?.length > 0 && (
+                  {(selectedUser?.studentProfile?.university || selectedUser?.studentProfile?.graduationYear) && (
                     <div>
                       <label className="text-sm font-medium text-gray-500">Education</label>
                       <div className="space-y-2 mt-1">
-                        {selectedUser.studentProfile.education.map((edu, index) => (
-                          <div key={index} className="bg-gray-50 p-2 rounded">
-                            <p className="font-medium text-gray-900">{edu?.degree} in {edu?.fieldOfStudy}</p>
-                            <p className="text-sm text-gray-600">{edu?.institution}</p>
+                        <div className="bg-gray-50 p-2 rounded">
+                          {selectedUser.studentProfile.university && (
+                            <p className="font-medium text-gray-900">{selectedUser.studentProfile.university}</p>
+                          )}
+                          {selectedUser.studentProfile.major && (
+                            <p className="text-sm text-gray-600">Major: {selectedUser.studentProfile.major}</p>
+                          )}
+                          {selectedUser.studentProfile.graduationYear && (
                             <p className="text-xs text-gray-500">
-                              {edu?.startYear} - {edu?.endYear || 'Present'}
+                              Expected Graduation: {selectedUser.studentProfile.graduationYear}
                             </p>
-                          </div>
-                        ))}
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}

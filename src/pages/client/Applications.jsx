@@ -27,10 +27,22 @@ const Applications = () => {
     },
   });
 
-  // Fetch user data (including points)
-  const { data: userData, isLoading: loadingPoints } = useQuery({
+  // Fetch user data (including points) - always fetch fresh data
+  const { data: userData, isLoading: loadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => authService.getMe(),
+    refetchOnMount: true,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
+
+  // Fetch points balance separately for more reliable data
+  const { data: pointsData, isLoading: loadingPoints } = useQuery({
+    queryKey: ['pointsBalance'],
+    queryFn: () => packageService.getPointsBalance(),
+    refetchOnMount: true,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   });
 
   // Group applications by job
@@ -75,7 +87,9 @@ const Applications = () => {
     );
   }
 
-  const pointsRemaining = userData?.data?.user?.clientProfile?.pointsRemaining || 0;
+  // Get points from dedicated points service (more reliable) with fallback to user data
+  const pointsRemaining = pointsData?.data?.pointsRemaining ?? 
+                          userData?.data?.user?.clientProfile?.pointsRemaining ?? 0;
 
   return (
     <div className="space-y-6">

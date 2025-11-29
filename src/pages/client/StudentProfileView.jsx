@@ -272,7 +272,7 @@ const StudentProfileView = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Hourly Rate</p>
                 <p className="font-bold text-lg text-green-600">
-                  ${profile.hourlyRate.min} - ${profile.hourlyRate.max} {profile.hourlyRate.currency}
+                  {profile.hourlyRate.min} - {profile.hourlyRate.max} {profile.hourlyRate.currency}
                 </p>
               </div>
             )}
@@ -301,37 +301,43 @@ const StudentProfileView = () => {
       )}
 
       {/* Education */}
-      {profile.education && profile.education.length > 0 && (
+      {(profile.university || profile.graduationYear) && (
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <GraduationCap className="w-6 h-6 text-primary-600" />
             Education
           </h3>
           <div className="space-y-4">
-            {profile.education.map((edu, index) => (
-              <div key={index} className="border-l-4 border-primary-500 pl-4 py-2">
-                <h4 className="font-bold text-lg">{edu.degree}</h4>
-                <p className="text-gray-700">{edu.institution}</p>
-                <p className="text-gray-600">{edu.fieldOfStudy}</p>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                  {edu.graduationYear && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {edu.isCurrentlyStudying ? `Expected ${edu.graduationYear}` : edu.graduationYear}
-                    </span>
-                  )}
-                  {edu.gpa && (
-                    <span className="flex items-center gap-1">
-                      <Star className="w-4 h-4" />
-                      GPA: {edu.gpa}
-                    </span>
-                  )}
-                  {edu.isCurrentlyStudying && (
-                    <Badge variant="info">Currently Studying</Badge>
-                  )}
+            {/* University and Expected Graduation Year */}
+            <div className="border-l-4 border-primary-500 pl-4 py-2 bg-primary-50 rounded-r-lg">
+              {profile.university && (
+                <div className="mb-2">
+                  <p className="text-sm text-gray-600 mb-1">University</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-lg text-gray-900">{profile.university}</p>
+                    {profile.universityLink && (
+                      <a
+                        href={profile.universityLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        title="Visit university website"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )}
+              {profile.graduationYear && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary-600" />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-semibold">Expected Graduation:</span> {profile.graduationYear}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
       )}

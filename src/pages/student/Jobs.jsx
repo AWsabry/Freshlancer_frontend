@@ -19,6 +19,9 @@ import {
   Filter,
   ChevronDown,
   CheckCircle,
+  Crown,
+  Lock,
+  Sparkles,
 } from 'lucide-react';
 
 const Jobs = () => {
@@ -26,6 +29,7 @@ const Jobs = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('');
+  const [sortBy, setSortBy] = useState(''); // 'budget-desc' for highest budget
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('available'); // 'available' or 'applied'
 
@@ -56,9 +60,13 @@ const Jobs = () => {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['jobs', searchQuery, category],
+    queryKey: ['jobs', searchQuery, category, sortBy],
     queryFn: ({ pageParam = 1 }) => {
       const params = { page: pageParam, limit: 10 };
+      // Only add sort if user is premium
+      if (sortBy && isPremium) {
+        params.sort = sortBy;
+      }
       if (searchQuery) {
         return jobService.searchJobs(searchQuery, params);
       }
@@ -252,18 +260,68 @@ const Jobs = () => {
               <Filter className="w-5 h-5" />
               Filters
             </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={true}
+              className="flex items-center gap-2 opacity-60 cursor-not-allowed relative"
+              title="Coming Soon: AI-powered job recommendations based on your profile"
+            >
+              <Sparkles className="w-5 h-5" />
+              AI Recommendations
+              <span className="ml-1 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                Soon
+              </span>
+            </Button>
           </div>
 
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
               <Select
                 label="Category"
-                options={categories}
+                options={[{ value: '', label: 'All Categories' }, ...categories]}
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                // placeholder=""
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  setSearchQuery(''); // Reset search when category changes
+                  setSearchInput(''); // Clear search input
+                }}
               />
-              {/* Add more filters as needed */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  {isPremium ? (
+                    <>
+                      <Crown className="w-4 h-4 text-yellow-500" />
+                      Sort by Budget
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-gray-400" />
+                      Sort by Budget (Premium Only)
+                    </>
+                  )}
+                </label>
+                <Select
+                  options={[
+                    { value: '', label: 'Default' },
+                    { value: 'budget-desc', label: 'Highest Budget First' },
+                  ]}
+                  value={sortBy}
+                  onChange={(e) => {
+                    if (isPremium) {
+                      setSortBy(e.target.value);
+                    }
+                  }}
+                  disabled={!isPremium}
+                  className={!isPremium ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}
+                />
+                {!isPremium && (
+                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    Upgrade to Premium to sort by budget
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </form>
@@ -296,7 +354,9 @@ const Jobs = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
-                        {isPremium ? (job.client?.clientProfile?.companyEmail || job.client?.email) : 'Premium members only'}
+                        {isPremium && job.client && !job.client.message 
+                          ? (job.client?.clientProfile?.companyEmail || job.client?.email || job.client?.name || 'N/A')
+                          : (job.client?.message || 'Premium members only')}
                       </span>
                       {job.location && (
                         <span className="flex items-center gap-1">
@@ -366,21 +426,16 @@ const Jobs = () => {
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="flex items-center gap-4">
-              {isPremium ? (
+              {isPremium && job.budget && !job.budget.message ? (
                 <div className="flex items-center gap-1 text-lg font-semibold text-green-600">
-                 
+                  <DollarSign className="w-5 h-5" />
                   {job.budget.currency} {job.budget.min} - {job.budget.max}
                 </div>
               ) : (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => navigate('/student/subscription')}
-                  className="flex items-center gap-1"
-                >
-              
-                  Subscribe to see budget
-                </Button>
+                <div className="flex items-center gap-1 text-sm text-gray-500 italic">
+                  <DollarSign className="w-4 h-4" />
+                  {job.budget?.message || 'Premium members only'}
+                </div>
               )}
                     {job.duration && (
                       <span className="text-sm text-gray-600">

@@ -19,12 +19,10 @@ export const useAuthStore = create((set) => ({
     return response;
   },
 
-  logout: () => {
-    authService.logout();
+  logout: async () => {
+    // Clear auth service storage
+    await authService.logout();
+    // Reset all state
     set({ user: null, isAuthenticated: false });
   },
-
-  updateUser: (userData) => set((state) => ({
-    user: { ...state.user, ...userData }
-  })),
 }));

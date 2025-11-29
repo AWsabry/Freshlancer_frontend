@@ -53,8 +53,11 @@ import AdminUsers from './pages/admin/Users';
 import AdminStudents from './pages/admin/Students';
 import AdminApplications from './pages/admin/Applications';
 import AdminJobs from './pages/admin/Jobs';
-import AdminOffers from './pages/admin/Offers';
+import AdminClientPackages from './pages/admin/ClientPackages';
+import AdminStudentPackages from './pages/admin/StudentPackages';
+import AdminCoupons from './pages/admin/Coupons';
 import AdminTransactions from './pages/admin/Transactions';
+import AdminClientTransactions from './pages/admin/ClientTransactions';
 import AdminReviews from './pages/admin/Reviews';
 import AdminNotifications from './pages/admin/Notifications';
 
@@ -154,8 +157,11 @@ function App() {
         <Route path="students" element={<AdminStudents />} />
         <Route path="applications" element={<AdminApplications />} />
         <Route path="jobs" element={<AdminJobs />} />
-        <Route path="offers" element={<AdminOffers />} />
+        <Route path="client-packages" element={<AdminClientPackages />} />
+        <Route path="student-packages" element={<AdminStudentPackages />} />
+        <Route path="coupons" element={<AdminCoupons />} />
         <Route path="transactions" element={<AdminTransactions />} />
+        <Route path="client-transactions" element={<AdminClientTransactions />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />
       </Route>

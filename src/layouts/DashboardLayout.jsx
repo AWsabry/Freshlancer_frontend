@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '../services/notificationService';
 import { authService } from '../services/authService';
 import {
@@ -20,13 +20,14 @@ import {
   DollarSign,
   Shield,
   Users,
-  Gift,
+  Tag,
 } from 'lucide-react';
 import logo from '../assets/logos/Logo.png';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Get unread notification count
@@ -44,9 +45,29 @@ const DashboardLayout = () => {
     refetchInterval: 60000, // Refetch every 60 seconds
   });
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      // Cancel all ongoing queries first
+      queryClient.cancelQueries();
+      
+      // Clear all React Query cache and queries
+      queryClient.clear();
+      queryClient.removeQueries();
+      
+      // Clear all storage and call backend logout
+      await logout();
+      
+      // Navigate to login and force reload to ensure complete state reset
+      navigate('/login', { replace: true });
+      window.location.reload();
+    } catch (error) {
+      // Even if there's an error, clear everything and redirect
+      queryClient.clear();
+      queryClient.removeQueries();
+      await logout();
+      navigate('/login', { replace: true });
+      window.location.reload();
+    }
   };
 
   const themeClass =
@@ -98,9 +119,10 @@ const DashboardLayout = () => {
         { name: 'Verifications', icon: Shield, path: '/admin/students' },
         { name: 'Applications', icon: FileText, path: '/admin/applications' },
         { name: 'Jobs', icon: Briefcase, path: '/admin/jobs' },
-        { name: 'Offers', icon: Gift, path: '/admin/offers' },
-        // { name: 'Verifications', icon: Shield, path: '/admin/verifications' },
-        // { name: 'Transactions', icon: DollarSign, path: '/admin/transactions' },
+        { name: 'Client Packages', icon: CreditCard, path: '/admin/client-packages' },
+        { name: 'Client Transactions', icon: DollarSign, path: '/admin/client-transactions' },
+        { name: 'Student Packages', icon: User, path: '/admin/student-packages' },
+        { name: 'Coupons', icon: Tag, path: '/admin/coupons' },
         // { name: 'Reviews', icon: Star, path: '/admin/reviews' },
         ...baseItems.slice(1),
       ];

@@ -459,25 +459,24 @@ const JobApplicationsDetail = () => {
                             View Profile
                           </Button>
 
-                          {job?.status !== 'cancelled' && (
+                          {/* Only show Accept/Reject buttons if application is pending and job is not cancelled */}
+                          {application.status === 'pending' && job?.status !== 'cancelled' && (
                             <>
                               <Button
                                 variant="success"
                                 size="sm"
                                 onClick={() => handleAccept(application._id)}
                                 loading={acceptMutation.isPending}
-                                disabled={application.status === 'accepted'}
                               >
-                                {application.status === 'accepted' ? 'Accepted' : 'Accept'}
+                                Accept
                               </Button>
                               <Button
                                 variant="error"
                                 size="sm"
                                 onClick={() => handleReject(application._id)}
                                 loading={rejectMutation.isPending}
-                                disabled={application.status === 'rejected'}
                               >
-                                {application.status === 'rejected' ? 'Rejected' : 'Reject'}
+                                Reject
                               </Button>
                             </>
                           )}

@@ -2,9 +2,9 @@ import api from './api';
 
 export const couponService = {
   // Validate a coupon code
-  validateCoupon: async (couponCode, amount, currency = 'EGP') => {
+  validateCoupon: async (code, amount, currency = 'EGP') => {
     const response = await api.post('/coupons/validate', {
-      couponCode,
+      couponCode: code, // Backend expects couponCode
       amount,
       currency,
     });

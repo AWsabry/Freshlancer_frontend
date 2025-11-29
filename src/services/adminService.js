@@ -49,4 +49,39 @@ export const adminService = {
   rejectVerificationDocument: async (documentId, rejectionReason, adminNotes = '') => {
     return api.patch(`/admin/verifications/${documentId}/reject`, { rejectionReason, adminNotes });
   },
+
+  // Package management
+  getAllPackages: async (params = {}) => {
+    return api.get('/admin/packages', { params });
+  },
+
+  getPackageById: async (id) => {
+    return api.get(`/admin/packages/${id}`);
+  },
+
+  createPackage: async (data) => {
+    return api.post('/admin/packages', data);
+  },
+
+  updatePackage: async (id, data) => {
+    return api.patch(`/admin/packages/${id}`, data);
+  },
+
+  deletePackage: async (id) => {
+    return api.delete(`/admin/packages/${id}`);
+  },
+
+  // Subscription management
+  getAllSubscriptions: async (params = {}) => {
+    return api.get('/subscriptions', { params }); // Admin route is at /subscriptions (protected by admin middleware)
+  },
+
+  getSubscriptionStats: async () => {
+    return api.get('/subscriptions/stats');
+  },
+
+  // Transaction management
+  getAllTransactions: async (params = {}) => {
+    return api.get('/transactions', { params });
+  },
 };

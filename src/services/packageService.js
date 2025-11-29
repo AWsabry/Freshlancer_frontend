@@ -8,7 +8,15 @@ export const packageService = {
 
   // Purchase package
   purchasePackage: async (packageType, paymentData) => {
-    return api.post('/packages/purchase', { packageType, ...paymentData });
+    // Support both packageType (legacy) and packageId (new)
+    const payload = { ...paymentData };
+    if (packageType) {
+      payload.packageType = packageType;
+    }
+    if (paymentData.packageId) {
+      payload.packageId = paymentData.packageId;
+    }
+    return api.post('/packages/purchase', payload);
   },
 
   // Get my packages
