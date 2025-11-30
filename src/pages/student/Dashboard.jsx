@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../../services/subscriptionService';
 import { applicationService } from '../../services/applicationService';
 import { verificationService } from '../../services/verificationService';
@@ -10,13 +10,22 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import { Briefcase, FileText, DollarSign, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Briefcase, FileText, DollarSign, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 
 const StudentDashboard = () => {
+  const queryClient = useQueryClient();
+
   // Fetch verification status
   const { data: verificationStatus, isLoading: loadingVerification } = useQuery({
     queryKey: ['verificationStatus'],
     queryFn: () => verificationService.getVerificationStatus(),
+  });
+
+  // Fetch verification documents
+  const { data: verificationData } = useQuery({
+    queryKey: ['verifications'],
+    queryFn: () => verificationService.getMyVerifications(),
+    retry: 1,
   });
 
   // Fetch current user data (including application counts)
@@ -47,9 +56,25 @@ const StudentDashboard = () => {
     return <Loading text="Loading dashboard..." />;
   }
 
-  const isVerified = verificationStatus?.data?.isVerified;
   const subscriptionData = subscription?.data?.subscription;
   const studentProfile = userData?.data?.user?.studentProfile;
+  
+  // Check verification documents
+  const verifications = verificationData?.data?.verifications || [];
+  const hasApprovedVerification = Array.isArray(verifications) && verifications.length > 0 && verifications.some(v => v && v.status === 'approved');
+  const hasPendingVerification = Array.isArray(verifications) && verifications.length > 0 && verifications.some(v => v && v.status === 'pending');
+  
+  // Determine verification status - check both user profile and verification documents
+  const isVerified = studentProfile?.isVerified || hasApprovedVerification || verificationStatus?.data?.isVerified;
+  const verificationStatusText = studentProfile?.verificationStatus || (hasApprovedVerification ? 'verified' : hasPendingVerification ? 'pending' : 'unverified');
+  
+  // Function to refresh verification status
+  const handleRefreshVerification = () => {
+    queryClient.invalidateQueries(['userProfile']);
+    queryClient.invalidateQueries(['currentUser']);
+    queryClient.invalidateQueries(['verifications']);
+    queryClient.invalidateQueries(['verificationStatus']);
+  };
 
   // Get application data from user profile
   const applicationsUsedThisMonth = studentProfile?.applicationsUsedThisMonth || 0;
@@ -101,10 +126,24 @@ const StudentDashboard = () => {
 
         <Card className="border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Verification</p>
-              <Badge variant={isVerified ? 'success' : 'warning'}>
-                {isVerified ? 'Verified' : 'Pending'}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm text-gray-600">Verification</p>
+                {!isVerified && (
+                  <button
+                    onClick={handleRefreshVerification}
+                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    title="Refresh verification status"
+                    disabled={loadingVerification || loadingUser}
+                  >
+                    <RefreshCw 
+                      className={`w-3 h-3 text-gray-600 ${loadingVerification || loadingUser ? 'animate-spin' : ''}`}
+                    />
+                  </button>
+                )}
+              </div>
+              <Badge variant={isVerified ? 'success' : verificationStatusText === 'pending' ? 'warning' : 'error'}>
+                {isVerified ? 'Verified' : verificationStatusText === 'pending' ? 'Pending' : verificationStatusText === 'rejected' ? 'Rejected' : 'Unverified'}
               </Badge>
             </div>
             {isVerified ? (

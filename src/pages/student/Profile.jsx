@@ -35,6 +35,8 @@ import {
   GraduationCap,
   Shield,
   AlertCircle,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
@@ -245,6 +247,17 @@ const Profile = () => {
   const verifications = verificationData?.data?.verifications || [];
   const hasApprovedVerification = Array.isArray(verifications) && verifications.length > 0 && verifications.some(v => v && v.status === 'approved');
   const hasPendingVerification = Array.isArray(verifications) && verifications.length > 0 && verifications.some(v => v && v.status === 'pending');
+  
+  // Determine verification status - check both user profile and verification documents
+  const isVerified = studentProfile?.isVerified || hasApprovedVerification;
+  const verificationStatus = studentProfile?.verificationStatus || (hasApprovedVerification ? 'verified' : hasPendingVerification ? 'pending' : 'unverified');
+  
+  // Function to refresh verification status
+  const handleRefreshVerification = () => {
+    queryClient.invalidateQueries(['userProfile']);
+    queryClient.invalidateQueries(['verifications']);
+    queryClient.invalidateQueries(['verificationStatus']);
+  };
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -490,16 +503,27 @@ const Profile = () => {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-                {studentProfile?.isVerified && (
+                {isVerified ? (
                   <Badge variant="success" className="flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" />
                     Verified
                   </Badge>
-                )}
-                {studentProfile?.verificationStatus && !studentProfile?.isVerified && (
-                  <Badge variant={getVerificationBadgeVariant(studentProfile.verificationStatus)}>
-                    {studentProfile.verificationStatus}
-                  </Badge>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getVerificationBadgeVariant(verificationStatus)}>
+                      {verificationStatus === 'pending' ? 'Pending' : verificationStatus === 'rejected' ? 'Rejected' : 'Unverified'}
+                    </Badge>
+                    <button
+                      onClick={handleRefreshVerification}
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      title="Refresh verification status"
+                      disabled={isLoading || loadingVerification}
+                    >
+                      <RefreshCw 
+                        className={`w-4 h-4 text-gray-600 ${isLoading || loadingVerification ? 'animate-spin' : ''}`}
+                      />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-4 text-gray-600 mb-3">
@@ -1755,7 +1779,10 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label="Experience Level"
-                  {...register('studentProfile.experienceLevel')}
+                  required
+                  {...register('studentProfile.experienceLevel', {
+                    required: 'Experience level is required',
+                  })}
                   error={errors.studentProfile?.experienceLevel?.message}
                   options={[
                     { value: 'Beginner', label: 'Beginner' },
@@ -1763,6 +1790,7 @@ const Profile = () => {
                     { value: 'Advanced', label: 'Advanced' },
                     { value: 'Expert', label: 'Expert' },
                   ]}
+                  placeholder="Select experience level..."
                 />
 
                 <Input
