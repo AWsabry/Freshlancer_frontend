@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../../services/subscriptionService';
-import { offerService } from '../../services/offerService';
+import couponService from '../../services/couponService';
 import { useAuthStore } from '../../stores/authStore';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X } from 'lucide-react';
+import paymobImage from '../../assets/images/paymob.png';
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -32,19 +33,19 @@ const Payment = () => {
   const processingFee = subtotalAfterDiscount * 0.03; // 3% processing fee
   const total = subtotalAfterDiscount + processingFee;
 
-  // Coupon validation mutation - using Offer model with couponCode filtered by targetAudience
+  // Coupon validation mutation - using Coupon model with couponCode filtered by targetAudience
   const couponMutation = useMutation({
     mutationFn: async ({ code, amount, currency }) => {
-      // Get offer by coupon code from Offer model (backend validates targetAudience matches user role)
-      const response = await offerService.getOfferByCoupon(code);
-      const offer = response.data.offer;
+      // Get coupon by coupon code from Coupon model (backend validates targetAudience matches user role)
+      const response = await couponService.getCouponByCode(code);
+      const coupon = response.data.coupon;
 
-      // Calculate discount from offer
+      // Calculate discount from coupon
       let discountAmount = 0;
-      if (offer.discountPercentage) {
-        discountAmount = (amount * offer.discountPercentage) / 100;
-      } else if (offer.discountAmount) {
-        discountAmount = offer.discountAmount;
+      if (coupon.discountPercentage) {
+        discountAmount = (amount * coupon.discountPercentage) / 100;
+      } else if (coupon.discountAmount) {
+        discountAmount = coupon.discountAmount;
       }
 
       // Ensure discount doesn't exceed the total amount
@@ -56,15 +57,15 @@ const Payment = () => {
 
       return {
         data: {
-          couponCode: offer.couponCode,
-          discountType: offer.discountPercentage ? 'percentage' : 'fixed',
-          discountValue: offer.discountPercentage || offer.discountAmount,
+          couponCode: coupon.couponCode,
+          discountType: coupon.discountPercentage ? 'percentage' : 'fixed',
+          discountValue: coupon.discountPercentage || coupon.discountAmount,
           discountAmount: Math.round(discountAmount * 100) / 100,
           originalAmount: amount,
           finalAmount: Math.round(finalAmount * 100) / 100,
           currency,
-          offerId: offer._id,
-          offerTitle: offer.title,
+          couponId: coupon._id,
+          couponTitle: coupon.title,
         },
       };
     },
@@ -189,8 +190,12 @@ const Payment = () => {
             <div className="space-y-6">
               {/* Payment Info */}
               <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <CreditCard className="w-8 h-8 text-blue-600" />
+                <div className="flex-shrink-0">
+                  <img
+                    src={paymobImage}
+                    alt="Paymob"
+                    className="h-12 w-auto object-contain"
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">

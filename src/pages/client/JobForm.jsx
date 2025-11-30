@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { jobService } from '../../services/jobService';
+import startupService from '../../services/startupService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -26,6 +27,8 @@ const JobForm = () => {
 
   const [skills, setSkills] = React.useState([]);
   const [newSkill, setNewSkill] = React.useState('');
+  const [isForStartup, setIsForStartup] = React.useState(false);
+  const [selectedStartup, setSelectedStartup] = React.useState('');
 
   // Fetch job if editing
   const { data: jobData, isLoading } = useQuery({
@@ -34,6 +37,15 @@ const JobForm = () => {
     enabled: isEditing,
   });
 
+  // Fetch client's startups
+  const { data: startupsData } = useQuery({
+    queryKey: ['myStartups'],
+    queryFn: () => startupService.getMyStartups(),
+  });
+
+  const startups = startupsData?.data?.startups || [];
+  const hasStartups = startups.length > 0;
+
   // Populate form when job data is loaded
   React.useEffect(() => {
     if (jobData?.data?.jobPost && isEditing) {
@@ -41,6 +53,12 @@ const JobForm = () => {
       
       // Set skills
       setSkills(job.skillsRequired || []);
+      
+      // Set startup fields
+      if (job.startup) {
+        setIsForStartup(true);
+        setSelectedStartup(job.startup._id || job.startup);
+      }
       
       // Prepare form data
       const formData = {
@@ -139,6 +157,11 @@ const JobForm = () => {
     // Only include deadline if provided (not empty string)
     if (data.deadline && data.deadline.trim() !== '') {
       jobData.deadline = data.deadline;
+    }
+
+    // Include startup if selected
+    if (isForStartup && selectedStartup) {
+      jobData.startup = selectedStartup;
     }
 
     saveMutation.mutate(jobData);
@@ -363,6 +386,61 @@ const JobForm = () => {
             error={errors.experienceLevel?.message}
             {...register('experienceLevel', { required: 'Please select the required experience level' })}
           />
+
+          {/* Startup Selection */}
+          {hasStartups && (
+            <div className="space-y-3 pt-4 border-t">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isForStartup"
+                  checked={isForStartup}
+                  onChange={(e) => {
+                    setIsForStartup(e.target.checked);
+                    if (!e.target.checked) {
+                      setSelectedStartup('');
+                    }
+                  }}
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="isForStartup" className="text-sm font-medium text-gray-700">
+                  This job is for one of my startups
+                </label>
+              </div>
+
+              {isForStartup && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Startup <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    {startups.map((startup) => (
+                      <div key={startup._id} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          id={`startup-${startup._id}`}
+                          name="startup"
+                          value={startup._id}
+                          checked={selectedStartup === startup._id}
+                          onChange={(e) => setSelectedStartup(e.target.value)}
+                          className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <label
+                          htmlFor={`startup-${startup._id}`}
+                          className="text-sm text-gray-700 cursor-pointer"
+                        >
+                          {startup.startupName}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  {isForStartup && !selectedStartup && (
+                    <p className="mt-1 text-sm text-red-600">Please select a startup</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-3 pt-6 border-t">
             <Button

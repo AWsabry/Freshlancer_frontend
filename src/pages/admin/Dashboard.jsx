@@ -14,7 +14,18 @@ import {
   Clock,
   TrendingUp,
   Crown,
+  CreditCard,
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -39,6 +50,8 @@ const Dashboard = () => {
 
   const stats = statsData?.data?.stats || {};
   const recentUsers = statsData?.data?.recentUsers || [];
+  const clientYearlyChartData = statsData?.data?.clientYearlyChartData || [];
+  const studentYearlyChartData = statsData?.data?.studentYearlyChartData || [];
 
   const statCards = [
     {
@@ -90,25 +103,32 @@ const Dashboard = () => {
       onClick: () => navigate('/admin/applications?status=pending'),
     },
     {
-      title: 'Total Subscribed',
-      value: stats.totalSubscriptions || 0,
-      icon: Users,
-      color: 'bg-cyan-500',
-      onClick: () => navigate('/admin/student-packages'),
-    },
-    {
-      title: 'Premium Users',
-      value: stats.premiumSubscriptions || 0,
+      title: 'Current Premium Students',
+      value: stats.currentPremiumStudents || 0,
       icon: Crown,
       color: 'bg-amber-500',
       onClick: () => navigate('/admin/student-packages?plan=premium'),
     },
     {
-      title: 'Free Users',
-      value: stats.freeSubscriptions || 0,
-      icon: UserCheck,
+      title: 'Total Client Transactions',
+      value: stats.totalClientTransactions || 0,
+      icon: CreditCard,
+      color: 'bg-cyan-500',
+      onClick: () => navigate('/admin/transactions?role=client'),
+    },
+    {
+      title: 'Total Current Premium Users',
+      value: stats.currentPremiumStudents || 0,
+      icon: Crown,
+      color: 'bg-amber-600',
+      onClick: () => navigate('/admin/student-packages?plan=premium'),
+    },
+    {
+      title: 'Total Active Subscriptions',
+      value: stats.totalActiveSubscriptions || 0,
+      icon: Users,
       color: 'bg-gray-500',
-      onClick: () => navigate('/admin/student-packages?plan=free'),
+      onClick: () => navigate('/admin/student-packages'),
     },
   ];
 
@@ -139,6 +159,61 @@ const Dashboard = () => {
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* Yearly Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Client Transactions Chart */}
+        {clientYearlyChartData.length > 0 && (
+          <Card title={`Client Transactions - ${new Date().getFullYear()}`}>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={clientYearlyChartData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="transactions" fill="#065084" name="Transactions" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
+
+        {/* Student Transactions Chart */}
+        {studentYearlyChartData.length > 0 && (
+          <Card title={`Student Transactions - ${new Date().getFullYear()}`}>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={studentYearlyChartData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="transactions" fill="#25aaad" name="Transactions" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Recent Users */}

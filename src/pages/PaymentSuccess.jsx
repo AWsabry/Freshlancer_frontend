@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores/authStore';
 import api from '../services/api';
 import paymobService from '../services/paymobService';
 import { packageService } from '../services/packageService';
-import { couponService } from '../services/couponService';
+import couponService from '../services/couponService';
 
 // Helper function to get cookie value by name
 const getCookie = (name) => {
@@ -96,9 +96,9 @@ const PaymentSuccess = () => {
         const appliedCouponStr = sessionStorage.getItem('appliedCoupon');
         if (appliedCouponStr) {
           const appliedCoupon = JSON.parse(appliedCouponStr);
-          if (appliedCoupon.offerId) {
-            console.log('Recording coupon usage for offer:', appliedCoupon.offerId);
-            await couponService.recordUsage(appliedCoupon.offerId);
+          if (appliedCoupon.couponId) {
+            console.log('Recording coupon usage for coupon:', appliedCoupon.couponId);
+            await couponService.recordCouponUsage(appliedCoupon.couponId);
             console.log('Coupon usage recorded successfully');
           }
         }

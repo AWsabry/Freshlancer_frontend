@@ -202,9 +202,20 @@ const Jobs = () => {
                     <h3 className="text-xl font-bold text-gray-900 flex-1">
                       {job.title}
                     </h3>
-                    {getStatusBadge(job.status)}
-                    {job.urgent && <Badge variant="error">Urgent</Badge>}
-                    {job.featured && <Badge variant="info">Featured</Badge>}
+                    <div className="flex flex-col items-end gap-2">
+                      {/* Startup Name */}
+                      {job.startup && job.startup.startupName && (
+                        <p className="text-sm font-medium text-primary-600">
+                          {job.startup.startupName}
+                        </p>
+                      )}
+                      {/* Status Badges */}
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(job.status)}
+                        {job.urgent && <Badge variant="error">Urgent</Badge>}
+                        {job.featured && <Badge variant="info">Featured</Badge>}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Description */}

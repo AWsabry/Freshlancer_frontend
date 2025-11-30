@@ -124,8 +124,8 @@ const ApplicationDetails = () => {
           </div>
           <div className="flex flex-col items-end gap-2">
             {getStatusBadge(application.status)}
-            {/* Contact Unlocked Indicator - Premium Only */}
-            {isPremium && application.contactUnlockedByClient && (
+            {/* Contact Unlocked Indicator */}
+            {application.contactUnlockedByClient === true && (
               <Badge variant="success" className="flex items-center gap-1">
                 <Unlock className="w-4 h-4" />
                 Contact Unlocked by Client
@@ -134,11 +134,20 @@ const ApplicationDetails = () => {
           </div>
         </div>
 
-        {/* Contact Unlocked Alert - Premium Only */}
-        {isPremium && application.contactUnlockedByClient && (
+        {/* Contact Unlocked Alert */}
+        {application.contactUnlockedByClient === true && (
           <Alert
             type="success"
             message="Great news! The client has unlocked your contact information. They are interested in your application and may reach out to you directly."
+            className="mb-4"
+          />
+        )}
+
+        {/* Premium Members Only Message */}
+        {application.contactUnlockedByClient === 'premium members only' && (
+          <Alert
+            type="info"
+            message="Premium members only - Upgrade to premium to see if the client has unlocked your contact information."
             className="mb-4"
           />
         )}

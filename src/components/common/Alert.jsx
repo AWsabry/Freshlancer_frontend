@@ -1,7 +1,7 @@
 import React from 'react';
-import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, XCircle, X } from 'lucide-react';
 
-const Alert = ({ type = 'info', title, message, className = '' }) => {
+const Alert = ({ type = 'info', title, message, className = '', onClose }) => {
   const config = {
     success: {
       bg: 'bg-green-50',
@@ -39,6 +39,15 @@ const Alert = ({ type = 'info', title, message, className = '' }) => {
           {title && <h4 className="font-semibold mb-1">{title}</h4>}
           <p className="text-sm">{message}</p>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="ml-3 flex-shrink-0 text-gray-400 hover:text-gray-600 focus:outline-none"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );

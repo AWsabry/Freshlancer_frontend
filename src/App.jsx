@@ -10,6 +10,10 @@ import Landing from './pages/Landing';
 // Auth pages
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmailRequired from './pages/VerifyEmailRequired';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import StartupRegistration from './pages/StartupRegistration';
 
 // Payment pages
 import PaymentSuccess from './pages/PaymentSuccess';
@@ -40,8 +44,10 @@ import ClientApplications from './pages/client/Applications';
 import JobApplicationsDetail from './pages/client/JobApplicationsDetail';
 import ClientPackages from './pages/client/Packages';
 import ClientPayment from './pages/client/Payment';
+import ClientPaymentUSD from './pages/client/PaymentUSD';
 import ClientNotifications from './pages/client/Notifications';
 import ClientProfile from './pages/client/Profile';
+import ClientStartupProfile from './pages/client/StartupProfile';
 import ClientReviews from './pages/client/Reviews';
 import ClientTransactions from './pages/client/Transactions';
 import StudentProfileView from './pages/client/StudentProfileView';
@@ -51,11 +57,13 @@ import UnlockedStudents from './pages/client/UnlockedStudents';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminStudents from './pages/admin/Students';
+import AdminStartups from './pages/admin/Startups';
 import AdminApplications from './pages/admin/Applications';
 import AdminJobs from './pages/admin/Jobs';
 import AdminClientPackages from './pages/admin/ClientPackages';
 import AdminStudentPackages from './pages/admin/StudentPackages';
 import AdminCoupons from './pages/admin/Coupons';
+import AdminContactUs from './pages/admin/ContactUs';
 import AdminTransactions from './pages/admin/Transactions';
 import AdminClientTransactions from './pages/admin/ClientTransactions';
 import AdminReviews from './pages/admin/Reviews';
@@ -87,6 +95,16 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to={getDashboardPath()} />} />
       <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to={getDashboardPath()} />} />
+      
+      {/* Email Verification Routes */}
+      <Route path="/verify-email-required" element={<VerifyEmailRequired />} />
+      
+      {/* Password Reset Routes */}
+      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to={getDashboardPath()} />} />
+      <Route path="/reset-password/:token" element={!isAuthenticated ? <ResetPassword /> : <Navigate to={getDashboardPath()} />} />
+      
+      {/* Startup Registration Route */}
+      <Route path="/startup-registration" element={!isAuthenticated ? <StartupRegistration /> : <Navigate to={getDashboardPath()} />} />
 
       {/* Payment callback routes - public but require authentication to function properly */}
       <Route path="/payment/processing" element={<PaymentProcessing />} />
@@ -136,8 +154,10 @@ function App() {
         <Route path="students/:studentId" element={<StudentProfileView />} />
         <Route path="packages" element={<ClientPackages />} />
         <Route path="payment" element={<ClientPayment />} />
+        <Route path="payment-usd" element={<ClientPaymentUSD />} />
         <Route path="notifications" element={<ClientNotifications />} />
         <Route path="profile" element={<ClientProfile />} />
+        <Route path="startup-profile" element={<ClientStartupProfile />} />
         <Route path="unlocked-students" element={<UnlockedStudents />} />
         <Route path="reviews" element={<ClientReviews />} />
         <Route path="transactions" element={<ClientTransactions />} />
@@ -155,11 +175,13 @@ function App() {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="students" element={<AdminStudents />} />
+        <Route path="startups" element={<AdminStartups />} />
         <Route path="applications" element={<AdminApplications />} />
         <Route path="jobs" element={<AdminJobs />} />
         <Route path="client-packages" element={<AdminClientPackages />} />
         <Route path="student-packages" element={<AdminStudentPackages />} />
         <Route path="coupons" element={<AdminCoupons />} />
+        <Route path="contact-us" element={<AdminContactUs />} />
         <Route path="transactions" element={<AdminTransactions />} />
         <Route path="client-transactions" element={<AdminClientTransactions />} />
         <Route path="reviews" element={<AdminReviews />} />

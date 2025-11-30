@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { authService } from '../../services/authService';
+import { verificationService } from '../../services/verificationService';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
 import Badge from '../../components/common/Badge';
@@ -32,6 +33,8 @@ import {
   Upload,
   Trash2,
   GraduationCap,
+  Shield,
+  AlertCircle,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
@@ -209,8 +212,16 @@ const Profile = () => {
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [formError, setFormError] = useState(null);
+  const [verificationFile, setVerificationFile] = useState(null);
+  const [verificationError, setVerificationError] = useState(null);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [documentDescription, setDocumentDescription] = useState('');
   const fileInputRef = useRef(null);
+  const verificationFileInputRef = useRef(null);
+  const additionalDocumentInputRef = useRef(null);
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
+  const { register: registerVerification, handleSubmit: handleSubmitVerification, formState: { errors: verificationErrors }, reset: resetVerification } = useForm();
 
   // Fetch user profile
   const { data: userData, isLoading } = useQuery({
@@ -221,6 +232,20 @@ const Profile = () => {
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
 
+  // Fetch verification status and history
+  const { data: verificationData, isLoading: loadingVerification, error: verificationQueryError } = useQuery({
+    queryKey: ['verifications'],
+    queryFn: () => verificationService.getMyVerifications(),
+    retry: 1,
+    onError: (error) => {
+      console.error('Error fetching verifications:', error);
+    },
+  });
+
+  const verifications = verificationData?.data?.verifications || [];
+  const hasApprovedVerification = Array.isArray(verifications) && verifications.length > 0 && verifications.some(v => v && v.status === 'approved');
+  const hasPendingVerification = Array.isArray(verifications) && verifications.length > 0 && verifications.some(v => v && v.status === 'pending');
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: (data) => authService.updateProfile(data),
@@ -228,15 +253,26 @@ const Profile = () => {
       queryClient.invalidateQueries(['userProfile']);
       setShowEditModal(false);
       reset();
+      setFormError(null);
       alert('Profile updated successfully!');
     },
     onError: (error) => {
-      alert(error.response?.data?.message || 'Failed to update profile');
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to update profile. Please check your input and try again.';
+      setFormError(errorMessage);
+      console.error('Profile update error:', error);
+      // Scroll to top of form to show error
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.scrollTop = 0;
+      }
     },
   });
 
   // Handle opening edit modal and populating form
   const handleOpenEditModal = () => {
+    setFormError(null); // Clear any previous errors
     if (user) {
       // Set form default values
       setValue('name', user.name || '');
@@ -262,6 +298,8 @@ const Profile = () => {
         setValue('studentProfile.socialLinks.linkedin', studentProfile.socialLinks?.linkedin || '');
         setValue('studentProfile.socialLinks.website', studentProfile.socialLinks?.website || '');
         setValue('studentProfile.socialLinks.behance', studentProfile.socialLinks?.behance || '');
+        setValue('studentProfile.socialLinks.telegram', studentProfile.socialLinks?.telegram || '');
+        setValue('studentProfile.socialLinks.whatsapp', studentProfile.socialLinks?.whatsapp || '');
       }
     }
     setShowEditModal(true);
@@ -298,6 +336,75 @@ const Profile = () => {
     },
   });
 
+  // Upload additional document mutation
+  const uploadAdditionalDocumentMutation = useMutation({
+    mutationFn: ({ file, description }) => authService.uploadAdditionalDocument(file, description),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userProfile']);
+      setUploadingDocument(false);
+      setDocumentDescription('');
+      if (additionalDocumentInputRef.current) {
+        additionalDocumentInputRef.current.value = '';
+      }
+      alert('Document uploaded successfully!');
+    },
+    onError: (error) => {
+      setUploadingDocument(false);
+      alert(error.response?.data?.message || 'Failed to upload document');
+    },
+  });
+
+  // Delete additional document mutation
+  const deleteAdditionalDocumentMutation = useMutation({
+    mutationFn: (documentIndex) => authService.deleteAdditionalDocument(documentIndex),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userProfile']);
+      alert('Document deleted successfully!');
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || 'Failed to delete document');
+    },
+  });
+
+  // Upload verification document mutation
+  const uploadVerificationMutation = useMutation({
+    mutationFn: (formData) => verificationService.uploadDocument(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['verifications']);
+      queryClient.invalidateQueries(['userProfile']);
+      queryClient.invalidateQueries(['verificationStatus']);
+      resetVerification();
+      setVerificationFile(null);
+      setVerificationError(null);
+      alert('Verification document submitted successfully! Our team will review it within 24-48 hours.');
+    },
+    onError: (error) => {
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to submit verification document. Please try again.';
+      setVerificationError(errorMessage);
+      console.error('Verification upload error:', error);
+    },
+  });
+
+  // Handle verification form submission
+  const onSubmitVerification = (data) => {
+    if (!verificationFile) {
+      setVerificationError('Please select a document to upload');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('document', verificationFile);
+    formData.append('documentType', data.documentType);
+    formData.append('institutionName', data.institutionName);
+    formData.append('studentIdNumber', data.studentIdNumber);
+    formData.append('enrollmentYear', data.enrollmentYear);
+    formData.append('expectedGraduationYear', data.expectedGraduationYear);
+
+    uploadVerificationMutation.mutate(formData);
+  };
+
   // Handle resume file selection
   const handleResumeChange = (event) => {
     const file = event.target.files[0];
@@ -327,6 +434,25 @@ const Profile = () => {
     }
   };
 
+  // Handle additional document upload
+  const handleAdditionalDocumentChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadingDocument(true);
+      uploadAdditionalDocumentMutation.mutate({
+        file,
+        description: documentDescription,
+      });
+    }
+  };
+
+  // Handle additional document delete
+  const handleDeleteAdditionalDocument = (index) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      deleteAdditionalDocumentMutation.mutate(index);
+    }
+  };
+
   const getVerificationBadgeVariant = (status) => {
     switch (status) {
       case 'verified':
@@ -340,7 +466,7 @@ const Profile = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loadingVerification) {
     return <Loading text="Loading profile..." />;
   }
 
@@ -782,9 +908,259 @@ const Profile = () => {
                     Behance
                   </a>
                 )}
+                {studentProfile.socialLinks.telegram && (
+                  <a
+                    href={studentProfile.socialLinks.telegram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    Telegram
+                  </a>
+                )}
+                {studentProfile.socialLinks.whatsapp && (
+                  <a
+                    href={studentProfile.socialLinks.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                )}
               </div>
             </Card>
           )}
+
+          {/* Student Verification */}
+          <Card title="Student Verification">
+            {loadingVerification ? (
+              <Loading text="Loading verification status..." />
+            ) : verificationQueryError ? (
+              <Alert
+                type="error"
+                message="Failed to load verification status. Please refresh the page."
+              />
+            ) : hasApprovedVerification ? (
+              <div className="space-y-4">
+                <Alert
+                  type="success"
+                  title="Verification Complete"
+                  message="Your student status has been verified. You can now apply for jobs!"
+                />
+                {verifications.filter(v => v && v.status === 'approved').map((verification, index) => (
+                  <div key={verification._id || `approved-${index}`} className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold text-gray-900 capitalize">
+                            {verification.documentType ? verification.documentType.replace(/_/g, ' ') : 'Verification Document'}
+                          </h4>
+                          <Badge variant="success">Approved</Badge>
+                        </div>
+                        <p className="text-sm text-gray-700">{verification.institutionName || 'N/A'}</p>
+                        {verification.reviewedAt && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            Approved: {new Date(verification.reviewedAt).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : hasPendingVerification ? (
+              <div className="space-y-4">
+                <Alert
+                  type="info"
+                  title="Verification Pending"
+                  message="Your verification is being reviewed by our admin team. This usually takes 24-48 hours."
+                />
+                {verifications.filter(v => v && v.status === 'pending').map((verification, index) => (
+                  <div key={verification._id || `pending-${index}`} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold text-gray-900 capitalize">
+                            {verification.documentType ? verification.documentType.replace(/_/g, ' ') : 'Verification Document'}
+                          </h4>
+                          <Badge variant="warning">Pending Review</Badge>
+                        </div>
+                        <p className="text-sm text-gray-700">{verification.institutionName || 'N/A'}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Submitted: {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Alert
+                  type="warning"
+                  title="Verification Required"
+                  message="Please submit your student verification documents to start applying for jobs."
+                />
+                
+                {/* Verification Upload Form */}
+                <form onSubmit={handleSubmitVerification(onSubmitVerification)} className="space-y-4">
+                  {verificationError && (
+                    <Alert
+                      type="error"
+                      message={verificationError}
+                      onClose={() => setVerificationError(null)}
+                    />
+                  )}
+
+                  <Select
+                    label="Document Type"
+                    options={[
+                      { value: 'student_id', label: 'Student ID Card' },
+                      { value: 'enrollment_certificate', label: 'Enrollment Certificate' },
+                      { value: 'transcript', label: 'Official Transcript' },
+                      { value: 'other', label: 'Other' },
+                    ]}
+                    error={verificationErrors.documentType?.message}
+                    {...registerVerification('documentType', { required: 'Document type is required' })}
+                  />
+
+                  <Input
+                    label="Institution Name"
+                    placeholder="University of..."
+                    error={verificationErrors.institutionName?.message}
+                    {...registerVerification('institutionName', { required: 'Institution name is required' })}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Student ID Number"
+                      placeholder="123456789"
+                      error={verificationErrors.studentIdNumber?.message}
+                      {...registerVerification('studentIdNumber', { required: 'Student ID is required' })}
+                    />
+
+                    <Input
+                      label="Enrollment Year"
+                      type="number"
+                      placeholder="2020"
+                      error={verificationErrors.enrollmentYear?.message}
+                      {...registerVerification('enrollmentYear', {
+                        required: 'Enrollment year is required',
+                        min: { value: 2000, message: 'Please enter a valid year' },
+                        max: { value: new Date().getFullYear(), message: 'Cannot be in the future' },
+                      })}
+                    />
+                  </div>
+
+                  <Input
+                    label="Expected Graduation Year"
+                    type="number"
+                    placeholder="2025"
+                    error={verificationErrors.expectedGraduationYear?.message}
+                    {...registerVerification('expectedGraduationYear', {
+                      required: 'Graduation year is required',
+                      min: { value: new Date().getFullYear(), message: 'Please enter a valid future year' },
+                    })}
+                  />
+
+                  {/* File Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Upload Document <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
+                      <div className="space-y-1 text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="flex text-sm text-gray-600">
+                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
+                            <span>Upload a file</span>
+                            <input
+                              ref={verificationFileInputRef}
+                              type="file"
+                              className="sr-only"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  // Validate file size (10MB max)
+                                  if (file.size > 10 * 1024 * 1024) {
+                                    setVerificationError('File size must be less than 10MB');
+                                    return;
+                                  }
+                                  setVerificationFile(file);
+                                  setVerificationError(null);
+                                }
+                              }}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          PDF, JPG, PNG up to 10MB
+                        </p>
+                        {verificationFile && (
+                          <p className="text-sm text-primary-600 font-medium">
+                            Selected: {verificationFile.name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="w-full"
+                    loading={uploadVerificationMutation.isPending}
+                    disabled={uploadVerificationMutation.isPending}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Submit for Verification
+                  </Button>
+                </form>
+              </div>
+            )}
+
+            {/* Verification History */}
+            {verifications && verifications.length > 0 && verifications.some(v => v && v.status === 'rejected') && (
+              <div className="mt-6 pt-6 border-t">
+                <h4 className="font-semibold text-gray-900 mb-3">Verification History</h4>
+                <div className="space-y-3">
+                  {verifications.filter(v => v && v.status === 'rejected').map((verification, index) => (
+                    <div key={verification._id || `rejected-${index}`} className="p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex items-start gap-3">
+                        <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold text-gray-900 capitalize">
+                              {verification.documentType?.replace('_', ' ')}
+                            </h4>
+                            <Badge variant="error">Rejected</Badge>
+                          </div>
+                          <p className="text-sm text-gray-700">{verification.institutionName || 'N/A'}</p>
+                          {verification.rejectionReason && (
+                            <Alert
+                              type="error"
+                              message={`Rejection reason: ${verification.rejectionReason}`}
+                              className="mt-2"
+                            />
+                          )}
+                          <p className="text-xs text-gray-600 mt-1">
+                            Submitted: {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
 
           {/* Resume */}
           <Card title="Resume / CV">
@@ -870,16 +1246,119 @@ const Profile = () => {
               </div>
             )}
           </Card>
+
+          {/* Additional Documents */}
+          <Card title="Additional Documents (Optional)">
+            <div className="space-y-4">
+              {/* Upload Form */}
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="space-y-3">
+                  <Input
+                    label="Document Description (Optional)"
+                    placeholder="e.g., Portfolio, Certificates, References"
+                    value={documentDescription}
+                    onChange={(e) => setDocumentDescription(e.target.value)}
+                    disabled={uploadingDocument}
+                  />
+                  <input
+                    ref={additionalDocumentInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={handleAdditionalDocumentChange}
+                    className="hidden"
+                    disabled={uploadingDocument}
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => additionalDocumentInputRef.current?.click()}
+                    loading={uploadingDocument || uploadAdditionalDocumentMutation.isPending}
+                    disabled={uploadingDocument || uploadAdditionalDocumentMutation.isPending}
+                    className="flex items-center gap-2 w-full"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {uploadingDocument ? 'Uploading...' : 'Upload Document'}
+                  </Button>
+                  <p className="text-xs text-gray-500">
+                    Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+                  </p>
+                </div>
+              </div>
+
+              {/* Documents List */}
+              {studentProfile?.additionalDocuments && studentProfile.additionalDocuments.length > 0 ? (
+                <div className="space-y-3">
+                  {studentProfile.additionalDocuments.map((doc, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <FileText className="w-6 h-6 text-primary-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{doc.filename}</p>
+                          {doc.description && (
+                            <p className="text-sm text-gray-600 truncate">{doc.description}</p>
+                          )}
+                          {doc.uploadedAt && (
+                            <p className="text-xs text-gray-500">
+                              Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(`${API_BASE_URL}${doc.url}`, '_blank')}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAdditionalDocument(index)}
+                          loading={deleteAdditionalDocumentMutation.isPending}
+                          disabled={deleteAdditionalDocumentMutation.isPending}
+                          className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm">No additional documents uploaded yet</p>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
 
       {/* Edit Profile Modal */}
       <Modal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={() => {
+          setShowEditModal(false);
+          setFormError(null);
+          reset();
+        }}
         title="Edit Profile"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Error Alert */}
+          {formError && (
+            <Alert
+              type="error"
+              message={formError}
+              onClose={() => setFormError(null)}
+            />
+          )}
+          
           {/* Personal Information Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
@@ -1375,6 +1854,20 @@ const Profile = () => {
                 {...register('studentProfile.socialLinks.behance')}
                 error={errors.studentProfile?.socialLinks?.behance?.message}
                 placeholder="https://behance.net/username"
+              />
+
+              <Input
+                label="Telegram (Optional)"
+                {...register('studentProfile.socialLinks.telegram')}
+                error={errors.studentProfile?.socialLinks?.telegram?.message}
+                placeholder="https://t.me/username"
+              />
+
+              <Input
+                label="WhatsApp (Optional)"
+                {...register('studentProfile.socialLinks.whatsapp')}
+                error={errors.studentProfile?.socialLinks?.whatsapp?.message}
+                placeholder="https://wa.me/1234567890"
               />
             </div>
           </div>

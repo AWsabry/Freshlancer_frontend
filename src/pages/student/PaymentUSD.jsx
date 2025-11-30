@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../../services/subscriptionService';
-import { couponService } from '../../services/couponService';
+import couponService from '../../services/couponService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X, DollarSign } from 'lucide-react';
+import paypalImage from '../../assets/images/paypal.png';
 
 const PaymentUSD = () => {
   const navigate = useNavigate();
@@ -138,8 +139,12 @@ const PaymentUSD = () => {
             <div className="space-y-6">
               {/* Payment Info */}
               <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <DollarSign className="w-8 h-8 text-blue-600" />
+                <div className="flex-shrink-0">
+                  <img
+                    src={paypalImage}
+                    alt="PayPal"
+                    className="h-12 w-auto object-contain"
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">
@@ -186,20 +191,14 @@ const PaymentUSD = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 border border-gray-200 rounded-lg">
                     <p className="text-sm text-gray-600">💳 Credit/Debit Cards</p>
-                    <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
-                  </div>
-                  <div className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">🏦 Bank Account</p>
-                    <p className="text-xs text-gray-500">Direct bank transfer</p>
+                    <p className="text-xs text-gray-500">Visa, Mastercard</p>
                   </div>
                   <div className="p-3 border border-gray-200 rounded-lg">
                     <p className="text-sm text-gray-600">💰 PayPal Balance</p>
                     <p className="text-xs text-gray-500">Pay with PayPal funds</p>
                   </div>
-                  <div className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">📱 Venmo</p>
-                    <p className="text-xs text-gray-500">Pay with Venmo</p>
-                  </div>
+         
+          
                 </div>
               </div>
 

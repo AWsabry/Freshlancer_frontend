@@ -21,8 +21,10 @@ import {
   Shield,
   Users,
   Tag,
+  Rocket,
+  Mail,
 } from 'lucide-react';
-import logo from '../assets/logos/Logo.png';
+import logo from '../assets/logos/01.png';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -100,16 +102,23 @@ const DashboardLayout = () => {
     }
 
     if (user?.role === 'client') {
-      return [
+      const items = [
         ...baseItems.slice(0, 1),
         { name: 'My Jobs', icon: Briefcase, path: '/client/jobs' },
         { name: 'Applications', icon: FileText, path: '/client/applications' },
         { name: 'Packages', icon: CreditCard, path: '/client/packages' },
-        // { name: 'Reviews', icon: Star, path: '/client/reviews' },
         { name: 'Transactions', icon: DollarSign, path: '/client/transactions' },
         { name: 'Profile', icon: User, path: `/${user?.role}/profile` },
         ...baseItems.slice(1),
       ];
+      
+      // Add Startup Profile menu item if user is a startup
+      if (user?.clientProfile?.isStartup || userData?.data?.user?.clientProfile?.isStartup) {
+        // Insert after Packages
+        items.splice(4, 0, { name: 'Startup Profile', icon: Rocket, path: '/client/startup-profile' });
+      }
+      
+      return items;
     }
 
     if (user?.role === 'admin') {
@@ -121,9 +130,10 @@ const DashboardLayout = () => {
         { name: 'Jobs', icon: Briefcase, path: '/admin/jobs' },
         { name: 'Client Packages', icon: CreditCard, path: '/admin/client-packages' },
         { name: 'Client Transactions', icon: DollarSign, path: '/admin/client-transactions' },
-        { name: 'Student Packages', icon: User, path: '/admin/student-packages' },
+        { name: 'Student Subscriptions', icon: User, path: '/admin/student-packages' },
         { name: 'Coupons', icon: Tag, path: '/admin/coupons' },
-        // { name: 'Reviews', icon: Star, path: '/admin/reviews' },
+        { name: 'Startups', icon: Star, path: '/admin/startups' },
+        { name: 'Contact Us', icon: Mail, path: '/admin/contact-us' },
         ...baseItems.slice(1),
       ];
     }
@@ -152,19 +162,16 @@ const DashboardLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b">
-            <Link to="/" className="flex items-center">
-              <img
-                src={logo}
-                alt="Freshlancer logo"
-                className="h-8 w-auto object-contain"
-              />
+            <Link to="/" className="flex items-center gap-2">
+              <span 
+                className="text-xl font-bold"
+                style={{fontWeight: 900, fontFamily: "'Lama Sans', sans-serif" }}
+              >
+                <span style={{ color: '#25aaad' }}>Fresh</span>
+                <span style={{ color: '#065084' }}>lancer</span>
+              </span>
             </Link>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-600 hover:text-gray-900"
-            >
-              <X className="w-6 h-6" />
-            </button>
+     
           </div>
 
           {/* User info */}

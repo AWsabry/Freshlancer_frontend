@@ -15,6 +15,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Lama Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
+      },
       colors: {
         primary: {
           50: withOpacityValue('--color-primary-50'),

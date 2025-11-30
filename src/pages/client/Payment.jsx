@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { packageService } from '../../services/packageService';
-import { couponService } from '../../services/couponService';
+import couponService from '../../services/couponService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X } from 'lucide-react';
+import paymobImage from '../../assets/images/paymob.png';
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -174,8 +175,12 @@ const Payment = () => {
             <div className="space-y-6">
               {/* Payment Info */}
               <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <CreditCard className="w-8 h-8 text-blue-600" />
+                <div className="flex-shrink-0">
+                  <img
+                    src={paymobImage}
+                    alt="Paymob"
+                    className="h-12 w-auto object-contain"
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">

@@ -5,7 +5,7 @@ import { authService } from '../../services/authService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
-import { Plus, Briefcase, Users, Package, Receipt, UserCheck, Building } from 'lucide-react';
+import { Plus, Briefcase, Users, Package, Receipt, UserCheck, Building, FileText, Unlock } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +14,12 @@ const Dashboard = () => {
   const { data: statsData, isLoading: loadingStats } = useQuery({
     queryKey: ['platformStats'],
     queryFn: () => authService.getPlatformStats(),
+  });
+
+  // Fetch client dashboard statistics
+  const { data: clientStatsData, isLoading: loadingClientStats } = useQuery({
+    queryKey: ['clientDashboardStats'],
+    queryFn: () => authService.getClientDashboardStats(),
   });
 
   const quickActions = [
@@ -64,23 +70,52 @@ const Dashboard = () => {
         <p className="text-gray-600">Manage your job postings and connect with talented students</p>
       </div>
 
-      {/* Platform Statistics */}
+      {/* Client Dashboard Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-primary-100 rounded-full">
-              <Users className="w-8 h-8 text-primary-600" />
+            <div className="p-4 bg-blue-100 rounded-full">
+              <FileText className="w-8 h-8 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Students</p>
+              <p className="text-sm text-gray-600">Total Applications</p>
               <p className="text-3xl font-bold text-gray-900">
-                {loadingStats ? '...' : stats?.totalStudents?.toLocaleString() || 0}
+                {loadingClientStats ? '...' : clientStatsData?.data?.totalApplications?.toLocaleString() || 0}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Available on the platform</p>
+              <p className="text-xs text-gray-500 mt-1">Received for your jobs</p>
             </div>
           </div>
         </Card>
 
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-green-100 rounded-full">
+              <Briefcase className="w-8 h-8 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Jobs Posted</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {loadingClientStats ? '...' : clientStatsData?.data?.totalJobs?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Jobs you've created</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-purple-100 rounded-full">
+              <Unlock className="w-8 h-8 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Unlocked Profiles</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {loadingClientStats ? '...' : clientStatsData?.data?.totalUnlockedProfiles?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Student contacts unlocked</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Quick Actions */}

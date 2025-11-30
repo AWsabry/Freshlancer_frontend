@@ -134,8 +134,8 @@ const Applications = () => {
               </h3>
               <div className="flex items-center gap-2">
                 {getStatusBadge(application.status || 'pending')}
-                {/* Premium + Contact Unlocked Badge */}
-                {isPremium && application.contactUnlockedByClient && (
+                {/* Contact Unlocked Badge - Show if contactUnlockedByClient is true (premium users only) */}
+                {application.contactUnlockedByClient === true && (
                   <Badge variant="success" className="flex items-center gap-1">
                     <Unlock className="w-3 h-3" />
                     Contact Unlocked
@@ -147,13 +147,6 @@ const Applications = () => {
               {application.jobPost?.category && (
                 <Badge variant="default">{application.jobPost.category}</Badge>
               )}
-                {/* Premium + Contact Unlocked Badge */}
-                {isPremium && application.contactUnlockedByClient && (
-                  <Badge variant="success" className="flex items-center gap-1">
-                    <Unlock className="w-3 h-3" />
-                    Contact Unlocked
-                  </Badge>
-                )}
               </div>
 
             </div>
@@ -186,6 +179,16 @@ const Applications = () => {
               <Briefcase className="w-4 h-4" />
               <span className="text-sm text-gray-500 italic">
                 {application.jobPost?.client?.message || 'Premium members only'}
+              </span>
+            </p>
+          )}
+
+          {/* Contact Unlocked Status - Show message for non-premium users */}
+          {application.contactUnlockedByClient === 'premium members only' && (
+            <p className="text-gray-600 mb-3 flex items-center gap-2">
+              <Unlock className="w-4 h-4" />
+              <span className="text-sm text-gray-500 italic">
+                Premium members only
               </span>
             </p>
           )}

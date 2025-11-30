@@ -89,7 +89,9 @@ const Packages = () => {
   const isLoading = loadingPoints || loadingPackages;
 
   const handlePurchase = (packageData) => {
-    navigate('/client/payment', {
+    // Route to USD payment page if USD is selected, otherwise to regular payment page
+    const paymentPath = selectedCurrency === 'USD' ? '/client/payment-usd' : '/client/payment';
+    navigate(paymentPath, {
       state: {
         currency: selectedCurrency,
         amount: packageData.price,
@@ -128,12 +130,14 @@ const Packages = () => {
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
                 <button
-                  disabled
-                  className="px-6 py-2 rounded-md font-medium transition-all border text-gray-400 border-transparent cursor-not-allowed opacity-60"
-                  title="USD payments not yet available"
+                  onClick={() => setSelectedCurrency('USD')}
+                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
+                    selectedCurrency === 'USD'
+                      ? 'bg-primary-500 text-[#2f00c0] border-primary-500 shadow-md'
+                      : 'text-gray-700 border-transparent hover:bg-gray-100'
+                  }`}
                 >
                   USD ($)
-                  <span className="text-xs block">Coming soon</span>
                 </button>
                 <button
                   onClick={() => setSelectedCurrency('EGP')}
@@ -148,7 +152,9 @@ const Packages = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 text-center mt-3">
-              Currently, we only accept payments in Egyptian Pounds (EGP) through Paymob.
+              {selectedCurrency === 'USD' 
+                ? 'Pay with PayPal using USD. PayPal accepts credit/debit cards, bank accounts, and PayPal balance.'
+                : 'Pay with Paymob using Egyptian Pounds (EGP). Paymob accepts credit/debit cards and mobile wallets.'}
             </p>
         </Card>
 
@@ -236,7 +242,7 @@ const Packages = () => {
                     {pkg.currency} {pkg.price.toFixed(2)}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {pkg.currency} {(pkg.price / pkg.points).toFixed(2)} per point
+                    {pkg.currency} {(pkg.price / pkg.points).toFixed(2) * 10 } per student profile
                   </p>
                 </div>
 

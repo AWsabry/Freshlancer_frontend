@@ -118,10 +118,19 @@ const JobDetails = () => {
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            {getStatusBadge(job.status)}
-            {job.urgent && <Badge variant="error">Urgent</Badge>}
-            {job.featured && <Badge variant="info">Featured</Badge>}
+          <div className="flex flex-col gap-2 items-end">
+            {/* Startup Name */}
+            {job.startup && job.startup.startupName && (
+              <p className="text-sm font-medium text-primary-600">
+                {job.startup.startupName}
+              </p>
+            )}
+            {/* Status Badges */}
+            <div className="flex items-center gap-2">
+              {getStatusBadge(job.status)}
+              {job.urgent && <Badge variant="error">Urgent</Badge>}
+              {job.featured && <Badge variant="info">Featured</Badge>}
+            </div>
           </div>
         </div>
 

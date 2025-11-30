@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Lama Sans';
+  src: url('./assets/fonts/LamaSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-primary-50: 240 249 255;
   --color-primary-100: 224 242 254;
@@ -13,10 +21,29 @@
   --color-primary-900: 12 74 110;
 }
 
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
 @layer base {
+  * {
+    font-family: 'Lama Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+
   body {
     background-color: rgb(249 250 251); /* gray-50 */
     color: rgb(17 24 39); /* gray-900 */
+    font-family: 'Lama Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Lama Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-weight: 600;
   }
 
   .student-theme {
@@ -33,16 +60,16 @@
   }
 
   .client-theme {
-    --color-primary-50: 224 237 245;
+    --color-primary-50: 230 240 248;
     --color-primary-100: 204 225 240;
-    --color-primary-200: 163 201 225;
-    --color-primary-300: 102 164 200;
-    --color-primary-400: 58 136 180;
-    --color-primary-500: 21 107 160;
-    --color-primary-600: 17 86 128;
-    --color-primary-700: 13 64 96;
-    --color-primary-800: 8 43 64;
-    --color-primary-900: 4 21 32;
+    --color-primary-200: 153 195 225;
+    --color-primary-300: 102 160 210;
+    --color-primary-400: 51 125 195;
+    --color-primary-500: 6 80 132;
+    --color-primary-600: 5 64 106;
+    --color-primary-700: 4 48 80;
+    --color-primary-800: 3 32 53;
+    --color-primary-900: 2 16 27;
   }
 }
 

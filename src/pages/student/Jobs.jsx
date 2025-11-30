@@ -22,6 +22,7 @@ import {
   Crown,
   Lock,
   Sparkles,
+  Rocket,
 } from 'lucide-react';
 
 const Jobs = () => {
@@ -32,6 +33,7 @@ const Jobs = () => {
   const [sortBy, setSortBy] = useState(''); // 'budget-desc' for highest budget
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('available'); // 'available' or 'applied'
+  const [startupsOnly, setStartupsOnly] = useState(false); // Filter for startup jobs only
 
   // Check subscription/application limit
   const { data: subscriptionData } = useQuery({
@@ -60,7 +62,7 @@ const Jobs = () => {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['jobs', searchQuery, category, sortBy],
+    queryKey: ['jobs', searchQuery, category, sortBy, startupsOnly],
     queryFn: ({ pageParam = 1 }) => {
       const params = { page: pageParam, limit: 10 };
       // Only add sort if user is premium
@@ -115,10 +117,16 @@ const Jobs = () => {
     [userAppliedJobs]
   );
 
-  const availableJobs = useMemo(
-    () => allJobs.filter((job) => !appliedJobIdsSet.has(job._id)),
-    [allJobs, appliedJobIdsSet]
-  );
+  const availableJobs = useMemo(() => {
+    let jobs = allJobs.filter((job) => !appliedJobIdsSet.has(job._id));
+    
+    // Filter for startup jobs only if checkbox is checked and user is premium
+    if (startupsOnly && isPremium) {
+      jobs = jobs.filter((job) => job.startup && job.startup.startupName && !job.startup.message);
+    }
+    
+    return jobs;
+  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium]);
 
   // Build applied jobs array with application metadata
   const appliedJobs = useMemo(() => {
@@ -128,7 +136,7 @@ const Jobs = () => {
     );
 
     // Map full job data with application status
-    return appliedJobsFromAPI
+    let jobs = appliedJobsFromAPI
       .map((job) => {
         const metadata = appliedJobMetadata.get(job._id);
         if (metadata) {
@@ -141,7 +149,14 @@ const Jobs = () => {
         return null;
       })
       .filter(job => job !== null);
-  }, [appliedJobsFromAPI, userAppliedJobs]);
+
+    // Filter for startup jobs only if checkbox is checked and user is premium
+    if (startupsOnly && isPremium) {
+      jobs = jobs.filter((job) => job.startup && job.startup.startupName && !job.startup.message);
+    }
+
+    return jobs;
+  }, [appliedJobsFromAPI, userAppliedJobs, startupsOnly, isPremium]);
 
   const jobs = activeTab === 'available' ? availableJobs : appliedJobs;
 
@@ -322,6 +337,50 @@ const Jobs = () => {
                   </p>
                 )}
               </div>
+              
+              {/* Startup Jobs Filter */}
+              <div className="flex items-center gap-2 pt-6 md:col-span-3">
+                <input
+                  type="checkbox"
+                  id="startupsOnly"
+                  checked={startupsOnly}
+                  onChange={(e) => {
+                    if (isPremium) {
+                      setStartupsOnly(e.target.checked);
+                    }
+                  }}
+                  disabled={!isPremium}
+                  className={`w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 ${
+                    isPremium ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                  }`}
+                />
+                <label
+                  htmlFor="startupsOnly"
+                  className={`text-sm font-medium flex items-center gap-2 ${
+                    isPremium
+                      ? 'text-gray-700 cursor-pointer'
+                      : 'text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {isPremium ? (
+                    <>
+                      <Rocket className="w-4 h-4 text-primary-600" />
+                      Show Startup Jobs Only
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-gray-400" />
+                      Show Startup Jobs Only (Premium Only)
+                    </>
+                  )}
+                </label>
+                {!isPremium && (
+                  <p className="text-xs text-gray-500 ml-2 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    Upgrade to Premium to filter by startups
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </form>
@@ -373,6 +432,12 @@ const Jobs = () => {
                   <div className="flex flex-col items-end gap-2">
                     <Badge variant="info">{job.category}</Badge>
                     {job.urgent && <Badge variant="error">Urgent</Badge>}
+                    {/* Show startup name tag if premium and startup exists */}
+                    {isPremium && job.startup && !job.startup.message && job.startup.startupName && (
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                        {job.startup.startupName}
+                      </Badge>
+                    )}
                     {activeTab === 'applied' && job.applicationStatus && (
                       <Badge
                         variant={

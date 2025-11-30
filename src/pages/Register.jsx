@@ -294,6 +294,10 @@ const Register = () => {
   const countryOfStudy = watch('countryOfStudy');
   const phoneCountryCode = watch('phoneCountryCode');
   const phoneNumber = watch('phoneNumber');
+  const industry = watch('industry');
+  const howDidYouHear = watch('howDidYouHear');
+  const isStartup = watch('isStartup');
+  const startupIndustry = watch('startupIndustry');
 
   // Auto-detect currency when country of study changes
   useEffect(() => {
@@ -384,10 +388,46 @@ const Register = () => {
         }
       } else if (data.role === 'client') {
         userData.clientProfile = {
-          companyName: data.companyName || '',
-          industry: data.industry || '',
           isStartup: data.isStartup || false,
         };
+        
+        // Handle industry - if "Other" is selected, use industryOther, otherwise use industry
+        if (data.industry === 'Other' && data.industryOther) {
+          userData.clientProfile.industry = data.industryOther.trim();
+        } else if (data.industry && data.industry !== 'Other') {
+          userData.clientProfile.industry = data.industry;
+        }
+        
+        // Add years of experience if provided
+        if (data.yearsOfExperience) {
+          userData.clientProfile.yearsOfExperience = parseInt(data.yearsOfExperience);
+        }
+        
+        // Add age if provided
+        if (data.age) {
+          userData.age = parseInt(data.age);
+        }
+        
+        // Handle howDidYouHear - if "Other" is selected, use howDidYouHearOther
+        if (data.howDidYouHear === 'Other' && data.howDidYouHearOther) {
+          userData.clientProfile.howDidYouHear = data.howDidYouHearOther.trim();
+        } else if (data.howDidYouHear && data.howDidYouHear !== 'Other') {
+          userData.clientProfile.howDidYouHear = data.howDidYouHear;
+        }
+
+        // If client is a startup, add startup data to be created after registration
+        if (data.isStartup) {
+          userData.startup = {
+            startupName: data.startupName,
+            position: data.startupPosition,
+            numberOfEmployees: data.startupNumberOfEmployees,
+            industry: data.startupIndustry === 'Other' && data.startupIndustryOther 
+              ? data.startupIndustryOther.trim() 
+              : data.startupIndustry,
+            industryOther: data.startupIndustry === 'Other' ? data.startupIndustryOther?.trim() : undefined,
+            stage: data.startupStage,
+          };
+        }
       }
 
       const response = await registerUser(userData);
@@ -622,22 +662,107 @@ const Register = () => {
           {step === 2 && role === 'client' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <Input
-                  label="Company Name (Optional)"
-                  placeholder="Acme Inc."
-                  error={errors.companyName?.message}
-                  {...register('companyName')}
+                <Select
+                  label="Industry"
+                  placeholder="Select your industry"
+                  error={errors.industry?.message}
+                  {...register('industry')}
+                  options={[
+                    { value: 'Technology', label: 'Technology' },
+                    { value: 'E-commerce', label: 'E-commerce' },
+                    { value: 'Healthcare', label: 'Healthcare' },
+                    { value: 'Finance', label: 'Finance' },
+                    { value: 'Education', label: 'Education' },
+                    { value: 'Marketing', label: 'Marketing' },
+                    { value: 'Real Estate', label: 'Real Estate' },
+                    { value: 'Manufacturing', label: 'Manufacturing' },
+                    { value: 'Consulting', label: 'Consulting' },
+                    { value: 'Non-profit', label: 'Non-profit' },
+                    { value: 'Other', label: 'Other' },
+                  ]}
                 />
               </div>
 
+              {industry === 'Other' && (
+                <div className="md:col-span-2">
+                  <Input
+                    label="Please specify your industry"
+                    placeholder="Enter your industry"
+                    error={errors.industryOther?.message}
+                    {...register('industryOther', {
+                      required: industry === 'Other' ? 'Please specify your industry' : false,
+                    })}
+                  />
+                </div>
+              )}
+
+              <Input
+                label="Years of Experience"
+                type="number"
+                placeholder="5"
+                error={errors.yearsOfExperience?.message}
+                {...register('yearsOfExperience', {
+                  min: {
+                    value: 0,
+                    message: 'Years of experience must be 0 or greater',
+                  },
+                  max: {
+                    value: 50,
+                    message: 'Years of experience must be 50 or less',
+                  },
+                })}
+              />
+
+              <Input
+                label="Age"
+                type="number"
+                placeholder="25"
+                error={errors.age?.message}
+                {...register('age', {
+                  required: 'Please enter your age',
+                  min: {
+                    value: 18,
+                    message: 'You must be at least 18 years old',
+                  },
+                  max: {
+                    value: 100,
+                    message: 'Please enter a valid age',
+                  },
+                })}
+              />
+
               <div className="md:col-span-2">
-                <Input
-                  label="Industry (Optional)"
-                  placeholder="Technology"
-                  error={errors.industry?.message}
-                  {...register('industry')}
+                <Select
+                  label="How did you hear about us?"
+                  placeholder="Select an option"
+                  error={errors.howDidYouHear?.message}
+                  {...register('howDidYouHear', {
+                    required: 'Please select how you heard about us',
+                  })}
+                  options={[
+                    { value: 'Google Search', label: 'Google Search' },
+                    { value: 'Social Media', label: 'Social Media' },
+                    { value: 'Friend/Colleague', label: 'Friend/Colleague' },
+                    { value: 'University/College', label: 'University/College' },
+                    { value: 'Advertisement', label: 'Advertisement' },
+                    { value: 'Blog/Article', label: 'Blog/Article' },
+                    { value: 'Other', label: 'Other' },
+                  ]}
                 />
               </div>
+
+              {howDidYouHear === 'Other' && (
+                <div className="md:col-span-2">
+                  <Input
+                    label="Please specify how you heard about us"
+                    placeholder="Enter details"
+                    error={errors.howDidYouHearOther?.message}
+                    {...register('howDidYouHearOther', {
+                      required: howDidYouHear === 'Other' ? 'Please specify how you heard about us' : false,
+                    })}
+                  />
+                </div>
+              )}
 
               <div className="md:col-span-2">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -649,6 +774,110 @@ const Register = () => {
                   <span className="text-sm text-gray-700">I am a startup</span>
                 </label>
               </div>
+
+              {isStartup && (
+                <>
+                  <div className="md:col-span-2 border-t pt-4 mt-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Startup Information</h3>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Startup Name"
+                      placeholder="My Awesome Startup"
+                      error={errors.startupName?.message}
+                      {...register('startupName', {
+                        required: isStartup ? 'Startup name is required' : false,
+                      })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Your Position"
+                      placeholder="CEO, Founder, CTO, etc."
+                      error={errors.startupPosition?.message}
+                      {...register('startupPosition', {
+                        required: isStartup ? 'Your position is required' : false,
+                      })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Select
+                      label="Number of Employees"
+                      placeholder="Select number of employees"
+                      error={errors.startupNumberOfEmployees?.message}
+                      {...register('startupNumberOfEmployees', {
+                        required: isStartup ? 'Number of employees is required' : false,
+                      })}
+                      options={[
+                        { value: '1-5', label: '1-5 employees' },
+                        { value: '6-10', label: '6-10 employees' },
+                        { value: '11-20', label: '11-20 employees' },
+                        { value: '21-50', label: '21-50 employees' },
+                        { value: '51-100', label: '51-100 employees' },
+                        { value: '100+', label: '100+ employees' },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Select
+                      label="Startup Industry"
+                      placeholder="Select your startup industry"
+                      error={errors.startupIndustry?.message}
+                      {...register('startupIndustry', {
+                        required: isStartup ? 'Startup industry is required' : false,
+                      })}
+                      options={[
+                        { value: 'Technology', label: 'Technology' },
+                        { value: 'E-commerce', label: 'E-commerce' },
+                        { value: 'Healthcare', label: 'Healthcare' },
+                        { value: 'Finance', label: 'Finance' },
+                        { value: 'Education', label: 'Education' },
+                        { value: 'Marketing', label: 'Marketing' },
+                        { value: 'Real Estate', label: 'Real Estate' },
+                        { value: 'Manufacturing', label: 'Manufacturing' },
+                        { value: 'Consulting', label: 'Consulting' },
+                        { value: 'Non-profit', label: 'Non-profit' },
+                        { value: 'Other', label: 'Other' },
+                      ]}
+                    />
+                  </div>
+
+                  {startupIndustry === 'Other' && (
+                    <div className="md:col-span-2">
+                      <Input
+                        label="Please specify your startup industry"
+                        placeholder="Enter your industry"
+                        error={errors.startupIndustryOther?.message}
+                        {...register('startupIndustryOther', {
+                          required: startupIndustry === 'Other' && isStartup ? 'Please specify your startup industry' : false,
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  <div className="md:col-span-2">
+                    <Select
+                      label="Startup Stage"
+                      placeholder="Select your startup stage"
+                      error={errors.startupStage?.message}
+                      {...register('startupStage', {
+                        required: isStartup ? 'Startup stage is required' : false,
+                      })}
+                      options={[
+                        { value: 'Idea', label: 'Idea' },
+                        { value: 'MVP', label: 'MVP' },
+                        { value: 'Early Stage', label: 'Early Stage' },
+                        { value: 'Growth', label: 'Growth' },
+                        { value: 'Scale', label: 'Scale' },
+                      ]}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 

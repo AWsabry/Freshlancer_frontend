@@ -98,6 +98,11 @@ export const authService = {
     return api.post('/users/forgotPassword', { email });
   },
 
+  // Resend verification email
+  resendVerificationEmail: async (data) => {
+    return api.post('/users/resendVerificationEmail', data);
+  },
+
   // Reset password
   resetPassword: async (token, password) => {
     return api.patch(`/users/resetPassword/${token}`, {
@@ -146,5 +151,55 @@ export const authService = {
   // Get platform statistics
   getPlatformStats: async () => {
     return api.get('/users/platform-stats');
+  },
+
+  // Get client dashboard statistics
+  getClientDashboardStats: async () => {
+    return api.get('/users/client-dashboard-stats');
+  },
+
+  // Upload additional document
+  uploadAdditionalDocument: async (file, description = '') => {
+    const formData = new FormData();
+    formData.append('document', file);
+    if (description) {
+      formData.append('description', description);
+    }
+
+    const response = await api.post('/users/uploadAdditionalDocument', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // Update user in localStorage with new document info
+    if (response.data?.document) {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && user.studentProfile) {
+        if (!user.studentProfile.additionalDocuments) {
+          user.studentProfile.additionalDocuments = [];
+        }
+        user.studentProfile.additionalDocuments.push(response.data.document);
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+    }
+
+    return response;
+  },
+
+  // Delete additional document
+  deleteAdditionalDocument: async (documentIndex) => {
+    const response = await api.delete('/users/deleteAdditionalDocument', {
+      data: { documentIndex },
+    });
+
+    // Update user in localStorage to remove document
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.studentProfile && user.studentProfile.additionalDocuments) {
+      user.studentProfile.additionalDocuments.splice(documentIndex, 1);
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+
+    return response;
   },
 };

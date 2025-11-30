@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { offerService } from '../../services/offerService';
+import couponService from '../../services/couponService';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -35,7 +35,6 @@ const Coupons = () => {
     targetAudience: 'both',
     offerType: 'discount',
     discountPercentage: '',
-    discountAmount: '',
     couponCode: '',
     startDate: '',
     endDate: '',
@@ -47,11 +46,12 @@ const Coupons = () => {
     terms: '',
   });
 
-  // Fetch offers with coupon codes only
-  const { data: offersData, isLoading } = useQuery({
+  // Fetch coupons
+  const { data: couponsData, isLoading } = useQuery({
     queryKey: ['coupons', filterAudience, filterActive],
     queryFn: async () => {
       // Build params object - only include non-empty filters
+      // Admin gets all coupons without pagination, so no need for limit/page
       const params = {};
       if (filterAudience && filterAudience.trim() !== '') {
         params.targetAudience = filterAudience;
@@ -59,41 +59,37 @@ const Coupons = () => {
       if (filterActive && filterActive.trim() !== '') {
         params.isActive = filterActive;
       }
-      // Increase limit to get all coupons (admin should see all)
-      // Convert to string to ensure it's passed as query parameter correctly
-      params.limit = '1000';
-      params.page = '1';
       
-      const response = await offerService.getAllOffers(params);
+      const response = await couponService.getAllCoupons(params);
       
-      // Backend returns: { status, results, data: { offers, pagination } }
+      // Backend returns: { status, results, data: { coupons } }
       // API interceptor returns response.data, so response is already the data object
       // Handle both response structures
-      let offers = [];
+      let coupons = [];
       if (response && typeof response === 'object') {
-        if (response.data && Array.isArray(response.data.offers)) {
-          offers = response.data.offers;
-        } else if (Array.isArray(response.offers)) {
-          offers = response.offers;
+        if (response.data && Array.isArray(response.data.coupons)) {
+          coupons = response.data.coupons;
+        } else if (Array.isArray(response.coupons)) {
+          coupons = response.coupons;
         } else if (Array.isArray(response)) {
-          offers = response;
+          coupons = response;
         }
       }
       
-      // Filter only offers with coupon codes (non-empty, non-null, non-undefined)
-      // This ensures we only show offers that have a valid couponCode
-      const coupons = offers.filter(offer => {
-        return offer.couponCode && 
-               typeof offer.couponCode === 'string' && 
-               offer.couponCode.trim() !== '';
+      // Filter only coupons with coupon codes (non-empty, non-null, non-undefined)
+      // This ensures we only show coupons that have a valid couponCode
+      const filteredCoupons = coupons.filter(coupon => {
+        return coupon.couponCode && 
+               typeof coupon.couponCode === 'string' && 
+               coupon.couponCode.trim() !== '';
       });
       
       return { 
         ...response, 
-        offers: coupons,
+        coupons: filteredCoupons,
         data: {
           ...response.data,
-          offers: coupons
+          coupons: filteredCoupons
         }
       };
     },
@@ -165,7 +161,7 @@ const Coupons = () => {
 
   // Create coupon mutation
   const createMutation = useMutation({
-    mutationFn: (data) => offerService.createOffer(data),
+    mutationFn: (data) => couponService.createCoupon(data),
     onSuccess: async () => {
       // Invalidate all coupon queries (with any filter combinations)
       await queryClient.invalidateQueries({ 
@@ -188,7 +184,7 @@ const Coupons = () => {
 
   // Update coupon mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => offerService.updateOffer(id, data),
+    mutationFn: ({ id, data }) => couponService.updateCoupon(id, data),
     onSuccess: async () => {
       // Invalidate all coupon queries (with any filter combinations)
       await queryClient.invalidateQueries({ 
@@ -212,7 +208,7 @@ const Coupons = () => {
 
   // Delete coupon mutation
   const deleteMutation = useMutation({
-    mutationFn: (id) => offerService.deleteOffer(id),
+    mutationFn: (id) => couponService.deleteCoupon(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['coupons']);
       alert('Coupon deleted successfully!');
@@ -230,7 +226,6 @@ const Coupons = () => {
       targetAudience: 'both',
       offerType: 'discount',
       discountPercentage: '',
-      discountAmount: '',
       couponCode: '',
       startDate: '',
       endDate: '',
@@ -251,7 +246,6 @@ const Coupons = () => {
       targetAudience: coupon.targetAudience,
       offerType: coupon.offerType,
       discountPercentage: coupon.discountPercentage || '',
-      discountAmount: coupon.discountAmount || '',
       couponCode: coupon.couponCode || '',
       startDate: coupon.startDate ? new Date(coupon.startDate).toISOString().split('T')[0] : '',
       endDate: coupon.endDate ? new Date(coupon.endDate).toISOString().split('T')[0] : '',
@@ -305,12 +299,19 @@ const Coupons = () => {
       delete cleanedData.couponCode;
     }
 
-    if (cleanedData.discountPercentage) {
+    // Validate discountPercentage is required when offerType is 'discount'
+    if (cleanedData.offerType === 'discount') {
+      if (!cleanedData.discountPercentage || cleanedData.discountPercentage === '') {
+        alert('Discount Percentage is required for discount coupons');
+        return;
+      }
       cleanedData.discountPercentage = parseFloat(cleanedData.discountPercentage);
+      if (isNaN(cleanedData.discountPercentage) || cleanedData.discountPercentage < 1 || cleanedData.discountPercentage > 100) {
+        alert('Discount Percentage must be between 1 and 100');
+        return;
+      }
     }
-    if (cleanedData.discountAmount) {
-      cleanedData.discountAmount = parseFloat(cleanedData.discountAmount);
-    }
+    
     if (cleanedData.maxUsageCount) {
       cleanedData.maxUsageCount = parseInt(cleanedData.maxUsageCount);
     }
@@ -335,8 +336,8 @@ const Coupons = () => {
   }
 
   // Extract coupons from the response structure
-  // The query function returns { offers, data: { offers, ... } }
-  const coupons = offersData?.offers || offersData?.data?.offers || [];
+  // The query function returns { coupons, data: { coupons, ... } }
+  const coupons = couponsData?.coupons || couponsData?.data?.coupons || [];
 
   return (
     <div className="space-y-6">
@@ -367,7 +368,7 @@ const Coupons = () => {
             value={filterAudience}
             onChange={(e) => {
               const value = e.target.value;
-              setFilterAudience(value);
+              setFilterAudience(value === '' ? '' : value);
             }}
             placeholder="All Audiences"
             options={[
@@ -381,7 +382,7 @@ const Coupons = () => {
             value={filterActive}
             onChange={(e) => {
               const value = e.target.value;
-              setFilterActive(value);
+              setFilterActive(value === '' ? '' : value);
             }}
             placeholder="All Statuses"
             options={[
@@ -438,8 +439,6 @@ const Coupons = () => {
                     <div className="mt-2 text-sm text-gray-600">
                       {coupon.discountPercentage ? (
                         <span>{coupon.discountPercentage}% discount</span>
-                      ) : coupon.discountAmount ? (
-                        <span>${coupon.discountAmount} discount</span>
                       ) : null}
                     </div>
                   </div>
@@ -549,28 +548,17 @@ const Coupons = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Discount Percentage (%)"
-              name="discountPercentage"
-              type="number"
-              min="0"
-              max="100"
-              value={formData.discountPercentage}
-              onChange={handleInputChange}
-              placeholder="e.g., 50"
-            />
-            <Input
-              label="OR Fixed Discount Amount"
-              name="discountAmount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.discountAmount}
-              onChange={handleInputChange}
-              placeholder="e.g., 10.00"
-            />
-          </div>
+          <Input
+            label="Discount Percentage (%)"
+            name="discountPercentage"
+            type="number"
+            min="1"
+            max="100"
+            value={formData.discountPercentage}
+            onChange={handleInputChange}
+            placeholder="e.g., 50"
+            required
+          />
 
           <Input
             label="Coupon Code"

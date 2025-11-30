@@ -165,6 +165,12 @@ const JobDetails = () => {
           <div className="flex flex-col gap-2">
             <Badge variant="info">{job.category}</Badge>
             {job.urgent && <Badge variant="error">Urgent</Badge>}
+            {/* Show startup name tag if premium and startup exists */}
+            {isPremium && job.startup && !job.startup.message && job.startup.startupName && (
+              <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                {job.startup.startupName}
+              </Badge>
+            )}
           </div>
         </div>
 

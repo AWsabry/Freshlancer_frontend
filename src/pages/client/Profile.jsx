@@ -21,6 +21,8 @@ import {
   Receipt,
   Settings,
   Edit2,
+  Link as LinkIcon,
+  ExternalLink,
 } from 'lucide-react';
 
 const Profile = () => {
@@ -33,6 +35,14 @@ const Profile = () => {
     phone: '',
     companyName: '',
     industry: '',
+    clientProfile: {
+      socialLinks: {
+        linkedin: '',
+        website: '',
+        telegram: '',
+        whatsapp: '',
+      },
+    },
   });
 
   // Fetch current user data from backend (to get fresh data with createdAt)
@@ -90,13 +100,31 @@ const Profile = () => {
         phone: userData?.phone || '',
         companyName: userData?.clientProfile?.companyName || '',
         industry: userData?.clientProfile?.industry || '',
+        clientProfile: {
+          socialLinks: {
+            linkedin: userData?.clientProfile?.socialLinks?.linkedin || '',
+            website: userData?.clientProfile?.socialLinks?.website || '',
+            telegram: userData?.clientProfile?.socialLinks?.telegram || '',
+            whatsapp: userData?.clientProfile?.socialLinks?.whatsapp || '',
+          },
+        },
       });
     }
   }, [userData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateMutation.mutate(formData);
+    // Format data for API - include clientProfile with socialLinks
+    const updateData = {
+      name: formData.name,
+      phone: formData.phone,
+      clientProfile: {
+        companyName: formData.companyName,
+        industry: formData.industry,
+        socialLinks: formData.clientProfile?.socialLinks || {},
+      },
+    };
+    updateMutation.mutate(updateData);
   };
 
   if (loadingUser) {
@@ -200,6 +228,100 @@ const Profile = () => {
               </div>
             </div>
 
+            {/* Social Links Section */}
+            <div className="pt-4 border-t">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Links (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    LinkedIn
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.clientProfile?.socialLinks?.linkedin || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      clientProfile: {
+                        ...formData.clientProfile,
+                        socialLinks: {
+                          ...formData.clientProfile?.socialLinks,
+                          linkedin: e.target.value,
+                        },
+                      },
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="https://linkedin.com/in/username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Website
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.clientProfile?.socialLinks?.website || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      clientProfile: {
+                        ...formData.clientProfile,
+                        socialLinks: {
+                          ...formData.clientProfile?.socialLinks,
+                          website: e.target.value,
+                        },
+                      },
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="https://yourwebsite.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Telegram
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.clientProfile?.socialLinks?.telegram || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      clientProfile: {
+                        ...formData.clientProfile,
+                        socialLinks: {
+                          ...formData.clientProfile?.socialLinks,
+                          telegram: e.target.value,
+                        },
+                      },
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="https://t.me/username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    WhatsApp
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.clientProfile?.socialLinks?.whatsapp || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      clientProfile: {
+                        ...formData.clientProfile,
+                        socialLinks: {
+                          ...formData.clientProfile?.socialLinks,
+                          whatsapp: e.target.value,
+                        },
+                      },
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="https://wa.me/1234567890"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 pt-4">
               <Button type="submit" variant="primary" loading={updateMutation.isPending}>
                 Save Changes
@@ -217,6 +339,14 @@ const Profile = () => {
                       phone: userData.phone || '',
                       companyName: userData.clientProfile?.companyName || '',
                       industry: userData.clientProfile?.industry || '',
+                      clientProfile: {
+                        socialLinks: {
+                          linkedin: userData?.clientProfile?.socialLinks?.linkedin || '',
+                          website: userData?.clientProfile?.socialLinks?.website || '',
+                          telegram: userData?.clientProfile?.socialLinks?.telegram || '',
+                          whatsapp: userData?.clientProfile?.socialLinks?.whatsapp || '',
+                        },
+                      },
                     });
                   }
                 }}
@@ -226,67 +356,126 @@ const Profile = () => {
             </div>
           </form>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-primary-600 mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Full Name</p>
-                <p className="font-semibold text-gray-900">{user?.name}</p>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-start gap-3">
+                <User className="w-5 h-5 text-primary-600 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="font-semibold text-gray-900">{user?.name}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Mail className="w-5 h-5 text-primary-600 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-semibold text-gray-900">{user?.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Phone className="w-5 h-5 text-primary-600 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Phone Number</p>
+                  <p className="font-semibold text-gray-900">{user?.phone || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Briefcase className="w-5 h-5 text-primary-600 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Company Name</p>
+                  <p className="font-semibold text-gray-900">
+                    {user?.clientProfile?.companyName || 'Not provided'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary-600 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Industry</p>
+                  <p className="font-semibold text-gray-900">
+                    {user?.clientProfile?.industry || 'Not provided'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Calendar className="w-5 h-5 text-primary-600 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Member Since</p>
+                  <p className="font-semibold text-gray-900">
+                    {user?.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'Not available'}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-primary-600 mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-semibold text-gray-900">{user?.email}</p>
+            {/* Social Links Display */}
+            {user?.clientProfile?.socialLinks && Object.values(user.clientProfile.socialLinks).some(link => link) && (
+              <div className="pt-6 border-t mt-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Social Links</h3>
+                <div className="flex flex-wrap gap-4">
+                  {user.clientProfile.socialLinks.linkedin && (
+                    <a
+                      href={user.clientProfile.socialLinks.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                      <span className="text-sm">LinkedIn</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {user.clientProfile.socialLinks.website && (
+                    <a
+                      href={user.clientProfile.socialLinks.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                      <span className="text-sm">Website</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {user.clientProfile.socialLinks.telegram && (
+                    <a
+                      href={user.clientProfile.socialLinks.telegram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                      <span className="text-sm">Telegram</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {user.clientProfile.socialLinks.whatsapp && (
+                    <a
+                      href={user.clientProfile.socialLinks.whatsapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                      <span className="text-sm">WhatsApp</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Phone className="w-5 h-5 text-primary-600 mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Phone Number</p>
-                <p className="font-semibold text-gray-900">{user?.phone || 'Not provided'}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Briefcase className="w-5 h-5 text-primary-600 mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Company Name</p>
-                <p className="font-semibold text-gray-900">
-                  {user?.clientProfile?.companyName || 'Not provided'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-primary-600 mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Industry</p>
-                <p className="font-semibold text-gray-900">
-                  {user?.clientProfile?.industry || 'Not provided'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-primary-600 mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Member Since</p>
-                <p className="font-semibold text-gray-900">
-                  {user?.createdAt
-                    ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                    : 'Not available'}
-                </p>
-              </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </Card>
 

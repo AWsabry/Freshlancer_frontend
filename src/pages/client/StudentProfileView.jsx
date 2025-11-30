@@ -28,6 +28,7 @@ import {
   ArrowLeft,
   ExternalLink,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config/env';
 
 const StudentProfileView = () => {
   const { studentId } = useParams();
@@ -209,6 +210,30 @@ const StudentProfileView = () => {
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
+                {profile.socialLinks.telegram && (
+                  <a
+                    href={profile.socialLinks.telegram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary-600 hover:text-primary-700"
+                  >
+                    <Globe className="w-5 h-5" />
+                    <span className="text-sm">Telegram</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {profile.socialLinks.whatsapp && (
+                  <a
+                    href={profile.socialLinks.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary-600 hover:text-primary-700"
+                  >
+                    <Phone className="w-5 h-5" />
+                    <span className="text-sm">WhatsApp</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -232,7 +257,7 @@ const StudentProfileView = () => {
               </div>
             </div>
             <a
-              href={profile.resume.url}
+              href={`${API_BASE_URL}${profile.resume.url}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2"
@@ -242,6 +267,50 @@ const StudentProfileView = () => {
                 Download CV
               </Button>
             </a>
+          </div>
+        </Card>
+      )}
+
+      {/* Additional Documents */}
+      {profile.additionalDocuments && profile.additionalDocuments.length > 0 && (
+        <Card>
+          <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
+            <FileText className="w-6 h-6 text-primary-600" />
+            Additional Documents
+          </h3>
+          <div className="space-y-3">
+            {profile.additionalDocuments.map((doc, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  <FileText className="w-6 h-6 text-primary-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{doc.filename}</p>
+                    {doc.description && (
+                      <p className="text-sm text-gray-600 truncate">{doc.description}</p>
+                    )}
+                    {doc.uploadedAt && (
+                      <p className="text-xs text-gray-500">
+                        Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <a
+                  href={`${API_BASE_URL}${doc.url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2"
+                >
+                  <Button variant="primary" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    View
+                  </Button>
+                </a>
+              </div>
+            ))}
           </div>
         </Card>
       )}
