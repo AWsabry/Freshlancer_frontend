@@ -63,6 +63,7 @@ import AdminJobs from './pages/admin/Jobs';
 import AdminClientPackages from './pages/admin/ClientPackages';
 import AdminStudentPackages from './pages/admin/StudentPackages';
 import AdminCoupons from './pages/admin/Coupons';
+import AdminCategories from './pages/admin/Categories';
 import AdminContactUs from './pages/admin/ContactUs';
 import AdminTransactions from './pages/admin/Transactions';
 import AdminClientTransactions from './pages/admin/ClientTransactions';
@@ -181,6 +182,7 @@ function App() {
         <Route path="client-packages" element={<AdminClientPackages />} />
         <Route path="student-packages" element={<AdminStudentPackages />} />
         <Route path="coupons" element={<AdminCoupons />} />
+        <Route path="categories" element={<AdminCategories />} />
         <Route path="contact-us" element={<AdminContactUs />} />
         <Route path="transactions" element={<AdminTransactions />} />
         <Route path="client-transactions" element={<AdminClientTransactions />} />

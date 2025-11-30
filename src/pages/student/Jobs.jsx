@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
 import { subscriptionService } from '../../services/subscriptionService';
 import { authService } from '../../services/authService';
+import { categoryService } from '../../services/categoryService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -30,10 +31,11 @@ const Jobs = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('');
-  const [sortBy, setSortBy] = useState(''); // 'budget-desc' for highest budget
+  const [sortBy, setSortBy] = useState('createdAt-desc'); // Default: newest first (descending)
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('available'); // 'available' or 'applied'
   const [startupsOnly, setStartupsOnly] = useState(false); // Filter for startup jobs only
+  const [currency, setCurrency] = useState(''); // Filter by currency (premium only)
 
   // Check subscription/application limit
   const { data: subscriptionData } = useQuery({
@@ -62,17 +64,27 @@ const Jobs = () => {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['jobs', searchQuery, category, sortBy, startupsOnly],
+    queryKey: ['jobs', searchQuery, category, sortBy, startupsOnly, currency],
     queryFn: ({ pageParam = 1 }) => {
       const params = { page: pageParam, limit: 10 };
-      // Only add sort if user is premium
-      if (sortBy && isPremium) {
-        params.sort = sortBy;
+      // Add sort - always include default sort, budget sort only for premium
+      if (sortBy) {
+        // Budget sorting is premium only
+        if ((sortBy === 'budget-desc' || sortBy === 'budget-asc') && !isPremium) {
+          // If user tries to sort by budget but isn't premium, use default
+          params.sort = 'createdAt-desc';
+        } else {
+          params.sort = sortBy;
+        }
+      } else {
+        // Default sort: newest first (descending)
+        params.sort = 'createdAt-desc';
       }
+      if (category) params.category = category;
+      if (currency && isPremium) params.currency = currency;
       if (searchQuery) {
         return jobService.searchJobs(searchQuery, params);
       }
-      if (category) params.category = category;
       return jobService.getAllJobs(params);
     },
     getNextPageParam: (lastPage) => {
@@ -125,8 +137,13 @@ const Jobs = () => {
       jobs = jobs.filter((job) => job.startup && job.startup.startupName && !job.startup.message);
     }
     
+    // Filter by currency if selected and user is premium
+    if (currency && isPremium) {
+      jobs = jobs.filter((job) => job.budget && job.budget.currency === currency && !job.budget.message);
+    }
+    
     return jobs;
-  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium]);
+  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium, currency]);
 
   // Build applied jobs array with application metadata
   const appliedJobs = useMemo(() => {
@@ -177,15 +194,16 @@ const Jobs = () => {
     setSearchQuery('');
   };
 
-  const categories = [
-    { value: 'Web Development', label: 'Web Development' },
-    { value: 'Mobile Development', label: 'Mobile Development' },
-    { value: 'Graphic Design', label: 'Graphic Design' },
-    { value: 'Writing', label: 'Writing' },
-    { value: 'Data Entry', label: 'Data Entry' },
-    { value: 'Undergraduate Tasks', label: 'Undergraduate Tasks' },
-    { value: 'Other', label: 'Other' },
-  ];
+  // Fetch categories from API
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+
+  const categories = categoriesData?.data?.categories?.map((cat) => ({
+    value: cat.name,
+    label: cat.name,
+  })) || [];
 
     console.log('Jobs Data:', subscription);
 
@@ -318,22 +336,107 @@ const Jobs = () => {
                 </label>
                 <Select
                   options={[
-                    { value: '', label: 'Default' },
+                    { value: 'createdAt-desc', label: 'Created By (Desc)' },
+                    { value: 'createdAt-asc', label: 'Created By (Asc)' },
                     { value: 'budget-desc', label: 'Highest Budget First' },
+                    { value: 'budget-asc', label: 'Lowest Budget First' },
                   ]}
                   value={sortBy}
                   onChange={(e) => {
-                    if (isPremium) {
-                      setSortBy(e.target.value);
+                    const selectedValue = e.target.value;
+                    // Budget sorting requires premium
+                    if ((selectedValue === 'budget-desc' || selectedValue === 'budget-asc') && !isPremium) {
+                      // Don't allow budget sorting for free users
+                      return;
                     }
+                    setSortBy(selectedValue);
                   }}
-                  disabled={!isPremium}
-                  className={!isPremium ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}
+                  className={
+                    (sortBy === 'budget-desc' || sortBy === 'budget-asc') && !isPremium
+                      ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                      : ''
+                  }
                 />
                 {!isPremium && (
                   <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     <Lock className="w-3 h-3" />
                     Upgrade to Premium to sort by budget
+                  </p>
+                )}
+              </div>
+              
+              {/* Currency Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  {isPremium ? (
+                    <>
+                      <Crown className="w-4 h-4 text-yellow-500" />
+                      Filter by Currency
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-gray-400" />
+                      Filter by Currency (Premium Only)
+                    </>
+                  )}
+                </label>
+                <Select
+                  options={[
+                    { value: '', label: 'All Currencies' },
+                    { value: 'USD', label: 'USD ($) - US Dollar' },
+                    { value: 'EUR', label: 'EUR (€) - Euro' },
+                    { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
+                    { value: 'GBP', label: 'GBP (£) - British Pound' },
+                    { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
+                    { value: 'SAR', label: 'SAR (﷼) - Saudi Riyal' },
+                    { value: 'QAR', label: 'QAR (﷼) - Qatari Riyal' },
+                    { value: 'KWD', label: 'KWD (د.ك) - Kuwaiti Dinar' },
+                    { value: 'BHD', label: 'BHD (.د.ب) - Bahraini Dinar' },
+                    { value: 'OMR', label: 'OMR (﷼) - Omani Rial' },
+                    { value: 'JOD', label: 'JOD (د.ا) - Jordanian Dinar' },
+                    { value: 'LBP', label: 'LBP (ل.ل) - Lebanese Pound' },
+                    { value: 'ILS', label: 'ILS (₪) - Israeli Shekel' },
+                    { value: 'TRY', label: 'TRY (₺) - Turkish Lira' },
+                    { value: 'ZAR', label: 'ZAR (R) - South African Rand' },
+                    { value: 'MAD', label: 'MAD (د.م.) - Moroccan Dirham' },
+                    { value: 'TND', label: 'TND (د.ت) - Tunisian Dinar' },
+                    { value: 'DZD', label: 'DZD (د.ج) - Algerian Dinar' },
+                    { value: 'NGN', label: 'NGN (₦) - Nigerian Naira' },
+                    { value: 'KES', label: 'KES (KSh) - Kenyan Shilling' },
+                    { value: 'GHS', label: 'GHS (₵) - Ghanaian Cedi' },
+                    { value: 'UGX', label: 'UGX (USh) - Ugandan Shilling' },
+                    { value: 'TZS', label: 'TZS (TSh) - Tanzanian Shilling' },
+                    { value: 'ETB', label: 'ETB (Br) - Ethiopian Birr' },
+                    { value: 'CHF', label: 'CHF (Fr) - Swiss Franc' },
+                    { value: 'SEK', label: 'SEK (kr) - Swedish Krona' },
+                    { value: 'NOK', label: 'NOK (kr) - Norwegian Krone' },
+                    { value: 'DKK', label: 'DKK (kr) - Danish Krone' },
+                    { value: 'PLN', label: 'PLN (zł) - Polish Zloty' },
+                    { value: 'CZK', label: 'CZK (Kč) - Czech Koruna' },
+                    { value: 'HUF', label: 'HUF (Ft) - Hungarian Forint' },
+                    { value: 'RON', label: 'RON (lei) - Romanian Leu' },
+                    { value: 'BGN', label: 'BGN (лв) - Bulgarian Lev' },
+                    { value: 'HRK', label: 'HRK (kn) - Croatian Kuna' },
+                    { value: 'RUB', label: 'RUB (₽) - Russian Ruble' },
+                    { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
+                  ]}
+                  value={currency}
+                  onChange={(e) => {
+                    if (isPremium) {
+                      setCurrency(e.target.value);
+                    }
+                  }}
+                  disabled={!isPremium}
+                  className={
+                    !isPremium
+                      ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                      : ''
+                  }
+                />
+                {!isPremium && (
+                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    Upgrade to Premium to filter by currency
                   </p>
                 )}
               </div>
@@ -493,12 +596,10 @@ const Jobs = () => {
                   <div className="flex items-center gap-4">
               {isPremium && job.budget && !job.budget.message ? (
                 <div className="flex items-center gap-1 text-lg font-semibold text-green-600">
-                  <DollarSign className="w-5 h-5" />
                   {job.budget.currency} {job.budget.min} - {job.budget.max}
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-sm text-gray-500 italic">
-                  <DollarSign className="w-4 h-4" />
                   {job.budget?.message || 'Premium members only'}
                 </div>
               )}

@@ -36,38 +36,53 @@ const Payment = () => {
   // Coupon validation mutation - using Coupon model with couponCode filtered by targetAudience
   const couponMutation = useMutation({
     mutationFn: async ({ code, amount, currency }) => {
-      // Get coupon by coupon code from Coupon model (backend validates targetAudience matches user role)
-      const response = await couponService.getCouponByCode(code);
-      const coupon = response.data.coupon;
+      try {
+        // Get coupon by coupon code from Coupon model (backend validates targetAudience matches user role)
+        const response = await couponService.getCouponByCode(code);
+        
+        if (!response || !response.data || !response.data.coupon) {
+          throw new Error('Invalid response from server');
+        }
 
-      // Calculate discount from coupon
-      let discountAmount = 0;
-      if (coupon.discountPercentage) {
-        discountAmount = (amount * coupon.discountPercentage) / 100;
-      } else if (coupon.discountAmount) {
-        discountAmount = coupon.discountAmount;
+        const coupon = response.data.coupon;
+
+        // Validate coupon has required fields
+        if (!coupon.couponCode) {
+          throw new Error('Invalid coupon data received');
+        }
+
+        // Calculate discount from coupon
+        let discountAmount = 0;
+        if (coupon.discountPercentage) {
+          discountAmount = (amount * coupon.discountPercentage) / 100;
+        } else if (coupon.discountAmount) {
+          discountAmount = coupon.discountAmount;
+        }
+
+        // Ensure discount doesn't exceed the total amount
+        if (discountAmount > amount) {
+          discountAmount = amount;
+        }
+
+        const finalAmount = Math.max(0, amount - discountAmount);
+
+        return {
+          data: {
+            couponCode: coupon.couponCode,
+            discountType: coupon.discountPercentage ? 'percentage' : 'fixed',
+            discountValue: coupon.discountPercentage || coupon.discountAmount || 0,
+            discountAmount: Math.round(discountAmount * 100) / 100,
+            originalAmount: amount,
+            finalAmount: Math.round(finalAmount * 100) / 100,
+            currency,
+            couponId: coupon._id || coupon.id,
+            couponTitle: coupon.title || 'Discount',
+          },
+        };
+      } catch (error) {
+        console.error('Coupon validation error:', error);
+        throw error;
       }
-
-      // Ensure discount doesn't exceed the total amount
-      if (discountAmount > amount) {
-        discountAmount = amount;
-      }
-
-      const finalAmount = Math.max(0, amount - discountAmount);
-
-      return {
-        data: {
-          couponCode: coupon.couponCode,
-          discountType: coupon.discountPercentage ? 'percentage' : 'fixed',
-          discountValue: coupon.discountPercentage || coupon.discountAmount,
-          discountAmount: Math.round(discountAmount * 100) / 100,
-          originalAmount: amount,
-          finalAmount: Math.round(finalAmount * 100) / 100,
-          currency,
-          couponId: coupon._id,
-          couponTitle: coupon.title,
-        },
-      };
     },
     onSuccess: (response) => {
       setAppliedCoupon(response.data);
@@ -145,13 +160,15 @@ const Payment = () => {
       sessionStorage.setItem('appliedCoupon', JSON.stringify(appliedCoupon));
     }
 
-    // Process payment
+    // Process payment - include coupon code if applied
     const paymentData = {
-      amount: total,
+      amount: total, // This is the discounted total from frontend calculation
       currency: currency,
       billingCycle: 'monthly',
+      couponCode: appliedCoupon ? appliedCoupon.couponCode : undefined, // Send coupon code to backend
     };
     console.log('Processing payment with data:', paymentData);
+    console.log('Applied coupon:', appliedCoupon);
 
     upgradeMutation.mutate(paymentData);
   };

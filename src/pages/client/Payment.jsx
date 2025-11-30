@@ -130,13 +130,15 @@ const Payment = () => {
       sessionStorage.setItem('appliedCoupon', JSON.stringify(appliedCoupon));
     }
 
-    // Process payment
+    // Process payment - include coupon code if applied
     const paymentData = {
-      amount: total,
+      amount: total, // This is the discounted total from frontend calculation
       currency: currency,
       packageId: packageId, // Include packageId if available
+      couponCode: appliedCoupon ? appliedCoupon.couponCode : undefined, // Send coupon code to backend
     };
     console.log('Processing payment with data:', paymentData);
+    console.log('Applied coupon:', appliedCoupon);
 
     purchaseMutation.mutate(paymentData);
   };

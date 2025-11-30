@@ -40,22 +40,27 @@ const COUNTRY_CURRENCY_MAP = {
 const COUNTRY_PHONE_CODE_MAP = {
   'United States': '+1', 'Canada': '+1', 'Mexico': '+52', 'Brazil': '+55',
   'Argentina': '+54', 'Chile': '+56', 'Colombia': '+57', 'Peru': '+51',
+  'Venezuela': '+58', 'Ecuador': '+593', 'Bolivia': '+591', 'Paraguay': '+595',
+  'Uruguay': '+598', 'Costa Rica': '+506', 'Panama': '+507', 'Guatemala': '+502',
   'Egypt': '+20', 'Saudi Arabia': '+966', 'United Arab Emirates': '+971',
   'Kuwait': '+965', 'Qatar': '+974', 'Bahrain': '+973', 'Oman': '+968',
   'Jordan': '+962', 'Lebanon': '+961', 'Palestine': '+970', 'Turkey': '+90',
+  'Israel': '+972', 'Syria': '+963', 'Iraq': '+964', 'Iran': '+98', 'Yemen': '+967',
   'South Africa': '+27', 'Morocco': '+212', 'Tunisia': '+216',
   'Algeria': '+213', 'Nigeria': '+234', 'Kenya': '+254', 'Ghana': '+233',
-  'Uganda': '+256', 'Tanzania': '+255', 'Ethiopia': '+251',
+  'Uganda': '+256', 'Tanzania': '+255', 'Ethiopia': '+251', 'Rwanda': '+250',
   'United Kingdom': '+44', 'Switzerland': '+41', 'Sweden': '+46',
   'Norway': '+47', 'Denmark': '+45', 'Poland': '+48', 'Czech Republic': '+420',
   'Hungary': '+36', 'Romania': '+40', 'Bulgaria': '+359', 'Croatia': '+385',
   'Russia': '+7', 'Ukraine': '+380', 'Germany': '+49', 'France': '+33',
   'Italy': '+39', 'Spain': '+34', 'Netherlands': '+31', 'Belgium': '+32',
   'Austria': '+43', 'Greece': '+30', 'Portugal': '+351', 'Ireland': '+353',
-  'Finland': '+358', 'Slovakia': '+421', 'China': '+86', 'Japan': '+81',
-  'South Korea': '+82', 'India': '+91', 'Pakistan': '+92', 'Bangladesh': '+880',
-  'Indonesia': '+62', 'Philippines': '+63', 'Vietnam': '+84', 'Thailand': '+66',
-  'Malaysia': '+60', 'Singapore': '+65', 'Australia': '+61', 'New Zealand': '+64',
+  'Finland': '+358', 'Slovakia': '+421', 'Slovenia': '+386', 'Lithuania': '+370',
+  'Latvia': '+371', 'Estonia': '+372', 'Serbia': '+381', 'Albania': '+355',
+  'China': '+86', 'Japan': '+81', 'South Korea': '+82', 'India': '+91',
+  'Pakistan': '+92', 'Bangladesh': '+880', 'Indonesia': '+62', 'Philippines': '+63',
+  'Vietnam': '+84', 'Thailand': '+66', 'Malaysia': '+60', 'Singapore': '+65',
+  'Australia': '+61', 'New Zealand': '+64',
 };
 
 // Country options for dropdown
@@ -307,6 +312,17 @@ const Register = () => {
     } else if (countryOfStudy) {
       // Default to USD if country not in map
       setValue('currency', 'USD');
+    }
+  }, [countryOfStudy, setValue]);
+
+  // Auto-detect phone country code when country of study changes
+  useEffect(() => {
+    if (countryOfStudy && COUNTRY_PHONE_CODE_MAP[countryOfStudy]) {
+      const phoneCode = COUNTRY_PHONE_CODE_MAP[countryOfStudy];
+      setValue('phoneCountryCode', phoneCode);
+    } else if (countryOfStudy) {
+      // Default to +1 if country not in map
+      setValue('phoneCountryCode', '+1');
     }
   }, [countryOfStudy, setValue]);
 
@@ -566,18 +582,53 @@ const Register = () => {
           {step === 2 && role === 'student' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
+                <Select
+                  label="Country of Study"
+                  placeholder="Select country of study"
+                  error={errors.countryOfStudy?.message}
+                  {...register('countryOfStudy', {
+                    required: 'Please select the country where you study',
+                  })}
+                  options={COUNTRY_OPTIONS}
+                />
+                {countryOfStudy && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      <strong>Auto-configured based on your country:</strong>
+                    </p>
+                    <ul className="text-xs text-blue-700 mt-1 space-y-1">
+                      <li>• Phone Code: {COUNTRY_PHONE_CODE_MAP[countryOfStudy] || '+1'}</li>
+                      <li>• Currency: {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'USD'}</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <Select
+                  label="Nationality"
+                  placeholder="Select your nationality"
+                  error={errors.nationality?.message}
+                  {...register('nationality', {
+                    required: 'Please select your nationality',
+                  })}
+                  options={NATIONALITY_OPTIONS}
+                />
+              </div>
+
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phone Number *
                 </label>
                 <div className="flex gap-2">
                   <div className="w-1/3">
-                    <Select
+                    <Input
                       placeholder="Code"
-                      error={errors.phoneCountryCode?.message}
-                      {...register('phoneCountryCode', { 
+                      {...register('phoneCountryCode', {
                         required: 'Please select your country code',
                       })}
-                      options={COUNTRY_CODE_OPTIONS}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
                     />
                   </div>
                   <div className="w-2/3">
@@ -585,7 +636,7 @@ const Register = () => {
                       type="tel"
                       placeholder="1234567890"
                       error={errors.phoneNumber?.message}
-                      {...register('phoneNumber', { 
+                      {...register('phoneNumber', {
                         required: 'Please enter your phone number',
                         pattern: {
                           value: /^[0-9]{7,15}$/,
@@ -595,36 +646,9 @@ const Register = () => {
                     />
                   </div>
                 </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <Select
-                  label="Nationality"
-                  placeholder="Select your nationality"
-                  error={errors.nationality?.message}
-                  {...register('nationality', { 
-                    required: 'Please select your nationality',
-                  })}
-                  options={NATIONALITY_OPTIONS}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Select
-                  label="Country of Study"
-                  placeholder="Select country of study"
-                  error={errors.countryOfStudy?.message}
-                  {...register('countryOfStudy', { 
-                    required: 'Please select the country where you study',
-                  })}
-                  options={COUNTRY_OPTIONS}
-                />
-          
-                {countryOfStudy && !COUNTRY_CURRENCY_MAP[countryOfStudy] && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Your payment currency will be set to US Dollars (USD)
-                  </p>
-                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Country code is automatically set based on your country of study
+                </p>
               </div>
 
               <div className="md:col-span-2">

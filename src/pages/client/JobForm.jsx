@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { jobService } from '../../services/jobService';
 import startupService from '../../services/startupService';
+import { categoryService } from '../../services/categoryService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -43,9 +44,19 @@ const JobForm = () => {
     queryFn: () => startupService.getMyStartups(),
   });
 
+  // Fetch categories
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+
   const startups = startupsData?.data?.startups || [];
   const hasStartups = startups.length > 0;
-
+  const categories = categoriesData?.categories?.map((cat) => ({
+    value: cat.name,
+    label: cat.name,
+  })) || [];
+console.log("categories" + categoriesData);
   // Populate form when job data is loaded
   React.useEffect(() => {
     if (jobData?.data?.jobPost && isEditing) {
@@ -224,15 +235,7 @@ const JobForm = () => {
 
           <Select
             label="Category"
-            options={[
-              { value: 'Web Development', label: 'Web Development' },
-              { value: 'Mobile Development', label: 'Mobile Development' },
-              { value: 'Graphic Design', label: 'Graphic Design' },
-              { value: 'Writing', label: 'Writing' },
-              { value: 'Data Entry', label: 'Data Entry' },
-              { value: 'Undergraduate Tasks', label: 'Undergraduate Tasks' },
-              { value: 'Other', label: 'Other' },
-            ]}
+            options={categories}
             error={errors.category?.message}
             {...register('category', { required: 'Please select a job category' })}
           />
@@ -347,8 +350,8 @@ const JobForm = () => {
 
           <Select
             label="Project Duration"
+            placeholder="Select duration"
             options={[
-              { value: '', label: 'Select duration' },
               { value: 'Less than 1 week', label: 'Less than 1 week' },
               { value: '1-2 weeks', label: '1-2 weeks' },
               { value: '2-4 weeks', label: '2-4 weeks' },

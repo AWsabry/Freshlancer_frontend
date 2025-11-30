@@ -21,7 +21,7 @@ const Select = React.forwardRef(({
         className={`input ${error ? 'border-red-500 focus:ring-red-500' : ''} ${className}`}
         {...props}
       >
-        <option value="">{placeholder}</option>
+        {!props.value && <option value="">{placeholder}</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

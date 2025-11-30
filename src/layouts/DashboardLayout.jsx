@@ -23,6 +23,7 @@ import {
   Tag,
   Rocket,
   Mail,
+  Folder,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 
@@ -128,6 +129,7 @@ const DashboardLayout = () => {
         { name: 'Verifications', icon: Shield, path: '/admin/students' },
         { name: 'Applications', icon: FileText, path: '/admin/applications' },
         { name: 'Jobs', icon: Briefcase, path: '/admin/jobs' },
+        { name: 'Categories', icon: Folder, path: '/admin/categories' },
         { name: 'Client Packages', icon: CreditCard, path: '/admin/client-packages' },
         { name: 'Client Transactions', icon: DollarSign, path: '/admin/client-transactions' },
         { name: 'Student Subscriptions', icon: User, path: '/admin/student-packages' },
