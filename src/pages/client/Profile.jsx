@@ -88,7 +88,42 @@ const Profile = () => {
       alert('Profile updated successfully!');
     },
     onError: (error) => {
-      alert(error.response?.data?.message || 'Failed to update profile');
+      // Log full error for debugging
+      console.error('Profile update error:', error);
+      
+      // Extract error message from various possible locations
+      // Note: API interceptor returns error.response?.data, so error might be the data object itself
+      let errorMessage = 'Failed to update profile';
+      
+      // Check if error is the response data object (from interceptor)
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.error?.message) {
+        errorMessage = error.error.message;
+      } else if (typeof error?.error === 'string') {
+        errorMessage = error.error;
+      } else if (error?.status === 'error' && error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Show validation errors if they exist
+      if (error?.errors) {
+        const validationErrors = Object.values(error.errors)
+          .map(err => (typeof err === 'object' && err?.message) ? err.message : err)
+          .filter(Boolean)
+          .join(', ');
+        if (validationErrors) {
+          errorMessage = `Validation errors: ${validationErrors}`;
+        }
+      }
+      
+      // If we still don't have a good message, show the error object
+      if (errorMessage === 'Failed to update profile' && error) {
+        console.error('Full error object:', JSON.stringify(error, null, 2));
+        errorMessage = `Failed to update profile. ${JSON.stringify(error)}`;
+      }
+      
+      alert(errorMessage);
     },
   });
 
@@ -114,16 +149,36 @@ const Profile = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Clean up social links - convert empty strings to undefined
+    const socialLinks = {};
+    if (formData.clientProfile?.socialLinks) {
+      Object.keys(formData.clientProfile.socialLinks).forEach(key => {
+        const value = formData.clientProfile.socialLinks[key];
+        // Only include non-empty values
+        if (value && value.trim() !== '') {
+          socialLinks[key] = value.trim();
+        }
+      });
+    }
+    
     // Format data for API - include clientProfile with socialLinks
     const updateData = {
-      name: formData.name,
-      phone: formData.phone,
+      name: formData.name?.trim() || '',
+      phone: formData.phone?.trim() || undefined,
       clientProfile: {
-        companyName: formData.companyName,
-        industry: formData.industry,
-        socialLinks: formData.clientProfile?.socialLinks || {},
+        companyName: formData.companyName?.trim() || undefined,
+        industry: formData.industry?.trim() || undefined,
+        socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : undefined,
       },
     };
+    
+    // Remove undefined values to avoid sending them
+    if (!updateData.phone) delete updateData.phone;
+    if (updateData.clientProfile.companyName === undefined) delete updateData.clientProfile.companyName;
+    if (updateData.clientProfile.industry === undefined) delete updateData.clientProfile.industry;
+    if (updateData.clientProfile.socialLinks === undefined) delete updateData.clientProfile.socialLinks;
+    
     updateMutation.mutate(updateData);
   };
 

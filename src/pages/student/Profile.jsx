@@ -298,7 +298,6 @@ const Profile = () => {
       setValue('name', user.name || '');
       setValue('phone', user.phone || '');
       setValue('age', user.age || '');
-      setValue('gender', user.gender || '');
       setValue('nationality', user.nationality || '');
       setValue('location.country', user.location?.country || '');
       setValue('location.city', user.location?.city || '');
@@ -758,11 +757,14 @@ const Profile = () => {
 
                     console.log('Updating skills:', formattedSkills);
 
-                    await updateProfileMutation.mutateAsync({
+                    // Build update payload - only include skills to avoid validation issues
+                    const updatePayload = {
                       studentProfile: {
                         skills: formattedSkills,
                       },
-                    });
+                    };
+
+                    await updateProfileMutation.mutateAsync(updatePayload);
                   } catch (error) {
                     console.error('Failed to update skills:', error);
                     const errorMessage = error.response?.data?.message || 
@@ -1452,15 +1454,6 @@ const Profile = () => {
                 placeholder="Enter your age"
               />
 
-              <Select
-                label="Gender"
-                {...register('gender')}
-                error={errors.gender?.message}
-                options={[
-                  { value: 'Male', label: 'Male' },
-                  { value: 'Female', label: 'Female' },
-                ]}
-              />
 
               <div>
                 <Select

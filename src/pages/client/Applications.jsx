@@ -90,7 +90,7 @@ const Applications = () => {
   // Get points from dedicated points service (more reliable) with fallback to user data
   const pointsRemaining = pointsData?.data?.pointsRemaining ?? 
                           userData?.data?.user?.clientProfile?.pointsRemaining ?? 0;
-
+  
   return (
     <div className="space-y-6">
       {/* Header with Points */}
@@ -142,10 +142,7 @@ const Applications = () => {
                         <span className="flex items-center gap-1">
                           {job.budget?.currency} {job.budget?.min} - {job.budget?.max}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          Deadline: {new Date(job.deadline).toLocaleDateString()}
-                        </span>
+          
                         <Badge variant="info">{job.category}</Badge>
                       </div>
                     </div>

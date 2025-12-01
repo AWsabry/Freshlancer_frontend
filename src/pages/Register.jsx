@@ -376,9 +376,11 @@ const Register = () => {
           : data.phone || data.phoneNumber;
         userData.phone = fullPhoneNumber;
         userData.nationality = data.nationality;
+        userData.gender = data.gender; // Gender is required for students
         
-        // Store country of study in location.country
+        // Store country of study in country field
         if (data.countryOfStudy) {
+          userData.country = data.countryOfStudy;
           userData.location = {
             country: data.countryOfStudy,
           };
@@ -393,11 +395,16 @@ const Register = () => {
           university: data.university?.trim() || '',
           major: data.major?.trim() || '',
           graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
-          experienceLevel: data.experienceLevel || '',
+          experienceLevel: data.experienceLevel, // Required field - don't use empty string fallback
           hourlyRate: {
             currency: currency,
           },
         };
+        
+        // Ensure experienceLevel is provided
+        if (!userData.studentProfile.experienceLevel) {
+          throw new Error('Experience level is required');
+        }
         
         // Remove graduationYear if it's invalid
         if (isNaN(userData.studentProfile.graduationYear) || userData.studentProfile.graduationYear < 1900 || userData.studentProfile.graduationYear > 2100) {
@@ -617,6 +624,19 @@ const Register = () => {
                 />
               </div>
 
+              <Select
+                label="Gender"
+                placeholder="Select your gender"
+                error={errors.gender?.message}
+                {...register('gender', {
+                  required: 'Please select your gender',
+                })}
+                options={[
+                  { value: 'Male', label: 'Male' },
+                  { value: 'Female', label: 'Female' },
+                ]}
+              />
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phone Number *
@@ -701,6 +721,18 @@ const Register = () => {
 
           {step === 2 && role === 'client' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Select
+                  label="Country"
+                  placeholder="Select your country"
+                  error={errors.country?.message}
+                  {...register('country', {
+                    required: 'Please select your country',
+                  })}
+                  options={COUNTRY_OPTIONS}
+                />
+              </div>
+
               <div className="md:col-span-2">
                 <Select
                   label="Industry"
