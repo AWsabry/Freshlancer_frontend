@@ -359,10 +359,9 @@ const StudentProfileView = () => {
           <div className="flex flex-wrap gap-3">
             {profile.skills.map((skill, index) => (
               <div key={index} className="bg-primary-50 border border-primary-200 rounded-lg px-4 py-2">
-                <div className="font-semibold text-primary-900">{skill.name}</div>
-                {skill.level && (
-                  <div className="text-xs text-primary-600">{skill.level}</div>
-                )}
+                <div className="font-semibold text-primary-900">
+                  {typeof skill === 'string' ? skill : skill.name || skill}
+                </div>
               </div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Badge from '../../components/common/Badge';
+import Button from '../../components/common/Button';
 import {
   Users,
   Briefcase,
@@ -15,7 +16,9 @@ import {
   TrendingUp,
   Crown,
   CreditCard,
+  Download,
 } from 'lucide-react';
+import { exportToCSV, formatDate } from '../../utils/exportUtils';
 import {
   BarChart,
   Bar,
@@ -52,6 +55,78 @@ const Dashboard = () => {
   const recentUsers = statsData?.data?.recentUsers || [];
   const clientYearlyChartData = statsData?.data?.clientYearlyChartData || [];
   const studentYearlyChartData = statsData?.data?.studentYearlyChartData || [];
+
+  const handleExportStats = () => {
+    const statsData = [
+      {
+        metric: 'Total Users',
+        value: stats.totalUsers || 0,
+      },
+      {
+        metric: 'Total Students',
+        value: stats.totalStudents || 0,
+      },
+      {
+        metric: 'Total Clients',
+        value: stats.totalClients || 0,
+      },
+      {
+        metric: 'Total Applications',
+        value: stats.totalApplications || 0,
+      },
+      {
+        metric: 'Total Jobs',
+        value: stats.totalJobs || 0,
+      },
+      {
+        metric: 'Active Jobs',
+        value: stats.activeJobs || 0,
+      },
+      {
+        metric: 'Pending Applications',
+        value: stats.pendingApplications || 0,
+      },
+      {
+        metric: 'Current Premium Students',
+        value: stats.currentPremiumStudents || 0,
+      },
+      {
+        metric: 'Total Client Transactions',
+        value: stats.totalClientTransactions || 0,
+      },
+      {
+        metric: 'Total Active Subscriptions',
+        value: stats.totalActiveSubscriptions || 0,
+      },
+    ];
+
+    const columns = [
+      { key: 'metric', label: 'Metric' },
+      { key: 'value', label: 'Value' },
+    ];
+
+    exportToCSV(statsData, columns, 'dashboard_stats');
+  };
+
+  const handleExportRecentUsers = () => {
+    if (recentUsers.length === 0) {
+      alert('No recent users to export');
+      return;
+    }
+
+    const columns = [
+      { key: 'name', label: 'Name' },
+      { key: 'email', label: 'Email' },
+      { key: 'role', label: 'Role' },
+      { 
+        key: 'createdAt', 
+        label: 'Joined Date',
+        formatter: formatDate
+      },
+    ];
+
+    exportToCSV(recentUsers, columns, 'recent_users');
+  };
 
   const statCards = [
     {
@@ -135,9 +210,31 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">Overview of platform statistics and activity</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-1">Overview of platform statistics and activity</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportStats}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export Stats
+          </Button>
+          {recentUsers.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleExportRecentUsers}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export Recent Users
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Grid */}

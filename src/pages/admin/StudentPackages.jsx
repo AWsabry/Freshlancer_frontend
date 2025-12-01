@@ -15,12 +15,22 @@ import {
   Crown,
   Users,
   TrendingUp,
+  Download,
+  Search,
 } from 'lucide-react';
+import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
+import DateRangePicker from '../../components/common/DateRangePicker';
 
 const StudentPackages = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   // Default to premium only
   const [filterPlan, setFilterPlan] = useState(searchParams.get('plan') || 'premium');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [dateRange, setDateRange] = useState({
+    startDate: searchParams.get('startDate') || null,
+    endDate: searchParams.get('endDate') || null,
+  });
 
   const page = parseInt(searchParams.get('page') || '1');
   const limit = 20;
@@ -33,23 +43,67 @@ const StudentPackages = () => {
 
   // Fetch subscriptions - default to premium only
   const { data: subscriptionsData, isLoading } = useQuery({
-    queryKey: ['adminSubscriptions', filterPlan, page],
+    queryKey: ['adminSubscriptions', filterPlan, page, dateRange.startDate, dateRange.endDate, searchTerm],
     queryFn: () =>
       adminService.getAllSubscriptions({
         plan: filterPlan === 'all' ? undefined : filterPlan, // Filter by plan (default: premium)
         status: 'active', // Only active subscriptions
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+        dateField: 'createdAt', // Filter by subscription creation date
+        search: searchTerm || undefined,
         page,
         limit,
       }),
   });
 
+  // Fetch subscription payment transactions for revenue calculation
+  const { data: transactionsData } = useQuery({
+    queryKey: ['subscriptionTransactions', dateRange.startDate, dateRange.endDate],
+    queryFn: () =>
+      adminService.getAllTransactions({
+        type: 'subscription_payment',
+        status: 'completed',
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+        limit: 10000, // Get all transactions for accurate totals
+      }),
+  });
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchTerm(searchInput.trim());
+    const params = { plan: filterPlan === 'all' ? '' : filterPlan, page: '1' };
+    if (searchInput.trim()) params.search = searchInput.trim();
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
   const handlePlanFilter = (plan) => {
     setFilterPlan(plan);
-    setSearchParams({ plan: plan === 'all' ? '' : plan, page: '1' });
+    const params = { plan: plan === 'all' ? '' : plan, page: '1' };
+    if (searchTerm) params.search = searchTerm;
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
+    const params = { plan: filterPlan === 'all' ? '' : filterPlan, page: '1' };
+    if (searchTerm) params.search = searchTerm;
+    if (newDateRange.startDate) params.startDate = newDateRange.startDate;
+    if (newDateRange.endDate) params.endDate = newDateRange.endDate;
+    setSearchParams(params);
   };
 
   const handlePageChange = (newPage) => {
-    setSearchParams({ plan: filterPlan, page: newPage.toString() });
+    const params = { plan: filterPlan === 'all' ? '' : filterPlan, page: newPage.toString() };
+    if (searchTerm) params.search = searchTerm;
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
   };
 
   if (isLoading || loadingStats) {
@@ -65,6 +119,19 @@ const StudentPackages = () => {
   const totalSubscriptions = stats.total || 0;
   const premiumCount = stats.stats?.find(s => s._id === 'premium')?.count || 0;
   const freeCount = stats.stats?.find(s => s._id === 'free')?.count || 0;
+
+  // Calculate revenue by currency from subscription payment transactions
+  const subscriptionTransactions = transactionsData?.data?.data?.transactions || 
+                                   transactionsData?.data?.transactions || 
+                                   [];
+  
+  const revenueUSD = subscriptionTransactions
+    .filter(t => (t.currency || 'USD').toUpperCase() === 'USD')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+  const revenueEGP = subscriptionTransactions
+    .filter(t => (t.currency || 'USD').toUpperCase() === 'EGP')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const getStatusBadge = (status) => {
     const variants = {
@@ -91,19 +158,76 @@ const StudentPackages = () => {
     );
   };
 
+  const handleExport = async () => {
+    try {
+      // Fetch all subscriptions for export (without pagination)
+      const exportData = await adminService.getAllSubscriptions({
+        limit: 10000, // Large limit to get all subscriptions
+        plan: filterPlan === 'all' ? undefined : filterPlan,
+        status: 'active',
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+        dateField: 'createdAt',
+      });
+
+      const allSubscriptions = exportData?.data?.data?.subscriptions || exportData?.data?.subscriptions || [];
+      
+      const columns = [
+        { key: 'student.name', label: 'Student Name' },
+        { key: 'student.email', label: 'Student Email' },
+        { key: 'plan', label: 'Plan' },
+        { key: 'status', label: 'Status' },
+        { 
+          key: 'startDate', 
+          label: 'Start Date',
+          formatter: formatDate
+        },
+        { 
+          key: 'endDate', 
+          label: 'End Date',
+          formatter: formatDate
+        },
+        { 
+          key: 'applicationsUsedThisMonth', 
+          label: 'Applications Used This Month'
+        },
+        { key: 'monthlyLimit', label: 'Monthly Limit' },
+        { 
+          key: 'createdAt', 
+          label: 'Subscription Date',
+          formatter: formatDate
+        },
+      ];
+
+      exportToCSV(allSubscriptions, columns, 'student_subscriptions');
+    } catch (error) {
+      alert('Failed to export subscriptions: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <User className="w-8 h-8 text-primary-600" />
-          Student Subscriptions Management
-        </h1>
-        <p className="text-gray-600 mt-2">View and manage active student subscription plans</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <User className="w-8 h-8 text-primary-600" />
+            Student Subscriptions Management
+          </h1>
+          <p className="text-gray-600 mt-2">View and manage active student subscription plans</p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={handleExport}
+          className="flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Export to CSV
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <div className="flex items-center justify-between">
             <div>
@@ -137,25 +261,101 @@ const StudentPackages = () => {
             </div>
           </div>
         </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">USD Revenue</p>
+              <p className="text-3xl font-bold text-blue-600 mt-2">
+                ${revenueUSD.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-blue-500 p-3 rounded-lg">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">EGP Revenue</p>
+              <p className="text-3xl font-bold text-primary-600 mt-2">
+                EGP {revenueEGP.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-primary-500 p-3 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            label="Plan Filter"
-            value={filterPlan}
-            onChange={(e) => handlePlanFilter(e.target.value)}
-            options={[
-              { value: 'premium', label: 'Premium Only' },
-              { value: 'free', label: 'Free Only' },
-              { value: 'all', label: 'All Plans' },
-            ]}
-          />
-          <div className="flex items-end">
-            <p className="text-sm text-gray-600">
-              Showing {subscriptions.length} of {totalCount} subscriptions
-            </p>
+        <div className="space-y-4">
+          {/* Search */}
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by student name or email..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </Button>
+            {searchTerm && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchTerm('');
+                  const params = { plan: filterPlan === 'all' ? '' : filterPlan, page: '1' };
+                  if (dateRange.startDate) params.startDate = dateRange.startDate;
+                  if (dateRange.endDate) params.endDate = dateRange.endDate;
+                  setSearchParams(params);
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </form>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Plan Filter"
+              value={filterPlan}
+              onChange={(e) => handlePlanFilter(e.target.value)}
+              options={[
+                { value: 'premium', label: 'Premium Only' },
+                { value: 'free', label: 'Free Only' },
+                { value: 'all', label: 'All Plans' },
+              ]}
+            />
+            <div className="flex items-end">
+              <p className="text-sm text-gray-600">
+                Showing {subscriptions.length} of {totalCount} subscriptions
+                {searchTerm && ` (filtered by "${searchTerm}")`}
+              </p>
+            </div>
+          </div>
+          <div className="pt-2 border-t">
+            <DateRangePicker
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              onChange={handleDateRangeChange}
+              label="Filter by Subscription Date"
+              placeholder="All dates"
+            />
           </div>
         </div>
       </Card>
@@ -212,7 +412,6 @@ const StudentPackages = () => {
                     </div>
                     {subscription.price?.amount > 0 && (
                       <div className="flex items-center gap-1 text-gray-600 col-span-2">
-                        <DollarSign className="w-3 h-3" />
                         <span>
                           {subscription.price.amount} {subscription.price.currency || 'USD'}
                         </span>

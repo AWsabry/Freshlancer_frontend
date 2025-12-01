@@ -55,6 +55,7 @@ import UnlockedStudents from './pages/client/UnlockedStudents';
 
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
+import AdminAnalytics from './pages/admin/Analytics';
 import AdminUsers from './pages/admin/Users';
 import AdminStudents from './pages/admin/Students';
 import AdminStartups from './pages/admin/Startups';
@@ -174,6 +175,7 @@ function App() {
         }
       >
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="students" element={<AdminStudents />} />
         <Route path="startups" element={<AdminStartups />} />

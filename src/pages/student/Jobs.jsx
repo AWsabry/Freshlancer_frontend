@@ -195,15 +195,34 @@ const Jobs = () => {
   };
 
   // Fetch categories from API
-  const { data: categoriesData } = useQuery({
+  const { data: categoriesData, isLoading: loadingCategories, error: categoriesError } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoryService.getAllCategories(),
   });
 
-  const categories = categoriesData?.data?.categories?.map((cat) => ({
-    value: cat.name,
-    label: cat.name,
-  })) || [];
+  const categories = useMemo(() => {
+    // Debug: log the response structure
+    if (categoriesData) {
+      console.log('Categories Data:', categoriesData);
+    }
+    if (categoriesError) {
+      console.error('Categories Error:', categoriesError);
+    }
+    
+    // The API interceptor returns response.data, so categoriesData is already the unwrapped response
+    // Backend returns: { status: 'success', data: { categories: [...] } }
+    // Try both possible paths in case the structure is different
+    const categoriesList = categoriesData?.data?.categories || categoriesData?.categories || [];
+    
+    if (categoriesList.length === 0 && categoriesData) {
+      console.warn('No categories found in response:', categoriesData);
+    }
+    
+    return categoriesList.map((cat) => ({
+      value: cat.name,
+      label: cat.name,
+    }));
+  }, [categoriesData, categoriesError]);
 
     console.log('Jobs Data:', subscription);
 
@@ -312,6 +331,7 @@ const Jobs = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
               <Select
                 label="Category"
+                placeholder=""
                 options={[{ value: '', label: 'All Categories' }, ...categories]}
                 value={category}
                 onChange={(e) => {
@@ -334,13 +354,7 @@ const Jobs = () => {
                     </>
                   )}
                 </label>
-                <Select
-                  options={[
-                    { value: 'createdAt-desc', label: 'Created By (Desc)' },
-                    { value: 'createdAt-asc', label: 'Created By (Asc)' },
-                    { value: 'budget-desc', label: 'Highest Budget First' },
-                    { value: 'budget-asc', label: 'Lowest Budget First' },
-                  ]}
+                <select
                   value={sortBy}
                   onChange={(e) => {
                     const selectedValue = e.target.value;
@@ -351,12 +365,29 @@ const Jobs = () => {
                     }
                     setSortBy(selectedValue);
                   }}
-                  className={
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                     (sortBy === 'budget-desc' || sortBy === 'budget-asc') && !isPremium
                       ? 'bg-gray-100 cursor-not-allowed opacity-60'
                       : ''
-                  }
-                />
+                  }`}
+                >
+                  <option value="createdAt-desc">Created By (Desc)</option>
+                  <option value="createdAt-asc">Created By (Asc)</option>
+                  <option
+                    value="budget-desc"
+                    disabled={!isPremium}
+                    className={!isPremium ? 'text-gray-400 bg-gray-100' : ''}
+                  >
+                    {isPremium ? 'Highest Budget First' : 'Highest Budget First 🔒 Premium'}
+                  </option>
+                  <option
+                    value="budget-asc"
+                    disabled={!isPremium}
+                    className={!isPremium ? 'text-gray-400 bg-gray-100' : ''}
+                  >
+                    {isPremium ? 'Lowest Budget First' : 'Lowest Budget First 🔒 Premium'}
+                  </option>
+                </select>
                 {!isPremium && (
                   <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     <Lock className="w-3 h-3" />

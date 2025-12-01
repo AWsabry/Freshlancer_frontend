@@ -393,6 +393,7 @@ const Register = () => {
           university: data.university?.trim() || '',
           major: data.major?.trim() || '',
           graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
+          experienceLevel: data.experienceLevel || '',
           hourlyRate: {
             currency: currency,
           },
@@ -679,6 +680,21 @@ const Register = () => {
                       message: 'Please enter a valid graduation year',
                     },
                   })}
+              />
+
+              <Select
+                label="Experience Level"
+                placeholder="Select your experience level"
+                error={errors.experienceLevel?.message}
+                {...register('experienceLevel', {
+                  required: 'Please select your experience level',
+                })}
+                options={[
+                  { value: 'Beginner', label: 'Beginner' },
+                  { value: 'Intermediate', label: 'Intermediate' },
+                  { value: 'Advanced', label: 'Advanced' },
+                  { value: 'Expert', label: 'Expert' },
+                ]}
               />
             </div>
           )}

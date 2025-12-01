@@ -11,6 +11,7 @@ import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
+import TagInput from '../../components/common/TagInput';
 import {
   User,
   Mail,
@@ -262,12 +263,18 @@ const Profile = () => {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: (data) => authService.updateProfile(data),
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries(['userProfile']);
-      setShowEditModal(false);
-      reset();
+      // Only close modal and reset if it was opened (not for skills-only updates)
+      if (showEditModal) {
+        setShowEditModal(false);
+        reset();
+      }
       setFormError(null);
-      alert('Profile updated successfully!');
+      // Only show alert if it's not a skills-only update (skills update shows no alert)
+      if (variables.studentProfile && Object.keys(variables.studentProfile).length > 1 || !variables.studentProfile?.skills) {
+        alert('Profile updated successfully!');
+      }
     },
     onError: (error) => {
       const errorMessage = error.response?.data?.message || 
@@ -313,6 +320,9 @@ const Profile = () => {
         setValue('studentProfile.socialLinks.behance', studentProfile.socialLinks?.behance || '');
         setValue('studentProfile.socialLinks.telegram', studentProfile.socialLinks?.telegram || '');
         setValue('studentProfile.socialLinks.whatsapp', studentProfile.socialLinks?.whatsapp || '');
+        // Set skills - handle both array of objects and array of strings
+        const skills = studentProfile.skills || [];
+        setValue('studentProfile.skills', skills);
       }
     }
     setShowEditModal(true);
@@ -725,28 +735,57 @@ const Profile = () => {
               </div>
             </Card>
           )}
-        </div>
 
-        {/* Right Column - Skills, Education, etc. */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Skills */}
-          {studentProfile?.skills && studentProfile.skills.length > 0 && (
+          {/* Skills Management Card */}
+          {studentProfile && (
             <Card title="Skills & Expertise">
-              <div className="flex flex-wrap gap-3">
-                {studentProfile.skills.map((skill, index) => (
-                  <div key={index} className="flex flex-col">
-                    <Badge variant="primary" className="mb-1">
-                      {skill.name}
-                    </Badge>
-                    {skill.level && (
-                      <span className="text-xs text-gray-500 text-center">{skill.level}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <TagInput
+                label=""
+                tags={studentProfile.skills || []}
+                onChange={async (newSkills) => {
+                  try {
+                    // Ensure skills are strings and filter out empty ones
+                    const formattedSkills = newSkills
+                      .map(skill => {
+                        // Handle both string and object formats (for backward compatibility)
+                        if (typeof skill === 'string') {
+                          return skill.trim();
+                        }
+                        // If it's an object, extract the name
+                        return (skill.name || skill).toString().trim();
+                      })
+                      .filter(skill => skill && skill.length > 0); // Remove empty skills
+
+                    console.log('Updating skills:', formattedSkills);
+
+                    await updateProfileMutation.mutateAsync({
+                      studentProfile: {
+                        skills: formattedSkills,
+                      },
+                    });
+                  } catch (error) {
+                    console.error('Failed to update skills:', error);
+                    const errorMessage = error.response?.data?.message || 
+                                        error.response?.data?.error ||
+                                        error.message || 
+                                        'Failed to update skills. Please try again.';
+                    alert(errorMessage);
+                  }
+                }}
+                placeholder="Add your skills (e.g., JavaScript, Python, Design)"
+                maxTags={20}
+              />
+              {(!studentProfile.skills || studentProfile.skills.length === 0) && (
+                <p className="text-sm text-gray-500 mt-2">
+                  No skills added yet. Start typing and press Enter to add skills.
+                </p>
+              )}
             </Card>
           )}
+        </div>
 
+        {/* Right Column - Education, etc. */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Education */}
           {(studentProfile?.university || studentProfile?.graduationYear) && (
             <Card>

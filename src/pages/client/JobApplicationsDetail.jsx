@@ -8,6 +8,7 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Modal from '../../components/common/Modal';
 import {
   ArrowLeft,
   DollarSign,
@@ -24,6 +25,8 @@ import {
   SortAsc,
   SortDesc,
   Crown,
+  FileText,
+  Download,
 } from 'lucide-react';
 
 const JobApplicationsDetail = () => {
@@ -40,6 +43,14 @@ const JobApplicationsDetail = () => {
   const [filterPremium, setFilterPremium] = useState('');
   const [page, setPage] = useState(1);
   const limit = 10;
+  
+  // State for full application view modal
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [showFullViewModal, setShowFullViewModal] = useState(false);
+  
+  // State for insufficient points modal
+  const [showInsufficientPointsModal, setShowInsufficientPointsModal] = useState(false);
+  const [insufficientPointsMessage, setInsufficientPointsMessage] = useState('');
 
   // Fetch job details
   const { data: jobData, isLoading: loadingJob } = useQuery({
@@ -67,12 +78,33 @@ const JobApplicationsDetail = () => {
       }),
   });
 
+  // Fetch full application details
+  const { data: fullApplicationData } = useQuery({
+    queryKey: ['fullApplication', selectedApplication],
+    queryFn: () => applicationService.getApplication(selectedApplication),
+    enabled: !!selectedApplication && showFullViewModal,
+  });
+
   // Unlock contact mutation
   const unlockMutation = useMutation({
     mutationFn: (applicationId) => applicationService.unlockContact(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
       queryClient.invalidateQueries(['currentUser']);
+      queryClient.invalidateQueries(['fullApplication', selectedApplication]);
+      alert('Student contact unlocked successfully!');
+    },
+    onError: (error) => {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to unlock contact';
+      
+      // Check if it's an insufficient points error
+      if (errorMessage.toLowerCase().includes('insufficient points') || 
+          errorMessage.toLowerCase().includes('need') && errorMessage.toLowerCase().includes('points')) {
+        setInsufficientPointsMessage(errorMessage);
+        setShowInsufficientPointsModal(true);
+      } else {
+        alert(errorMessage);
+      }
     },
   });
 
@@ -96,13 +128,13 @@ const JobApplicationsDetail = () => {
 
   const handleUnlock = async (applicationId) => {
     if (confirm('Unlock this student\'s contact for 10 points?')) {
-      try {
-        await unlockMutation.mutateAsync(applicationId);
-        alert('Student contact unlocked successfully!');
-      } catch (error) {
-        alert(error.response?.data?.message || 'Failed to unlock contact');
-      }
+      unlockMutation.mutate(applicationId);
     }
+  };
+
+  const handleBuyPoints = () => {
+    setShowInsufficientPointsModal(false);
+    navigate('/client/packages');
   };
 
   const handleAccept = async (applicationId) => {
@@ -135,6 +167,16 @@ const JobApplicationsDetail = () => {
     setPage(1);
   };
 
+  const handleViewFullApplication = (applicationId) => {
+    setSelectedApplication(applicationId);
+    setShowFullViewModal(true);
+  };
+
+  const handleCloseFullViewModal = () => {
+    setShowFullViewModal(false);
+    setSelectedApplication(null);
+  };
+
   if (loadingJob || loadingApplications) {
     return <Loading text="Loading applications..." />;
   }
@@ -153,6 +195,9 @@ const JobApplicationsDetail = () => {
   const applications = applicationsData?.data?.applications || [];
   const pagination = applicationsData?.data?.pagination || {};
   const uniqueNationalities = applicationsData?.data?.uniqueNationalities || [];
+  
+  // Get total count - check multiple possible locations
+  const totalCount = pagination?.total || applicationsData?.data?.total || applications.length;
 
   const SortIcon = sortOrder === 'asc' ? SortAsc : SortDesc;
 
@@ -346,7 +391,7 @@ const JobApplicationsDetail = () => {
       </Card>
 
       {/* Applications List */}
-      <Card title={`All Applicants (${pagination.total || 0})`}>
+      <Card title={`All Applicants (${totalCount})`}>
         {applications.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600">No applications match your filters.</p>
@@ -380,15 +425,15 @@ const JobApplicationsDetail = () => {
                                 <User className="w-6 h-6 text-primary-600" />
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <div>
                                 <h3 className="font-bold text-gray-900">{student?.name}</h3>
                                 <p className="text-sm text-gray-600">{student?.email}</p>
                               </div>
                               {isPremium && (
-                                <Badge variant="warning" className="flex items-center gap-1">
+                                <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
                                   <Crown className="w-3 h-3" />
-                                  Premium
+                                  Premium Account
                                 </Badge>
                               )}
                             </div>
@@ -396,12 +441,12 @@ const JobApplicationsDetail = () => {
                         ) : (
                           <>
                             <Lock className="w-5 h-5 text-gray-400" />
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="text-gray-500">Contact Locked</p>
                               {isPremium && (
-                                <Badge variant="warning" className="flex items-center gap-1">
+                                <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
                                   <Crown className="w-3 h-3" />
-                                  Premium
+                                  Premium Account
                                 </Badge>
                               )}
                             </div>
@@ -448,6 +493,16 @@ const JobApplicationsDetail = () => {
 
                     {/* Actions */}
                     <div className="flex flex-col gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleViewFullApplication(application._id)}
+                        className="flex items-center gap-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        View Full Application
+                      </Button>
+                      
                       {isUnlocked ? (
                         <>
                           <Button
@@ -504,8 +559,8 @@ const JobApplicationsDetail = () => {
         {pagination.pages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-6 border-t">
             <p className="text-sm text-gray-600">
-              Showing {(page - 1) * limit + 1} to {Math.min(page * limit, pagination.total)} of{' '}
-              {pagination.total} results
+              Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalCount)} of{' '}
+              {totalCount} results
             </p>
             <div className="flex gap-2">
               <Button
@@ -531,6 +586,392 @@ const JobApplicationsDetail = () => {
           </div>
         )}
       </Card>
+
+      {/* Full Application View Modal */}
+      <Modal
+        isOpen={showFullViewModal}
+        onClose={handleCloseFullViewModal}
+        title="Full Application Details"
+        size="xl"
+      >
+        {fullApplicationData?.data?.application ? (
+          <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+            {(() => {
+              const fullApp = fullApplicationData.data.application;
+              const fullStudent = fullApp.student;
+              const isUnlocked = fullApp.contactUnlockedByClient;
+              const isPremium = fullStudent?.studentProfile?.subscriptionTier === 'premium';
+
+              return (
+                <>
+                  {/* Student Info Section */}
+                  <Card>
+                    <div className="flex items-start gap-4 mb-4">
+                      {isUnlocked && fullStudent?.photo ? (
+                        <img
+                          src={fullStudent.photo}
+                          alt={fullStudent.name || 'Student'}
+                          className="w-20 h-20 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center">
+                          <User className="w-10 h-10 text-primary-600" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {isUnlocked ? (fullStudent?.name || 'Student') : 'Contact Locked'}
+                          </h3>
+                          {isPremium && (
+                            <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
+                              <Crown className="w-3 h-3" />
+                              Premium Account
+                            </Badge>
+                          )}
+                        </div>
+                        {isUnlocked ? (
+                          <>
+                            <p className="text-gray-600 mb-1">{fullStudent?.email}</p>
+                            <p className="text-sm text-gray-500">
+                              {fullStudent?.nationality && `Nationality: ${fullStudent.nationality}`}
+                              {fullStudent?.age && ` • Age: ${fullStudent.age}`}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-gray-500">Unlock contact to view student details</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Application Details */}
+                  <Card>
+                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Application Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Application Status</p>
+                        <Badge
+                          variant={
+                            fullApp.status === 'pending' ? 'info' :
+                            fullApp.status === 'accepted' ? 'success' :
+                            fullApp.status === 'rejected' ? 'error' : 'default'
+                          }
+                        >
+                          {fullApp.status}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Applied Date</p>
+                        <p className="font-semibold">
+                          {new Date(fullApp.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Proposed Budget</p>
+                        <p className="font-semibold text-green-600 text-lg">
+                          {fullApp.proposedBudget?.currency} {fullApp.proposedBudget?.amount}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Estimated Duration</p>
+                        <p className="font-semibold">{fullApp.estimatedDuration || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Relevant Experience Level</p>
+                        <p className="font-semibold">
+                          {fullApp.relevantExperienceLevel || 'Not specified'}
+                        </p>
+                      </div>
+                      {fullApp.proposalType && (
+                        <div>
+                          <p className="text-sm text-gray-500">Proposal Type</p>
+                          <Badge variant="info">
+                            {fullApp.proposalType.charAt(0).toUpperCase() + fullApp.proposalType.slice(1)}
+                          </Badge>
+                        </div>
+                      )}
+                      {fullApp.availabilityCommitment && (
+                        <div>
+                          <p className="text-sm text-gray-500">Availability Commitment</p>
+                          <p className="font-semibold">{fullApp.availabilityCommitment}</p>
+                        </div>
+                      )}
+                      {fullApp.applicationNumber && (
+                        <div>
+                          <p className="text-sm text-gray-500">Application Number</p>
+                          <p className="font-semibold">{fullApp.applicationNumber}</p>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+
+                  {/* Approach & Methodology */}
+                  {fullApp.approachSelections && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-4">Approach & Methodology</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {fullApp.approachSelections.methodology && (
+                          <div>
+                            <p className="text-sm text-gray-500">Methodology</p>
+                            <p className="font-semibold">{fullApp.approachSelections.methodology}</p>
+                          </div>
+                        )}
+                        {fullApp.approachSelections.deliveryFrequency && (
+                          <div>
+                            <p className="text-sm text-gray-500">Delivery Frequency</p>
+                            <p className="font-semibold">{fullApp.approachSelections.deliveryFrequency}</p>
+                          </div>
+                        )}
+                        {fullApp.approachSelections.revisions !== undefined && (
+                          <div>
+                            <p className="text-sm text-gray-500">Number of Revisions</p>
+                            <p className="font-semibold">{fullApp.approachSelections.revisions}</p>
+                          </div>
+                        )}
+                        {fullApp.approachSelections.communicationPreference && (
+                          <div>
+                            <p className="text-sm text-gray-500">Communication Preference</p>
+                            <p className="font-semibold">{fullApp.approachSelections.communicationPreference}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Proposal Message */}
+                  {fullApp.proposalText && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-3">Proposal Message</h4>
+                      <p className="text-gray-700 whitespace-pre-wrap">{fullApp.proposalText}</p>
+                    </Card>
+                  )}
+
+                  {/* Cover Letter */}
+                  {fullApp.coverLetter && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-3">Cover Letter</h4>
+                      <p className="text-gray-700 whitespace-pre-wrap">{fullApp.coverLetter}</p>
+                    </Card>
+                  )}
+
+                  {/* Why Choose Me */}
+                  {fullApp.whyChooseMe && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-3">Why Choose Me</h4>
+                      <p className="text-gray-700 whitespace-pre-wrap">{fullApp.whyChooseMe}</p>
+                    </Card>
+                  )}
+
+                  {/* Relevant Experience */}
+                  {fullApp.relevantExperience && fullApp.relevantExperience.length > 0 && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-3">Relevant Experience</h4>
+                      <div className="space-y-4">
+                        {fullApp.relevantExperience.map((exp, index) => (
+                          <div key={index} className="border-l-4 border-primary-500 pl-4">
+                            <h5 className="font-semibold text-gray-900">{exp.title}</h5>
+                            {exp.company && <p className="text-gray-600">{exp.company}</p>}
+                            {exp.duration && <p className="text-sm text-gray-500">{exp.duration}</p>}
+                            {exp.description && (
+                              <p className="text-gray-700 mt-2">{exp.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Portfolio */}
+                  {fullApp.portfolio && fullApp.portfolio.length > 0 && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-3">Portfolio</h4>
+                      <div className="space-y-4">
+                        {fullApp.portfolio.map((item, index) => (
+                          <div key={index} className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">{item.title}</h5>
+                            {item.description && (
+                              <p className="text-gray-700 mb-2">{item.description}</p>
+                            )}
+                            {item.url && (
+                              <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                View Portfolio Item
+                              </a>
+                            )}
+                            {item.technologies && item.technologies.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {item.technologies.map((tech, techIndex) => (
+                                  <Badge key={techIndex} variant="info" size="sm">
+                                    {tech}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Attachments */}
+                  {fullApp.attachments && fullApp.attachments.length > 0 && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-3">Attachments</h4>
+                      <div className="space-y-2">
+                        {fullApp.attachments.map((attachment, index) => (
+                          <a
+                            key={index}
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                          >
+                            <Download className="w-5 h-5 text-gray-600" />
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{attachment.name}</p>
+                              {attachment.type && (
+                                <p className="text-sm text-gray-500">{attachment.type}</p>
+                              )}
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-gray-400" />
+                          </a>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-4 border-t">
+                    {!isUnlocked && (
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          handleUnlock(fullApp._id);
+                        }}
+                        loading={unlockMutation.isPending}
+                      >
+                        <Unlock className="w-4 h-4 mr-2" />
+                        Unlock Contact (10 pts)
+                      </Button>
+                    )}
+                    {isUnlocked && fullStudent?._id && (
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          handleCloseFullViewModal();
+                          navigate(`/client/students/${fullStudent._id}`);
+                        }}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        View Student Profile
+                      </Button>
+                    )}
+                    {fullApp.status === 'pending' && job?.status !== 'cancelled' && (
+                      <>
+                        <Button
+                          variant="success"
+                          onClick={() => {
+                            handleAccept(fullApp._id);
+                            handleCloseFullViewModal();
+                          }}
+                          loading={acceptMutation.isPending}
+                        >
+                          Accept Application
+                        </Button>
+                        <Button
+                          variant="error"
+                          onClick={() => {
+                            handleReject(fullApp._id);
+                            handleCloseFullViewModal();
+                          }}
+                          loading={rejectMutation.isPending}
+                        >
+                          Reject Application
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        ) : (
+          <Loading text="Loading application details..." />
+        )}
+      </Modal>
+
+      {/* Insufficient Points Modal */}
+      <Modal
+        isOpen={showInsufficientPointsModal}
+        onClose={() => setShowInsufficientPointsModal(false)}
+        title="Insufficient Points"
+        size="md"
+      >
+        <div className="text-center py-4">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4">
+            <Lock className="h-8 w-8 text-yellow-600" />
+          </div>
+          
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Not Enough Points
+          </h3>
+          
+          <p className="text-gray-600 mb-6">
+            {insufficientPointsMessage || 'You need 10 points to unlock a student\'s contact information.'}
+          </p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                </div>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-blue-900 mb-1">
+                  Unlock Student Profiles
+                </p>
+                <p className="text-sm text-blue-700">
+                  Purchase points to unlock student contact information and access their full profiles.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowInsufficientPointsModal(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleBuyPoints}
+              className="flex-1 flex items-center justify-center gap-2"
+            >
+              <DollarSign className="w-5 h-5" />
+              Buy Points
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

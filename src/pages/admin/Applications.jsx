@@ -14,33 +14,56 @@ import {
   DollarSign,
   Calendar,
   Eye,
+  Download,
 } from 'lucide-react';
+import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
+import DateRangePicker from '../../components/common/DateRangePicker';
 
 const Applications = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+  const [dateRange, setDateRange] = useState({
+    startDate: searchParams.get('startDate') || null,
+    endDate: searchParams.get('endDate') || null,
+  });
   const page = parseInt(searchParams.get('page') || '1');
 
   // Fetch applications
   const { data: applicationsData, isLoading, error } = useQuery({
-    queryKey: ['adminApplications', page, statusFilter],
+    queryKey: ['adminApplications', page, statusFilter, dateRange.startDate, dateRange.endDate],
     queryFn: () =>
       adminService.getAllApplications({
         page,
         limit: 20,
         status: statusFilter || undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
       }),
   });
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
-    setSearchParams({ page: '1', status });
+    const params = { page: '1', status };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
+    const params = { page: '1', status: statusFilter };
+    if (newDateRange.startDate) params.startDate = newDateRange.startDate;
+    if (newDateRange.endDate) params.endDate = newDateRange.endDate;
+    setSearchParams(params);
   };
 
   const handlePageChange = (newPage) => {
-    setSearchParams({ page: newPage.toString(), status: statusFilter });
+    const params = { page: newPage.toString(), status: statusFilter };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
   };
 
   const getStatusBadge = (status) => {
@@ -51,6 +74,66 @@ const Applications = () => {
       withdrawn: 'secondary',
     };
     return <Badge variant={variants[status] || 'secondary'}>{status}</Badge>;
+  };
+
+  const handleExport = async () => {
+    try {
+      // Fetch all applications for export (without pagination)
+      const exportData = await adminService.getAllApplications({
+        limit: 10000, // Large limit to get all applications
+        status: statusFilter || undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+      });
+
+      const allApplications = exportData?.data?.data?.applications || exportData?.data?.applications || [];
+      
+      const columns = [
+        { key: 'student.name', label: 'Student Name' },
+        { key: 'student.email', label: 'Student Email' },
+        { key: 'jobPost.title', label: 'Job Title' },
+        { key: 'jobPost.category', label: 'Job Category' },
+        { key: 'jobPost.client.name', label: 'Client Name' },
+        { key: 'jobPost.client.email', label: 'Client Email' },
+        { 
+          key: 'proposedBudget.amount', 
+          label: 'Proposed Budget',
+          formatter: (value, item) => {
+            if (item.proposedBudget) {
+              return formatCurrency(item.proposedBudget.amount || 0, item.proposedBudget.currency || 'USD');
+            }
+            return 'N/A';
+          }
+        },
+        { key: 'proposedBudget.currency', label: 'Currency' },
+        { key: 'estimatedDuration', label: 'Estimated Duration' },
+        { key: 'relevantExperienceLevel', label: 'Experience Level' },
+        { key: 'proposalType', label: 'Proposal Type' },
+        { key: 'availabilityCommitment', label: 'Availability' },
+        { key: 'approachSelections.methodology', label: 'Methodology' },
+        { key: 'approachSelections.communicationPreference', label: 'Communication Preference' },
+        { key: 'status', label: 'Status' },
+        { 
+          key: 'createdAt', 
+          label: 'Applied Date',
+          formatter: formatDate
+        },
+        { 
+          key: 'contactUnlockedByClient', 
+          label: 'Contact Unlocked',
+          formatter: (value) => value ? 'Yes' : 'No'
+        },
+        { 
+          key: 'contactUnlockedAt', 
+          label: 'Unlocked Date',
+          formatter: formatDate
+        },
+      ];
+
+      exportToCSV(allApplications, columns, 'applications');
+    } catch (error) {
+      alert('Failed to export applications: ' + (error.message || 'Unknown error'));
+    }
   };
 
   if (isLoading) {
@@ -85,41 +168,60 @@ const Applications = () => {
             Total: {totalCount} applications
           </p>
         </div>
+        <Button
+          variant="primary"
+          onClick={handleExport}
+          className="flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Export to CSV
+        </Button>
       </div>
 
       {/* Filters */}
       <Card>
-        <div className="flex gap-2">
-          <Button
-            variant={statusFilter === '' ? 'primary' : 'outline'}
-            onClick={() => handleStatusFilter('')}
-          >
-            All
-          </Button>
-          <Button
-            variant={statusFilter === 'pending' ? 'primary' : 'outline'}
-            onClick={() => handleStatusFilter('pending')}
-          >
-            Pending
-          </Button>
-          <Button
-            variant={statusFilter === 'accepted' ? 'primary' : 'outline'}
-            onClick={() => handleStatusFilter('accepted')}
-          >
-            Accepted
-          </Button>
-          <Button
-            variant={statusFilter === 'rejected' ? 'primary' : 'outline'}
-            onClick={() => handleStatusFilter('rejected')}
-          >
-            Rejected
-          </Button>
-          <Button
-            variant={statusFilter === 'withdrawn' ? 'primary' : 'outline'}
-            onClick={() => handleStatusFilter('withdrawn')}
-          >
-            Withdrawn
-          </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={statusFilter === '' ? 'primary' : 'outline'}
+              onClick={() => handleStatusFilter('')}
+            >
+              All
+            </Button>
+            <Button
+              variant={statusFilter === 'pending' ? 'primary' : 'outline'}
+              onClick={() => handleStatusFilter('pending')}
+            >
+              Pending
+            </Button>
+            <Button
+              variant={statusFilter === 'accepted' ? 'primary' : 'outline'}
+              onClick={() => handleStatusFilter('accepted')}
+            >
+              Accepted
+            </Button>
+            <Button
+              variant={statusFilter === 'rejected' ? 'primary' : 'outline'}
+              onClick={() => handleStatusFilter('rejected')}
+            >
+              Rejected
+            </Button>
+            <Button
+              variant={statusFilter === 'withdrawn' ? 'primary' : 'outline'}
+              onClick={() => handleStatusFilter('withdrawn')}
+            >
+              Withdrawn
+            </Button>
+          </div>
+          <div className="pt-2 border-t">
+            <DateRangePicker
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              onChange={handleDateRangeChange}
+              label="Filter by Applied Date"
+              placeholder="All dates"
+            />
+          </div>
         </div>
       </Card>
 

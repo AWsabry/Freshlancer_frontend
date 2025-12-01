@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -52,11 +52,17 @@ const JobForm = () => {
 
   const startups = startupsData?.data?.startups || [];
   const hasStartups = startups.length > 0;
-  const categories = categoriesData?.categories?.map((cat) => ({
-    value: cat.name,
-    label: cat.name,
-  })) || [];
-console.log("categories" + categoriesData);
+  
+  // The API interceptor returns response.data, so categoriesData is already the unwrapped response
+  // Backend returns: { status: 'success', data: { categories: [...] } }
+  // So we need: categoriesData.data.categories
+  const categories = useMemo(() => {
+    const categoriesList = categoriesData?.data?.categories || categoriesData?.categories || [];
+    return categoriesList.map((cat) => ({
+      value: cat.name,
+      label: cat.name,
+    }));
+  }, [categoriesData]);
   // Populate form when job data is loaded
   React.useEffect(() => {
     if (jobData?.data?.jobPost && isEditing) {

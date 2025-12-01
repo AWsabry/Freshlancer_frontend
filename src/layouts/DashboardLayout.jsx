@@ -24,6 +24,7 @@ import {
   Rocket,
   Mail,
   Folder,
+  BarChart3,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 
@@ -125,6 +126,7 @@ const DashboardLayout = () => {
     if (user?.role === 'admin') {
       return [
         ...baseItems.slice(0, 1),
+        { name: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
         { name: 'Users', icon: Users, path: '/admin/users' },
         { name: 'Verifications', icon: Shield, path: '/admin/students' },
         { name: 'Applications', icon: FileText, path: '/admin/applications' },

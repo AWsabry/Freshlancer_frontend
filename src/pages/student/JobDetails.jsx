@@ -76,32 +76,65 @@ const JobDetails = () => {
       navigate('/student/jobs');
     },
     onError: (error) => {
-      alert(error.message || 'Failed to submit application');
+      // Provide more specific error messages
+      let errorMessage = 'Failed to submit application. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Don't show alert for duplicate application errors (user might have clicked twice)
+      if (!errorMessage.includes('already applied')) {
+        alert(errorMessage);
+      }
     },
   });
 
   const onSubmit = (data) => {
+    // Validate required fields before submission
+    if (!id) {
+      alert('Job ID is missing. Please refresh the page and try again.');
+      return;
+    }
+
+    if (!data.proposedBudget || isNaN(parseFloat(data.proposedBudget))) {
+      alert('Please enter a valid proposed budget.');
+      return;
+    }
+
+    if (!data.estimatedDuration) {
+      alert('Please select an estimated duration.');
+      return;
+    }
+
+    if (!data.availabilityCommitment) {
+      alert('Please select your availability commitment.');
+      return;
+    }
+
     const applicationData = {
       jobPost: id,
-      proposalType: data.proposalType,
+      proposalType: data.proposalType || 'standard',
       proposedBudget: {
         amount: parseFloat(data.proposedBudget),
         currency: data.proposedBudgetCurrency || 'USD',
       },
       estimatedDuration: data.estimatedDuration,
       approachSelections: {
-        methodology: data.methodology,
-        deliveryFrequency: data.deliveryFrequency,
-        revisions: parseInt(data.revisions),
-        communicationPreference: data.communicationPreference,
+        methodology: data.methodology || null,
+        deliveryFrequency: data.deliveryFrequency || null,
+        revisions: data.revisions ? parseInt(data.revisions) : 2,
+        communicationPreference: data.communicationPreference || 'Flexible',
       },
       availabilityCommitment: data.availabilityCommitment,
-      relevantExperienceLevel: data.relevantExperienceLevel,
+      relevantExperienceLevel: data.relevantExperienceLevel || null,
     };
 
     // Add optional proposal text if provided (premium feature)
-    if (data.proposalText) {
-      applicationData.proposalText = data.proposalText;
+    if (data.proposalText && data.proposalText.trim()) {
+      applicationData.proposalText = data.proposalText.trim();
     }
 
     applyMutation.mutate(applicationData);

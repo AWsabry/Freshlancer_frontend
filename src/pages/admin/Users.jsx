@@ -9,6 +9,7 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
+import DateRangePicker from '../../components/common/DateRangePicker';
 import {
   Users as UsersIcon,
   Search,
@@ -24,6 +25,18 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
+import { exportToCSV, formatDate } from '../../utils/exportUtils';
+
+// Helper function to format date for display (more readable format)
+const formatDisplayDate = (date) => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
 
 const Users = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,12 +51,17 @@ const Users = () => {
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState('');
+  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    startDate: searchParams.get('startDate') || null,
+    endDate: searchParams.get('endDate') || null,
+  });
 
   const page = parseInt(searchParams.get('page') || '1');
 
   // Fetch users
   const { data: usersData, isLoading, error } = useQuery({
-    queryKey: ['adminUsers', page, roleFilter, searchTerm, showDeleted],
+    queryKey: ['adminUsers', page, roleFilter, searchTerm, showDeleted, dateRange.startDate, dateRange.endDate],
     queryFn: () =>
       adminService.getAllUsers({
         page,
@@ -51,6 +69,8 @@ const Users = () => {
         role: roleFilter || undefined,
         search: searchTerm || undefined,
         includeDeleted: showDeleted ? 'true' : undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
       }),
   });
 
@@ -91,13 +111,28 @@ const Users = () => {
     // Update the actual search term (triggers query refetch)
     setSearchTerm(searchInput.trim());
     // Reset to page 1 when searching
-    setSearchParams({ page: '1', role: roleFilter });
+    const params = { page: '1', role: roleFilter };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
   };
 
   const handleRoleFilter = (role) => {
     setRoleFilter(role);
     // Reset to page 1 when changing role filter
-    setSearchParams({ page: '1', role });
+    const params = { page: '1', role };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
+    // Update URL params
+    const params = { page: '1', role: roleFilter };
+    if (newDateRange.startDate) params.startDate = newDateRange.startDate;
+    if (newDateRange.endDate) params.endDate = newDateRange.endDate;
+    setSearchParams(params);
   };
 
   const handleSuspend = (user) => {
@@ -133,9 +168,23 @@ const Users = () => {
     }
   };
 
-  const handleView = (user) => {
-    setSelectedUser(user);
+  const handleView = async (user) => {
+    setLoadingUserDetails(true);
     setShowViewModal(true);
+    try {
+      // Fetch full user details
+      const response = await adminService.getUserById(user._id);
+      // Handle both response structures - API interceptor unwraps response.data
+      const fullUser = response?.data?.data?.user || response?.data?.user || response?.user || user;
+      setSelectedUser(fullUser);
+    } catch (error) {
+      console.error('Failed to fetch user details:', error);
+      alert('Failed to load user details. Showing limited information.');
+      // Fallback to the user data from the list
+      setSelectedUser(user);
+    } finally {
+      setLoadingUserDetails(false);
+    }
   };
 
   // Fetch verifications for selected student
@@ -152,7 +201,94 @@ const Users = () => {
   };
 
   const handlePageChange = (newPage) => {
-    setSearchParams({ page: newPage.toString(), role: roleFilter, search: searchTerm });
+    const params = { page: newPage.toString(), role: roleFilter, search: searchTerm };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
+  const handleExport = async () => {
+    try {
+      // Fetch all users for export (without pagination)
+      const exportData = await adminService.getAllUsers({
+        limit: 10000, // Large limit to get all users
+        role: roleFilter || undefined,
+        search: searchTerm || undefined,
+        includeDeleted: showDeleted ? 'true' : undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+      });
+
+      const allUsers = exportData?.data?.data?.users || exportData?.data?.users || [];
+      
+      const columns = [
+        { key: 'name', label: 'Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'role', label: 'Role' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'nationality', label: 'Nationality' },
+        { 
+          key: 'location', 
+          label: 'Location',
+          formatter: (value) => {
+            if (!value) return 'N/A';
+            if (typeof value === 'string') return value;
+            if (typeof value === 'object') {
+              const parts = [];
+              if (value.city) parts.push(value.city);
+              if (value.timezone) parts.push(value.timezone);
+              return parts.length > 0 ? parts.join(', ') : 'N/A';
+            }
+            return 'N/A';
+          }
+        },
+        { 
+          key: 'active', 
+          label: 'Status',
+          formatter: (value, item) => {
+            if (value === false) return 'Deleted';
+            if (item.suspended) return 'Suspended';
+            return 'Active';
+          }
+        },
+        { 
+          key: 'emailVerified', 
+          label: 'Email Verified',
+          formatter: (value) => value ? 'Yes' : 'No'
+        },
+        { 
+          key: 'studentProfile.isVerified', 
+          label: 'Profile Verified',
+          formatter: (value, item) => {
+            if (item.role === 'student') {
+              return item.studentProfile?.isVerified ? 'Yes' : 'No';
+            }
+            if (item.role === 'client') {
+              return item.clientProfile?.isVerified ? 'Yes' : 'No';
+            }
+            return 'N/A';
+          }
+        },
+        { 
+          key: 'createdAt', 
+          label: 'Joined Date',
+          formatter: formatDate
+        },
+        { 
+          key: 'suspended', 
+          label: 'Suspended',
+          formatter: (value) => value ? 'Yes' : 'No'
+        },
+        { 
+          key: 'suspensionReason', 
+          label: 'Suspension Reason'
+        },
+      ];
+
+      exportToCSV(allUsers, columns, 'users');
+    } catch (error) {
+      alert('Failed to export users: ' + (error.message || 'Unknown error'));
+    }
   };
 
   if (isLoading) {
@@ -198,6 +334,14 @@ const Users = () => {
             }
           </p>
         </div>
+        <Button
+          variant="primary"
+          onClick={handleExport}
+          className="flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Export to CSV
+        </Button>
       </div>
 
       {/* Filters */}
@@ -249,6 +393,17 @@ const Users = () => {
                 Admins
               </Button>
             </div>
+          </div>
+
+          {/* Date Range Filter */}
+          <div className="pt-2 border-t">
+            <DateRangePicker
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              onChange={handleDateRangeChange}
+              label="Filter by Joined Date"
+              placeholder="All dates"
+            />
           </div>
 
           {/* Show Deleted and Suspended Toggles */}
@@ -355,7 +510,7 @@ const Users = () => {
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                      {user.joinedAt ? formatDisplayDate(user.joinedAt) : 'N/A'}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
@@ -492,7 +647,11 @@ const Users = () => {
         title="User Details"
         size="xl"
       >
-        {selectedUser && (
+        {loadingUserDetails ? (
+          <div className="text-center py-8">
+            <Loading text="Loading user details..." />
+          </div>
+        ) : selectedUser ? (
           <div className="space-y-6 max-h-[70vh] overflow-y-auto">
             {/* User Header */}
             <div className="flex items-center gap-4 pb-4 border-b">
@@ -555,18 +714,24 @@ const Users = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Location</label>
-                <p className="text-gray-900">{selectedUser.location || 'N/A'}</p>
+                <p className="text-gray-900">
+                  {selectedUser.location
+                    ? typeof selectedUser.location === 'string'
+                      ? selectedUser.location
+                      : `${selectedUser.location.city || ''}${selectedUser.location.city && selectedUser.location.timezone ? ', ' : ''}${selectedUser.location.timezone || ''}`.trim() || 'N/A'
+                    : 'N/A'}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Joined Date</label>
                 <p className="text-gray-900">
-                  {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'N/A'}
+                  {selectedUser.joinedAt ? formatDisplayDate(selectedUser.joinedAt) : 'N/A'}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Last Updated</label>
                 <p className="text-gray-900">
-                  {selectedUser.updatedAt ? new Date(selectedUser.updatedAt).toLocaleDateString() : 'N/A'}
+                  {selectedUser.updatedAt ? formatDisplayDate(selectedUser.updatedAt) : 'N/A'}
                 </p>
               </div>
             </div>
@@ -602,7 +767,7 @@ const Users = () => {
                       {selectedUser?.studentProfile?.skills?.length > 0 ? (
                         selectedUser.studentProfile.skills.map((skill, index) => (
                           <Badge key={index} variant="secondary">
-                            {skill?.name}
+                            {typeof skill === 'string' ? skill : skill?.name || skill}
                           </Badge>
                         ))
                       ) : (
@@ -714,9 +879,9 @@ const Users = () => {
                                 <p><strong>Student ID:</strong> {verification.studentIdNumber}</p>
                                 <p><strong>Enrollment Year:</strong> {verification.enrollmentYear}</p>
                                 <p><strong>Expected Graduation:</strong> {verification.expectedGraduationYear}</p>
-                                <p><strong>Submitted:</strong> {new Date(verification.createdAt).toLocaleString()}</p>
+                                <p><strong>Submitted:</strong> {formatDisplayDate(verification.createdAt)}</p>
                                 {verification.reviewedAt && (
-                                  <p><strong>Reviewed:</strong> {new Date(verification.reviewedAt).toLocaleString()}</p>
+                                  <p><strong>Reviewed:</strong> {formatDisplayDate(verification.reviewedAt)}</p>
                                 )}
                                 {verification.rejectionReason && (
                                   <p className="text-red-600"><strong>Rejection Reason:</strong> {verification.rejectionReason}</p>
@@ -837,6 +1002,10 @@ const Users = () => {
                 </Button>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No user data available</p>
           </div>
         )}
       </Modal>

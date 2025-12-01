@@ -16,38 +16,78 @@ import {
   XCircle,
   Clock,
   TrendingUp,
+  Download,
+  Search,
 } from 'lucide-react';
+import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
+import DateRangePicker from '../../components/common/DateRangePicker';
 
 const ClientTransactions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterStatus, setFilterStatus] = useState(searchParams.get('status') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [dateRange, setDateRange] = useState({
+    startDate: searchParams.get('startDate') || null,
+    endDate: searchParams.get('endDate') || null,
+  });
 
   const page = parseInt(searchParams.get('page') || '1');
   const limit = 20;
 
   // Fetch client transactions (package_purchase type)
   const { data: transactionsData, isLoading } = useQuery({
-    queryKey: ['adminClientTransactions', filterStatus, page],
+    queryKey: ['adminClientTransactions', filterStatus, page, dateRange.startDate, dateRange.endDate, searchTerm],
     queryFn: () =>
       adminService.getAllTransactions({
         type: 'package_purchase', // Only package purchases
         role: 'client', // Only client transactions
         status: filterStatus || undefined,
+        search: searchTerm || undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
         page,
         limit,
       }),
   });
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchTerm(searchInput.trim());
+    const params = { status: filterStatus, page: '1' };
+    if (searchInput.trim()) params.search = searchInput.trim();
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
   const handleStatusFilter = (status) => {
     setFilterStatus(status);
-    setSearchParams({ status, page: '1' });
+    const params = { status, page: '1' };
+    if (searchTerm) params.search = searchTerm;
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
+    const params = { status: filterStatus, page: '1' };
+    if (searchTerm) params.search = searchTerm;
+    if (newDateRange.startDate) params.startDate = newDateRange.startDate;
+    if (newDateRange.endDate) params.endDate = newDateRange.endDate;
+    setSearchParams(params);
   };
 
   const handlePageChange = (newPage) => {
-    setSearchParams({
+    const params = {
       status: filterStatus,
       page: newPage.toString(),
-    });
+    };
+    if (searchTerm) params.search = searchTerm;
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
   };
 
   if (isLoading) {
@@ -60,13 +100,18 @@ const ClientTransactions = () => {
   const currentPage = transactionsData?.page || 1;
 
   // Calculate stats
+  const completedTransactions = transactions.filter(t => t.status === 'completed');
+  
   const stats = {
     total: transactions.length,
-    completed: transactions.filter(t => t.status === 'completed').length,
+    completed: completedTransactions.length,
     pending: transactions.filter(t => t.status === 'pending').length,
     failed: transactions.filter(t => t.status === 'failed').length,
-    totalRevenue: transactions
-      .filter(t => t.status === 'completed')
+    totalRevenueUSD: completedTransactions
+      .filter(t => (t.currency || 'USD').toUpperCase() === 'USD')
+      .reduce((sum, t) => sum + (t.amount || 0), 0),
+    totalRevenueEGP: completedTransactions
+      .filter(t => (t.currency || 'USD').toUpperCase() === 'EGP')
       .reduce((sum, t) => sum + (t.amount || 0), 0),
   };
 
@@ -82,23 +127,75 @@ const ClientTransactions = () => {
     return <Badge variant={variants[status] || 'info'}>{status}</Badge>;
   };
 
-  const formatCurrency = (amount, currency) => {
+  const formatCurrencyDisplay = (amount, currency) => {
     return `${currency || 'EGP'} ${amount?.toFixed(2) || '0.00'}`;
+  };
+
+  const handleExport = async () => {
+    try {
+      // Fetch all transactions for export (without pagination)
+      const exportData = await adminService.getAllTransactions({
+        limit: 10000, // Large limit to get all transactions
+        type: 'package_purchase',
+        role: 'client',
+        status: filterStatus || undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+      });
+
+      const allTransactions = exportData?.data?.data?.transactions || exportData?.data?.transactions || [];
+      
+      const columns = [
+        { key: 'user.name', label: 'Client Name' },
+        { key: 'user.email', label: 'Client Email' },
+        { key: 'description', label: 'Description' },
+        { 
+          key: 'amount', 
+          label: 'Amount',
+          formatter: (value, item) => formatCurrency(value, item.currency)
+        },
+        { key: 'currency', label: 'Currency' },
+        { key: 'status', label: 'Status' },
+        { key: 'points', label: 'Points' },
+        { key: 'packageType', label: 'Package Type' },
+        { key: 'paymentMethod', label: 'Payment Method' },
+        { key: 'gatewayTransactionId', label: 'Transaction ID' },
+        { 
+          key: 'createdAt', 
+          label: 'Transaction Date',
+          formatter: formatDate
+        },
+      ];
+
+      exportToCSV(allTransactions, columns, 'client_transactions');
+    } catch (error) {
+      alert('Failed to export transactions: ' + (error.message || 'Unknown error'));
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <CreditCard className="w-8 h-8 text-primary-600" />
-          Client Transactions
-        </h1>
-        <p className="text-gray-600 mt-2">View and manage client payment transactions</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <CreditCard className="w-8 h-8 text-primary-600" />
+            Client Transactions
+          </h1>
+          <p className="text-gray-600 mt-2">View and manage client payment transactions</p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={handleExport}
+          className="flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Export to CSV
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <div className="flex items-center justify-between">
             <div>
@@ -135,9 +232,22 @@ const ClientTransactions = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-sm font-medium text-gray-600">USD Revenue</p>
+              <p className="text-3xl font-bold text-blue-600 mt-2">
+                ${stats.totalRevenueUSD.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-blue-500 p-3 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">EGP Revenue</p>
               <p className="text-3xl font-bold text-primary-600 mt-2">
-                {formatCurrency(stats.totalRevenue, 'EGP')}
+                EGP {stats.totalRevenueEGP.toFixed(2)}
               </p>
             </div>
             <div className="bg-primary-500 p-3 rounded-lg">
@@ -149,23 +259,73 @@ const ClientTransactions = () => {
 
       {/* Filters */}
       <Card>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            label="Status Filter"
-            value={filterStatus}
-            onChange={(e) => handleStatusFilter(e.target.value)}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'failed', label: 'Failed' },
-              { value: 'cancelled', label: 'Cancelled' },
-            ]}
-          />
-          <div className="flex items-end">
-            <p className="text-sm text-gray-600">
-              Showing {transactions.length} of {totalCount} transactions
-            </p>
+        <div className="space-y-4">
+          {/* Search */}
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by client name or email..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </Button>
+            {searchTerm && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchTerm('');
+                  const params = { status: filterStatus, page: '1' };
+                  if (dateRange.startDate) params.startDate = dateRange.startDate;
+                  if (dateRange.endDate) params.endDate = dateRange.endDate;
+                  setSearchParams(params);
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </form>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Status Filter"
+              value={filterStatus}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'failed', label: 'Failed' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+            />
+            <div className="flex items-end">
+              <p className="text-sm text-gray-600">
+                Showing {transactions?.length || 0} of {totalCount} transactions
+                {searchTerm && ` (filtered by "${searchTerm}")`}
+              </p>
+            </div>
+          </div>
+          <div className="pt-2 border-t">
+            <DateRangePicker
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              onChange={handleDateRangeChange}
+              label="Filter by Transaction Date"
+              placeholder="All dates"
+            />
           </div>
         </div>
       </Card>
@@ -213,7 +373,7 @@ const ClientTransactions = () => {
                       <div className="flex items-center gap-1 text-gray-600">
                         <DollarSign className="w-3 h-3" />
                         <span className="font-medium">
-                          {formatCurrency(transaction.amount, transaction.currency)}
+                          {formatCurrencyDisplay(transaction.amount, transaction.currency)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-600">

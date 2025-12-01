@@ -3,7 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
+import Button from '../../components/common/Button';
+import DateRangePicker from '../../components/common/DateRangePicker';
 import { adminService } from '../../services/adminService';
+import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
+import { Download } from 'lucide-react';
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,15 +19,21 @@ const Jobs = () => {
   const status = searchParams.get('status') || '';
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
+  const [dateRange, setDateRange] = useState({
+    startDate: searchParams.get('startDate') || null,
+    endDate: searchParams.get('endDate') || null,
+  });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-jobs', { page, search, status, category }],
+    queryKey: ['admin-jobs', { page, search, status, category, startDate: dateRange.startDate, endDate: dateRange.endDate }],
     queryFn: () =>
       adminService.getAllJobs({
         page,
         search,
         status: status || undefined,
         category: category || undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
       }),
   });
 
@@ -32,12 +42,15 @@ const Jobs = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setSearchParams({
+    const params = {
       page: '1',
       search: searchTerm,
       ...(status && { status }),
       ...(category && { category }),
-    });
+    };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
   };
 
   const handleFilterChange = (filterType, value) => {
@@ -53,16 +66,34 @@ const Jobs = () => {
       params[filterType] = value;
     }
 
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
+    const params = {
+      page: '1',
+      ...(search && { search }),
+      ...(status && { status }),
+      ...(category && { category }),
+    };
+    if (newDateRange.startDate) params.startDate = newDateRange.startDate;
+    if (newDateRange.endDate) params.endDate = newDateRange.endDate;
     setSearchParams(params);
   };
 
   const handlePageChange = (newPage) => {
-    setSearchParams({
+    const params = {
       page: newPage.toString(),
       ...(searchTerm && { search: searchTerm }),
       ...(status && { status }),
       ...(category && { category }),
-    });
+    };
+    if (dateRange.startDate) params.startDate = dateRange.startDate;
+    if (dateRange.endDate) params.endDate = dateRange.endDate;
+    setSearchParams(params);
   };
 
   const handleViewDetails = (job) => {
@@ -111,10 +142,88 @@ const Jobs = () => {
     });
   };
 
+  const handleExport = async () => {
+    try {
+      // Fetch all jobs for export (without pagination)
+      const exportData = await adminService.getAllJobs({
+        limit: 10000, // Large limit to get all jobs
+        search: search || undefined,
+        status: status || undefined,
+        category: category || undefined,
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+      });
+
+      const allJobs = exportData?.data?.data?.jobs || exportData?.data?.jobs || [];
+      
+      const columns = [
+        { key: 'title', label: 'Job Title' },
+        { key: 'client.name', label: 'Client Name' },
+        { key: 'client.email', label: 'Client Email' },
+        { key: 'category', label: 'Category' },
+        { 
+          key: 'budget.min', 
+          label: 'Budget Min',
+          formatter: (value, item) => {
+            if (item.budget) {
+              return formatCurrency(item.budget.min || 0, item.budget.currency || 'USD');
+            }
+            return 'N/A';
+          }
+        },
+        { 
+          key: 'budget.max', 
+          label: 'Budget Max',
+          formatter: (value, item) => {
+            if (item.budget) {
+              return formatCurrency(item.budget.max || 0, item.budget.currency || 'USD');
+            }
+            return 'N/A';
+          }
+        },
+        { key: 'budget.currency', label: 'Currency' },
+        { 
+          key: 'deadline', 
+          label: 'Deadline',
+          formatter: formatDate
+        },
+        { key: 'status', label: 'Status' },
+        { key: 'experienceLevel', label: 'Experience Level' },
+        { key: 'projectDuration', label: 'Project Duration' },
+        { key: 'applicationsCount', label: 'Applications Count' },
+        { 
+          key: 'createdAt', 
+          label: 'Posted Date',
+          formatter: formatDate
+        },
+        { 
+          key: 'skillsRequired', 
+          label: 'Skills Required',
+          formatter: (value) => Array.isArray(value) ? value.join('; ') : value || 'N/A'
+        },
+      ];
+
+      exportToCSV(allJobs, columns, 'jobs');
+    } catch (error) {
+      alert('Failed to export jobs: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   if (isLoading) return <Loading />;
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">Jobs Management</h1>
+        <Button
+          variant="primary"
+          onClick={handleExport}
+          className="flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Export to CSV
+        </Button>
+      </div>
       <Card title="Jobs Management">
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
@@ -134,33 +243,43 @@ const Jobs = () => {
             </button>
           </form>
 
-          <div className="flex gap-4">
-            <select
-              value={status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex gap-4">
+              <select
+                value={status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
 
-            <select
-              value={category}
-              onChange={(e) => handleFilterChange('category', e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Categories</option>
-              <option value="Web Development">Web Development</option>
-              <option value="Mobile Development">Mobile Development</option>
-              <option value="Graphic Design">Graphic Design</option>
-              <option value="Writing">Writing</option>
-              <option value="Data Entry">Data Entry</option>
-              <option value="Undergraduate Tasks">Undergraduate Tasks</option>
-              <option value="Other">Other</option>
-            </select>
+              <select
+                value={category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Categories</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Mobile Development">Mobile Development</option>
+                <option value="Graphic Design">Graphic Design</option>
+                <option value="Writing">Writing</option>
+                <option value="Data Entry">Data Entry</option>
+                <option value="Undergraduate Tasks">Undergraduate Tasks</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <DateRangePicker
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              onChange={handleDateRangeChange}
+              label="Filter by Posted Date"
+              placeholder="All dates"
+              className="md:w-auto"
+            />
           </div>
         </div>
 
