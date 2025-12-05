@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '../../services/applicationService';
@@ -21,9 +21,96 @@ import {
   Eye,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading your applications...',
+    myApplications: 'My Applications',
+    trackApplications: 'Track all your job applications',
+    browseJobs: 'Browse Jobs',
+    failedToLoad: 'Failed to load applications',
+    retry: 'Retry',
+    jobTitle: 'Job Title',
+    contactUnlocked: 'Contact Unlocked',
+    jobWithdrawn: 'This job was withdrawn by the client',
+    premiumMembersOnly: 'Premium members only',
+    yourBid: 'Your Bid',
+    appliedOn: 'Applied On',
+    duration: 'Duration',
+    jobBudget: 'Job Budget',
+    proposal: 'Proposal',
+    clientFeedback: 'Client Feedback:',
+    viewApplication: 'View Application',
+    noApplicationsYet: "You haven't applied to any jobs yet.",
+    filterByStatus: 'Filter by Status',
+    all: 'All',
+    pending: 'Pending',
+    reviewed: 'Reviewed',
+    accepted: 'Accepted',
+    rejected: 'Rejected',
+    withdrawn: 'Withdrawn',
+    noApplications: 'No applications',
+    noStatusApplications: 'No {status} applications',
+  },
+  it: {
+    loading: 'Caricamento delle tue candidature...',
+    myApplications: 'Le Mie Candidature',
+    trackApplications: 'Traccia tutte le tue candidature di lavoro',
+    browseJobs: 'Sfoglia Lavori',
+    failedToLoad: 'Impossibile caricare le candidature',
+    retry: 'Riprova',
+    jobTitle: 'Titolo Lavoro',
+    contactUnlocked: 'Contatto Sbloccato',
+    jobWithdrawn: 'Questo lavoro è stato ritirato dal cliente',
+    premiumMembersOnly: 'Solo membri Premium',
+    yourBid: 'La Tua Offerta',
+    appliedOn: 'Candidato Il',
+    duration: 'Durata',
+    jobBudget: 'Budget Lavoro',
+    proposal: 'Proposta',
+    clientFeedback: 'Feedback Cliente:',
+    viewApplication: 'Visualizza Candidatura',
+    noApplicationsYet: 'Non hai ancora fatto domanda per nessun lavoro.',
+    filterByStatus: 'Filtra per Stato',
+    all: 'Tutti',
+    pending: 'In Attesa',
+    reviewed: 'Revisionato',
+    accepted: 'Accettato',
+    rejected: 'Rifiutato',
+    withdrawn: 'Ritirato',
+    noApplications: 'Nessuna candidatura',
+    noStatusApplications: 'Nessuna candidatura {status}',
+  },
+};
+
 const Applications = () => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'accepted', 'rejected', 'withdrawn'
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch student's applications
   const { data, isLoading, error } = useQuery({
@@ -80,11 +167,11 @@ const Applications = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { variant: 'info', label: 'Pending', icon: Clock },
-      reviewed: { variant: 'warning', label: 'Reviewed', icon: Eye },
-      accepted: { variant: 'success', label: 'Accepted', icon: CheckCircle },
-      rejected: { variant: 'error', label: 'Rejected', icon: XCircle },
-      withdrawn: { variant: 'default', label: 'Withdrawn', icon: AlertCircle },
+      pending: { variant: 'info', label: t.pending, icon: Clock },
+      reviewed: { variant: 'warning', label: t.reviewed, icon: Eye },
+      accepted: { variant: 'success', label: t.accepted, icon: CheckCircle },
+      rejected: { variant: 'error', label: t.rejected, icon: XCircle },
+      withdrawn: { variant: 'default', label: t.withdrawn, icon: AlertCircle },
     };
     const config = statusConfig[status] || { variant: 'default', label: status, icon: FileText };
     const Icon = config.icon;
@@ -99,7 +186,7 @@ const Applications = () => {
 
   // Now safe to have conditional returns after all hooks
   if (isLoading) {
-    return <Loading text="Loading your applications..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (error) {
@@ -107,11 +194,11 @@ const Applications = () => {
       <Card>
         <div className="text-center py-12">
           <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <p className="text-gray-600 mb-4">Failed to load applications</p>
+          <p className="text-gray-600 mb-4">{t.failedToLoad}</p>
           <p className="text-sm text-gray-500 mb-4">
             {error.response?.data?.message || error.message}
           </p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <Button onClick={() => window.location.reload()}>{t.retry}</Button>
         </div>
       </Card>
     );
@@ -130,7 +217,7 @@ const Applications = () => {
             {/* Job Title and Status */}
             <div className="flex items-start gap-3 mb-3">
               <h3 className="text-xl font-bold text-gray-900 flex-1">
-                {application.jobPost?.title || 'Job Title'}
+                {application.jobPost?.title || t.jobTitle}
               </h3>
               <div className="flex items-center gap-2">
                 {getStatusBadge(application.status || 'pending')}
@@ -138,7 +225,7 @@ const Applications = () => {
                 {application.contactUnlockedByClient === true && (
                   <Badge variant="success" className="flex items-center gap-1">
                     <Unlock className="w-3 h-3" />
-                    Contact Unlocked
+                    {t.contactUnlocked}
                   </Badge>
                 )}
               </div>
@@ -157,7 +244,7 @@ const Applications = () => {
               <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                 <p className="text-sm text-orange-800 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  This job was withdrawn by the client
+                  {t.jobWithdrawn}
                 </p>
               </div>
             )}
@@ -178,7 +265,7 @@ const Applications = () => {
             <p className="text-gray-600 mb-3 flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
               <span className="text-sm text-gray-500 italic">
-                {application.jobPost?.client?.message || 'Premium members only'}
+                {application.jobPost?.client?.message || t.premiumMembersOnly}
               </span>
             </p>
           )}
@@ -188,7 +275,7 @@ const Applications = () => {
             <p className="text-gray-600 mb-3 flex items-center gap-2">
               <Unlock className="w-4 h-4" />
               <span className="text-sm text-gray-500 italic">
-                Premium members only
+                {t.premiumMembersOnly}
               </span>
             </p>
           )}
@@ -199,7 +286,7 @@ const Applications = () => {
             {application.proposedBudget && (
               <div className="flex items-center gap-2 text-gray-600">
                 <div>
-                  <p className="text-xs text-gray-500">Your Bid</p>
+                  <p className="text-xs text-gray-500">{t.yourBid}</p>
                   <p className="font-semibold text-green-600">
                     {application.proposedBudget.currency} {application.proposedBudget.amount}
                   </p>
@@ -211,7 +298,7 @@ const Applications = () => {
             <div className="flex items-center gap-2 text-gray-600">
               <Calendar className="w-5 h-5 text-gray-500" />
               <div>
-                <p className="text-xs text-gray-500">Applied On</p>
+                <p className="text-xs text-gray-500">{t.appliedOn}</p>
                 <p className="font-semibold text-sm">
                   {new Date(application.createdAt).toLocaleDateString()}
                 </p>
@@ -223,7 +310,7 @@ const Applications = () => {
               <div className="flex items-center gap-2 text-gray-600">
                 <Clock className="w-5 h-5 text-primary-600" />
                 <div>
-                  <p className="text-xs text-gray-500">Duration</p>
+                  <p className="text-xs text-gray-500">{t.duration}</p>
                   <p className="font-semibold text-sm">
                     {application.estimatedDuration}
                   </p>
@@ -235,7 +322,7 @@ const Applications = () => {
             {isPremium && application.jobPost?.budget && !application.jobPost.budget.message ? (
               <div className="flex items-center gap-2 text-gray-600">
                 <div>
-                  <p className="text-xs text-gray-500">Job Budget</p>
+                  <p className="text-xs text-gray-500">{t.jobBudget}</p>
                   <p className="font-semibold text-sm">
                     {application.jobPost.budget.currency} {application.jobPost.budget.min} - {application.jobPost.budget.max}
                   </p>
@@ -244,9 +331,9 @@ const Applications = () => {
             ) : (
               <div className="flex items-center gap-2 text-gray-600">
                 <div>
-                  <p className="text-xs text-gray-500">Job Budget</p>
+                  <p className="text-xs text-gray-500">{t.jobBudget}</p>
                   <p className="font-semibold text-sm text-gray-400 italic">
-                    {application.jobPost?.budget?.message || 'Premium members only'}
+                    {application.jobPost?.budget?.message || t.premiumMembersOnly}
                   </p>
                 </div>
               </div>
@@ -258,7 +345,7 @@ const Applications = () => {
             <div className="mb-3">
               <span className="inline-block px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-medium">
                 {application.proposalType.charAt(0).toUpperCase() +
-                 application.proposalType.slice(1)} Proposal
+                 application.proposalType.slice(1)} {t.proposal}
               </span>
             </div>
           )}
@@ -267,7 +354,7 @@ const Applications = () => {
           {application.clientFeedback && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3">
               <p className="text-sm font-semibold text-blue-900 mb-1">
-                Client Feedback:
+                {t.clientFeedback}
               </p>
               <p className="text-sm text-blue-800">
                 {application.clientFeedback.message}
@@ -288,7 +375,7 @@ const Applications = () => {
           className="flex items-center gap-2"
         >
           <FileText className="w-4 h-4" />
-          View Application
+          {t.viewApplication}
         </Button>
       </div>
     </Card>
@@ -300,8 +387,8 @@ const Applications = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
-          <p className="text-gray-600 mt-1">Track all your job applications</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t.myApplications}</h1>
+          <p className="text-gray-600 mt-1">{t.trackApplications}</p>
         </div>
         <Button
           variant="primary"
@@ -309,7 +396,7 @@ const Applications = () => {
           className="flex items-center gap-2"
         >
           <Briefcase className="w-5 h-5" />
-          Browse Jobs
+          {t.browseJobs}
         </Button>
       </div>
 
@@ -318,7 +405,7 @@ const Applications = () => {
         <Card>
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600 mb-4">You haven't applied to any jobs yet.</p>
+            <p className="text-gray-600 mb-4">{t.noApplicationsYet}</p>
           </div>
         </Card>
       ) : (
@@ -329,7 +416,7 @@ const Applications = () => {
               <Filter className="w-5 h-5 text-gray-600" />
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Status
+                  {t.filterByStatus}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -340,7 +427,7 @@ const Applications = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    All ({statusCounts.all})
+                    {t.all} ({statusCounts.all})
                   </button>
                   <button
                     onClick={() => setStatusFilter('pending')}
@@ -351,7 +438,7 @@ const Applications = () => {
                     }`}
                   >
                     <Clock className="w-4 h-4" />
-                    Pending ({statusCounts.pending})
+                    {t.pending} ({statusCounts.pending})
                   </button>
                   <button
                     onClick={() => setStatusFilter('accepted')}
@@ -362,7 +449,7 @@ const Applications = () => {
                     }`}
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Accepted ({statusCounts.accepted})
+                    {t.accepted} ({statusCounts.accepted})
                   </button>
                   <button
                     onClick={() => setStatusFilter('rejected')}
@@ -373,7 +460,7 @@ const Applications = () => {
                     }`}
                   >
                     <XCircle className="w-4 h-4" />
-                    Rejected ({statusCounts.rejected})
+                    {t.rejected} ({statusCounts.rejected})
                   </button>
                   <button
                     onClick={() => setStatusFilter('withdrawn')}
@@ -384,7 +471,7 @@ const Applications = () => {
                     }`}
                   >
                     <AlertCircle className="w-4 h-4" />
-                    Withdrawn ({statusCounts.withdrawn})
+                    {t.withdrawn} ({statusCounts.withdrawn})
                   </button>
                 </div>
               </div>
@@ -398,8 +485,8 @@ const Applications = () => {
                 <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                 <p className="text-gray-600">
                   {statusFilter === 'all'
-                    ? 'No applications'
-                    : `No ${statusFilter} applications`}
+                    ? t.noApplications
+                    : t.noStatusApplications.replace('{status}', t[statusFilter] || statusFilter)}
                 </p>
   
               </div>

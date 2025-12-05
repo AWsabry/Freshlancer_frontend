@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -21,11 +21,208 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading job details...',
+    jobNotFound: 'Job not found',
+    backToJobs: 'Back to Jobs',
+    posted: 'Posted',
+    budget: 'Budget',
+    duration: 'Duration',
+    applicants: 'Applicants',
+    description: 'Description',
+    skillsRequired: 'Skills Required',
+    premiumMembersOnly: 'Premium members only',
+    premium: 'Premium',
+    free: 'Free',
+    urgent: 'Urgent',
+    alreadyApplied: 'You have already applied for this job. Application status: {status}',
+    viewMyApplication: 'View My Application',
+    allApplications: 'All Applications',
+    applicationsThisMonth: 'Applications This Month',
+    resetsOn: 'Resets on {date}',
+    usedApplications: 'You\'ve used {used} of {limit} applications. Upgrade to Premium for 100 applications per month!',
+    reachedLimit: 'You\'ve reached your monthly application limit of {limit}. {message}',
+    limitResetMessage: 'Your limit will reset on the first day of next month.',
+    upgradeMessage: 'Upgrade to Premium for 100 applications per month!',
+    applyForJob: 'Apply for this Job',
+    applyForJobTitle: 'Apply for Job',
+    applicationInfo: 'Complete the application form using only the provided options. No free-text responses allowed.',
+    proposalType: 'Proposal Type',
+    proposalTypeRequired: 'Proposal type is required',
+    standardProposal: 'Standard Proposal',
+    expressProposal: 'Express (Fast Delivery)',
+    premiumProposal: 'Premium (High Quality)',
+    customProposal: 'Custom Approach',
+    proposalMessage: 'Proposal Message (Optional)',
+    proposalMessagePlaceholder: 'Add a personalized message to the client about why you\'re the best fit for this project...',
+    proposalMessageMaxLength: 'Proposal text must be less than 1000 characters',
+    proposalMessageInfo: 'Max 1000 characters. This message will be visible to the client.',
+    premiumOnly: 'Premium Only',
+    proposedBudgetAmount: 'Proposed Budget Amount',
+    proposedBudgetRequired: 'Proposed budget is required',
+    budgetMin: 'Budget must be at least $1',
+    currency: 'Currency',
+    currencyRequired: 'Currency is required',
+    estimatedDuration: 'Estimated Duration',
+    durationRequired: 'Duration is required',
+    lessThan1Week: 'Less than 1 week',
+    oneToTwoWeeks: '1-2 weeks',
+    twoToFourWeeks: '2-4 weeks',
+    oneToThreeMonths: '1-3 months',
+    moreThanThreeMonths: 'More than 3 months',
+    methodology: 'Methodology',
+    deliveryFrequency: 'Delivery Frequency',
+    dailyUpdates: 'Daily updates',
+    weeklyUpdates: 'Weekly updates',
+    biWeeklyUpdates: 'Bi-weekly updates',
+    monthlyUpdates: 'Monthly updates',
+    uponCompletion: 'Upon completion',
+    numberOfRevisions: 'Number of Revisions (0-10)',
+    communicationPreference: 'Communication Preference',
+    emailOnly: 'Email only',
+    chatPreferred: 'Chat preferred',
+    videoCallsAvailable: 'Video calls available',
+    flexible: 'Flexible',
+    availabilityCommitment: 'Availability Commitment',
+    availabilityRequired: 'Availability is required',
+    fullTime: 'Full-time (40+ hours/week)',
+    partTime20_40: 'Part-time (20-40 hours/week)',
+    partTime10_20: 'Part-time (10-20 hours/week)',
+    weekendsOnly: 'Weekends only',
+    flexibleHours: 'Flexible hours',
+    relevantExperienceLevel: 'Relevant Experience Level',
+    firstProject: 'This is my first project',
+    oneToThreeProjects: '1-3 similar projects',
+    threeToFiveProjects: '3-5 similar projects',
+    fivePlusProjects: '5+ similar projects',
+    expertInField: 'Expert in this field',
+    cancel: 'Cancel',
+    submitApplication: 'Submit Application',
+    applicationSuccess: 'Application submitted successfully! The job has been moved to your Applied Jobs.',
+    applicationFailed: 'Failed to submit application. Please try again.',
+    jobIdMissing: 'Job ID is missing. Please refresh the page and try again.',
+    validBudgetRequired: 'Please enter a valid proposed budget.',
+    durationRequiredAlert: 'Please select an estimated duration.',
+    availabilityRequiredAlert: 'Please select your availability commitment.',
+  },
+  it: {
+    loading: 'Caricamento dettagli lavoro...',
+    jobNotFound: 'Lavoro non trovato',
+    backToJobs: 'Torna ai Lavori',
+    posted: 'Pubblicato',
+    budget: 'Budget',
+    duration: 'Durata',
+    applicants: 'Candidati',
+    description: 'Descrizione',
+    skillsRequired: 'Competenze Richieste',
+    premiumMembersOnly: 'Solo membri Premium',
+    premium: 'Premium',
+    free: 'Gratuito',
+    urgent: 'Urgente',
+    alreadyApplied: 'Hai già fatto domanda per questo lavoro. Stato candidatura: {status}',
+    viewMyApplication: 'Visualizza La Mia Candidatura',
+    allApplications: 'Tutte Le Candidature',
+    applicationsThisMonth: 'Candidature Questo Mese',
+    resetsOn: 'Si resetta il {date}',
+    usedApplications: 'Hai usato {used} di {limit} candidature. Passa a Premium per 100 candidature al mese!',
+    reachedLimit: 'Hai raggiunto il limite mensile di {limit} candidature. {message}',
+    limitResetMessage: 'Il tuo limite si resetta il primo giorno del prossimo mese.',
+    upgradeMessage: 'Passa a Premium per 100 candidature al mese!',
+    applyForJob: 'Candidati per questo Lavoro',
+    applyForJobTitle: 'Candidati per Lavoro',
+    applicationInfo: 'Compila il modulo di candidatura utilizzando solo le opzioni fornite. Non sono consentite risposte in testo libero.',
+    proposalType: 'Tipo di Proposta',
+    proposalTypeRequired: 'Il tipo di proposta è obbligatorio',
+    standardProposal: 'Proposta Standard',
+    expressProposal: 'Express (Consegna Veloce)',
+    premiumProposal: 'Premium (Alta Qualità)',
+    customProposal: 'Approccio Personalizzato',
+    proposalMessage: 'Messaggio Proposta (Opzionale)',
+    proposalMessagePlaceholder: 'Aggiungi un messaggio personalizzato al cliente sul perché sei la scelta migliore per questo progetto...',
+    proposalMessageMaxLength: 'Il testo della proposta deve essere inferiore a 1000 caratteri',
+    proposalMessageInfo: 'Massimo 1000 caratteri. Questo messaggio sarà visibile al cliente.',
+    premiumOnly: 'Solo Premium',
+    proposedBudgetAmount: 'Importo Budget Proposto',
+    proposedBudgetRequired: 'Il budget proposto è obbligatorio',
+    budgetMin: 'Il budget deve essere almeno $1',
+    currency: 'Valuta',
+    currencyRequired: 'La valuta è obbligatoria',
+    estimatedDuration: 'Durata Stimata',
+    durationRequired: 'La durata è obbligatoria',
+    lessThan1Week: 'Meno di 1 settimana',
+    oneToTwoWeeks: '1-2 settimane',
+    twoToFourWeeks: '2-4 settimane',
+    oneToThreeMonths: '1-3 mesi',
+    moreThanThreeMonths: 'Più di 3 mesi',
+    methodology: 'Metodologia',
+    deliveryFrequency: 'Frequenza di Consegna',
+    dailyUpdates: 'Aggiornamenti giornalieri',
+    weeklyUpdates: 'Aggiornamenti settimanali',
+    biWeeklyUpdates: 'Aggiornamenti bisettimanali',
+    monthlyUpdates: 'Aggiornamenti mensili',
+    uponCompletion: 'Al completamento',
+    numberOfRevisions: 'Numero di Revisioni (0-10)',
+    communicationPreference: 'Preferenza di Comunicazione',
+    emailOnly: 'Solo email',
+    chatPreferred: 'Chat preferita',
+    videoCallsAvailable: 'Videochiamate disponibili',
+    flexible: 'Flessibile',
+    availabilityCommitment: 'Impegno di Disponibilità',
+    availabilityRequired: 'La disponibilità è obbligatoria',
+    fullTime: 'Tempo pieno (40+ ore/settimana)',
+    partTime20_40: 'Part-time (20-40 ore/settimana)',
+    partTime10_20: 'Part-time (10-20 ore/settimana)',
+    weekendsOnly: 'Solo fine settimana',
+    flexibleHours: 'Ore flessibili',
+    relevantExperienceLevel: 'Livello di Esperienza Rilevante',
+    firstProject: 'Questo è il mio primo progetto',
+    oneToThreeProjects: '1-3 progetti simili',
+    threeToFiveProjects: '3-5 progetti simili',
+    fivePlusProjects: '5+ progetti simili',
+    expertInField: 'Esperto in questo campo',
+    cancel: 'Annulla',
+    submitApplication: 'Invia Candidatura',
+    applicationSuccess: 'Candidatura inviata con successo! Il lavoro è stato spostato nei tuoi Lavori a cui hai fatto domanda.',
+    applicationFailed: 'Invio candidatura fallito. Riprova.',
+    jobIdMissing: 'ID lavoro mancante. Ricarica la pagina e riprova.',
+    validBudgetRequired: 'Inserisci un budget proposto valido.',
+    durationRequiredAlert: 'Seleziona una durata stimata.',
+    availabilityRequiredAlert: 'Seleziona il tuo impegno di disponibilità.',
+  },
+};
+
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
@@ -72,12 +269,12 @@ const JobDetails = () => {
       queryClient.invalidateQueries(['jobs']); // Invalidate jobs list to update Available/Applied tabs
       setShowApplicationModal(false);
       reset();
-      alert('Application submitted successfully! The job has been moved to your Applied Jobs.');
+      alert(t.applicationSuccess);
       navigate('/student/jobs');
     },
     onError: (error) => {
       // Provide more specific error messages
-      let errorMessage = 'Failed to submit application. Please try again.';
+      let errorMessage = t.applicationFailed;
       
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -95,22 +292,22 @@ const JobDetails = () => {
   const onSubmit = (data) => {
     // Validate required fields before submission
     if (!id) {
-      alert('Job ID is missing. Please refresh the page and try again.');
+      alert(t.jobIdMissing);
       return;
     }
 
     if (!data.proposedBudget || isNaN(parseFloat(data.proposedBudget))) {
-      alert('Please enter a valid proposed budget.');
+      alert(t.validBudgetRequired);
       return;
     }
 
     if (!data.estimatedDuration) {
-      alert('Please select an estimated duration.');
+      alert(t.durationRequiredAlert);
       return;
     }
 
     if (!data.availabilityCommitment) {
-      alert('Please select your availability commitment.');
+      alert(t.availabilityRequiredAlert);
       return;
     }
 
@@ -141,7 +338,7 @@ const JobDetails = () => {
   };
 
   if (isLoading) {
-    return <Loading text="Loading job details..." />;
+    return <Loading text={t.loading} />;
   }
 
   const job = jobData?.data?.jobPost;
@@ -154,9 +351,9 @@ const JobDetails = () => {
   if (!job) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Job not found</p>
+        <p className="text-gray-600">{t.jobNotFound}</p>
         <Button onClick={() => navigate('/student/jobs')} className="mt-4">
-          Back to Jobs
+          {t.backToJobs}
         </Button>
       </div>
     );
@@ -170,7 +367,7 @@ const JobDetails = () => {
         className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
       >
         <ArrowLeft className="w-5 h-5" />
-        Back to Jobs
+        {t.backToJobs}
       </button>
 
       {/* Job Header */}
@@ -191,13 +388,13 @@ const JobDetails = () => {
               )}
               <span className="flex items-center gap-1">
                 <Calendar className="w-5 h-5" />
-                Posted {new Date(job.createdAt).toLocaleDateString()}
+                {t.posted} {new Date(job.createdAt).toLocaleDateString()}
               </span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <Badge variant="info">{job.category}</Badge>
-            {job.urgent && <Badge variant="error">Urgent</Badge>}
+            {job.urgent && <Badge variant="error">{t.urgent}</Badge>}
             {/* Show startup name tag if premium and startup exists */}
             {isPremium && job.startup && !job.startup.message && job.startup.startupName && (
               <Badge variant="secondary" className="bg-purple-100 text-purple-700">
@@ -211,7 +408,7 @@ const JobDetails = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
           {job.budget && (
             <div>
-              <p className="text-sm text-gray-600 mb-1">Budget</p>
+              <p className="text-sm text-gray-600 mb-1">{t.budget}</p>
               {isPremium && !job.budget.message ? (
                 <div className="flex items-center gap-1 text-lg font-semibold text-green-600">
                   <DollarSign className="w-5 h-5" />
@@ -220,19 +417,19 @@ const JobDetails = () => {
               ) : (
                 <div className="flex items-center gap-1 text-sm text-gray-500 italic">
                   <DollarSign className="w-4 h-4" />
-                  {job.budget.message || 'Premium members only'}
+                  {job.budget.message || t.premiumMembersOnly}
                 </div>
               )}
             </div>
           )}
           {job.duration && (
             <div>
-              <p className="text-sm text-gray-600 mb-1">Duration</p>
+              <p className="text-sm text-gray-600 mb-1">{t.duration}</p>
               <p className="text-lg font-semibold text-gray-900">{job.duration}</p>
             </div>
           )}
           <div>
-            <p className="text-sm text-gray-600 mb-1">Applicants</p>
+            <p className="text-sm text-gray-600 mb-1">{t.applicants}</p>
             <p className="text-lg font-semibold text-gray-900">
               {job.applicationsCount || 0}
             </p>
@@ -241,14 +438,14 @@ const JobDetails = () => {
 
         {/* Description */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold mb-3">Description</h2>
+          <h2 className="text-xl font-bold mb-3">{t.description}</h2>
           <p className="text-gray-700 whitespace-pre-line break-words overflow-wrap-anywhere">{job.description}</p>
         </div>
 
         {/* Skills Required */}
         {job.skillsRequired && job.skillsRequired.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-xl font-bold mb-3">Skills Required</h2>
+            <h2 className="text-xl font-bold mb-3">{t.skillsRequired}</h2>
             <div className="flex flex-wrap gap-2">
               {job.skillsRequired.map((skill, index) => (
                 <span
@@ -268,7 +465,7 @@ const JobDetails = () => {
             <div>
               <Alert
                 type="success"
-                message={`You have already applied for this job. Application status: ${existingApplication?.status || 'pending'}`}
+                message={t.alreadyApplied.replace('{status}', existingApplication?.status || 'pending')}
                 className="mb-4"
               />
               <div className="flex gap-3">
@@ -278,7 +475,7 @@ const JobDetails = () => {
                   className="flex-1"
                   onClick={() => navigate(`/student/applications/${existingApplication?._id}`)}
                 >
-                  View My Application
+                  {t.viewMyApplication}
                 </Button>
                 <Button
                   variant="outline"
@@ -286,7 +483,7 @@ const JobDetails = () => {
                   className="flex-1"
                   onClick={() => navigate('/student/applications')}
                 >
-                  All Applications
+                  {t.allApplications}
                 </Button>
               </div>
             </div>
@@ -296,26 +493,26 @@ const JobDetails = () => {
               <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Applications This Month</p>
+                    <p className="text-sm text-gray-600 mb-1">{t.applicationsThisMonth}</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {currentUsage} / {monthlyLimit}
                     </p>
                   </div>
                   <div className="text-right">
                     <Badge variant={isPremium ? 'success' : 'info'}>
-                      {isPremium ? 'Premium' : 'Free'}
+                      {isPremium ? t.premium : t.free}
                     </Badge>
                   </div>
                 </div>
                 {resetDate && (
                   <p className="text-xs text-gray-500 mt-2">
-                    Resets on {new Date(resetDate).toLocaleDateString()}
+                    {t.resetsOn.replace('{date}', new Date(resetDate).toLocaleDateString())}
                   </p>
                 )}
                 {!isPremium && currentUsage > monthlyLimit * 0.7 && (
                   <Alert
                     type="warning"
-                    message={`You've used ${currentUsage} of ${monthlyLimit} applications. Upgrade to Premium for 100 applications per month!`}
+                    message={t.usedApplications.replace('{used}', currentUsage).replace('{limit}', monthlyLimit)}
                     className="mt-3"
                   />
                 )}
@@ -324,11 +521,7 @@ const JobDetails = () => {
               {!canApply && (
                 <Alert
                   type="error"
-                  message={`You've reached your monthly application limit of ${monthlyLimit}. ${
-                    isPremium
-                      ? 'Your limit will reset on the first day of next month.'
-                      : 'Upgrade to Premium for 100 applications per month!'
-                  }`}
+                  message={t.reachedLimit.replace('{limit}', monthlyLimit).replace('{message}', isPremium ? t.limitResetMessage : t.upgradeMessage)}
                   className="mb-4"
                 />
               )}
@@ -339,7 +532,7 @@ const JobDetails = () => {
                 onClick={() => setShowApplicationModal(true)}
                 disabled={!canApply}
               >
-                Apply for this Job
+                {t.applyForJob}
               </Button>
             </div>
           )}
@@ -350,69 +543,69 @@ const JobDetails = () => {
       <Modal
         isOpen={showApplicationModal}
         onClose={() => setShowApplicationModal(false)}
-        title="Apply for Job"
+        title={t.applyForJobTitle}
         size="lg"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Alert
             type="info"
-            message="Complete the application form using only the provided options. No free-text responses allowed."
+            message={t.applicationInfo}
           />
 
           <Select
-            label="Proposal Type"
+            label={t.proposalType}
             options={[
-              { value: 'standard', label: 'Standard Proposal' },
-              { value: 'express', label: 'Express (Fast Delivery)' },
-              { value: 'premium', label: 'Premium (High Quality)' },
-              { value: 'custom', label: 'Custom Approach' },
+              { value: 'standard', label: t.standardProposal },
+              { value: 'express', label: t.expressProposal },
+              { value: 'premium', label: t.premiumProposal },
+              { value: 'custom', label: t.customProposal },
             ]}
             error={errors.proposalType?.message}
-            {...register('proposalType', { required: 'Proposal type is required' })}
+            {...register('proposalType', { required: t.proposalTypeRequired })}
           />
 
           {/* Proposal Text - Premium Feature */}
           {isPremium && (
             <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Proposal Message (Optional)
+                {t.proposalMessage}
                 <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">
-                  Premium Only
+                  {t.premiumOnly}
                 </span>
               </label>
               <textarea
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 rows="4"
-                placeholder="Add a personalized message to the client about why you're the best fit for this project..."
+                placeholder={t.proposalMessagePlaceholder}
                 maxLength="1000"
                 {...register('proposalText', {
-                  maxLength: { value: 1000, message: 'Proposal text must be less than 1000 characters' },
+                  maxLength: { value: 1000, message: t.proposalMessageMaxLength },
                 })}
               />
               {errors.proposalText?.message && (
                 <p className="mt-1 text-sm text-red-600">{errors.proposalText.message}</p>
               )}
               <p className="mt-1 text-xs text-gray-500">
-                Max 1000 characters. This message will be visible to the client.
+                {t.proposalMessageInfo}
               </p>
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Proposed Budget Amount"
+              label={t.proposedBudgetAmount}
               type="number"
               min="1"
               step="0.01"
               error={errors.proposedBudget?.message}
               {...register('proposedBudget', {
-                required: 'Proposed budget is required',
-                min: { value: 1, message: 'Budget must be at least $1' },
+                required: t.proposedBudgetRequired,
+                min: { value: 1, message: t.budgetMin },
               })}
             />
 
             <Select
-              label="Currency"
+              label={t.currency}
               options={[
                 { value: 'USD', label: 'USD ($) - US Dollar' },
                 { value: 'EUR', label: 'EUR (€) - Euro' },
@@ -452,25 +645,25 @@ const JobDetails = () => {
                 { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
               ]}
               error={errors.proposedBudgetCurrency?.message}
-              {...register('proposedBudgetCurrency', { required: 'Currency is required' })}
+              {...register('proposedBudgetCurrency', { required: t.currencyRequired })}
             />
           </div>
 
           <Select
-            label="Estimated Duration"
+            label={t.estimatedDuration}
             options={[
-              { value: 'Less than 1 week', label: 'Less than 1 week' },
-              { value: '1-2 weeks', label: '1-2 weeks' },
-              { value: '2-4 weeks', label: '2-4 weeks' },
-              { value: '1-3 months', label: '1-3 months' },
-              { value: 'More than 3 months', label: 'More than 3 months' },
+              { value: 'Less than 1 week', label: t.lessThan1Week },
+              { value: '1-2 weeks', label: t.oneToTwoWeeks },
+              { value: '2-4 weeks', label: t.twoToFourWeeks },
+              { value: '1-3 months', label: t.oneToThreeMonths },
+              { value: 'More than 3 months', label: t.moreThanThreeMonths },
             ]}
             error={errors.estimatedDuration?.message}
-            {...register('estimatedDuration', { required: 'Duration is required' })}
+            {...register('estimatedDuration', { required: t.durationRequired })}
           />
 
           <Select
-            label="Methodology"
+            label={t.methodology}
             options={[
               { value: 'Agile', label: 'Agile' },
               { value: 'Waterfall', label: 'Waterfall' },
@@ -482,19 +675,19 @@ const JobDetails = () => {
           />
 
           <Select
-            label="Delivery Frequency"
+            label={t.deliveryFrequency}
             options={[
-              { value: 'Daily updates', label: 'Daily updates' },
-              { value: 'Weekly updates', label: 'Weekly updates' },
-              { value: 'Bi-weekly updates', label: 'Bi-weekly updates' },
-              { value: 'Monthly updates', label: 'Monthly updates' },
-              { value: 'Upon completion', label: 'Upon completion' },
+              { value: 'Daily updates', label: t.dailyUpdates },
+              { value: 'Weekly updates', label: t.weeklyUpdates },
+              { value: 'Bi-weekly updates', label: t.biWeeklyUpdates },
+              { value: 'Monthly updates', label: t.monthlyUpdates },
+              { value: 'Upon completion', label: t.uponCompletion },
             ]}
             {...register('deliveryFrequency')}
           />
 
           <Input
-            label="Number of Revisions (0-10)"
+            label={t.numberOfRevisions}
             type="number"
             min="0"
             max="10"
@@ -503,37 +696,37 @@ const JobDetails = () => {
           />
 
           <Select
-            label="Communication Preference"
+            label={t.communicationPreference}
             options={[
-              { value: 'Email only', label: 'Email only' },
-              { value: 'Chat preferred', label: 'Chat preferred' },
-              { value: 'Video calls available', label: 'Video calls available' },
-              { value: 'Flexible', label: 'Flexible' },
+              { value: 'Email only', label: t.emailOnly },
+              { value: 'Chat preferred', label: t.chatPreferred },
+              { value: 'Video calls available', label: t.videoCallsAvailable },
+              { value: 'Flexible', label: t.flexible },
             ]}
             {...register('communicationPreference')}
           />
 
           <Select
-            label="Availability Commitment"
+            label={t.availabilityCommitment}
             options={[
-              { value: 'Full-time (40+ hours/week)', label: 'Full-time (40+ hours/week)' },
-              { value: 'Part-time (20-40 hours/week)', label: 'Part-time (20-40 hours/week)' },
-              { value: 'Part-time (10-20 hours/week)', label: 'Part-time (10-20 hours/week)' },
-              { value: 'Weekends only', label: 'Weekends only' },
-              { value: 'Flexible hours', label: 'Flexible hours' },
+              { value: 'Full-time (40+ hours/week)', label: t.fullTime },
+              { value: 'Part-time (20-40 hours/week)', label: t.partTime20_40 },
+              { value: 'Part-time (10-20 hours/week)', label: t.partTime10_20 },
+              { value: 'Weekends only', label: t.weekendsOnly },
+              { value: 'Flexible hours', label: t.flexibleHours },
             ]}
             error={errors.availabilityCommitment?.message}
-            {...register('availabilityCommitment', { required: 'Availability is required' })}
+            {...register('availabilityCommitment', { required: t.availabilityRequired })}
           />
 
           <Select
-            label="Relevant Experience Level"
+            label={t.relevantExperienceLevel}
             options={[
-              { value: 'This is my first project in this category', label: 'This is my first project' },
-              { value: 'I have 1-3 similar projects', label: '1-3 similar projects' },
-              { value: 'I have 3-5 similar projects', label: '3-5 similar projects' },
-              { value: 'I have 5+ similar projects', label: '5+ similar projects' },
-              { value: 'I am an expert in this field', label: 'Expert in this field' },
+              { value: 'This is my first project in this category', label: t.firstProject },
+              { value: 'I have 1-3 similar projects', label: t.oneToThreeProjects },
+              { value: 'I have 3-5 similar projects', label: t.threeToFiveProjects },
+              { value: 'I have 5+ similar projects', label: t.fivePlusProjects },
+              { value: 'I am an expert in this field', label: t.expertInField },
             ]}
             {...register('relevantExperienceLevel')}
           />
@@ -545,7 +738,7 @@ const JobDetails = () => {
               onClick={() => setShowApplicationModal(false)}
               className="flex-1"
             >
-              Cancel
+              {t.cancel}
             </Button>
             <Button
               type="submit"
@@ -554,7 +747,7 @@ const JobDetails = () => {
               disabled={applyMutation.isPending}
               className="flex-1"
             >
-              Submit Application
+              {t.submitApplication}
             </Button>
           </div>
         </form>

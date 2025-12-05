@@ -4,8 +4,8 @@ import { useAuthStore } from '../stores/authStore';
 import Button from '../components/common/Button';
 import { contactService } from '../services/contactService';
 import Alert from '../components/common/Alert';
-import Studentimage from  '../assets/images/student.png'
-import Clientimage from  '../assets/images/client.png'
+import Studentimage from '../assets/images/student.png';
+import Clientimage from '../assets/images/client.png';
 import logo from '../assets/logos/01.png';
 import heroLogo from '../assets/logos/02.png';
 import {
@@ -40,9 +40,502 @@ import {
   Send
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    languageLabel: 'Language',
+    languageOptions: { en: 'English', it: 'Italiano' },
+    seo: {
+      title: 'Freshlancer - Hire Talented Students & Find Freelance Jobs | #1 Student Freelance Platform',
+      description: 'Connect with skilled student freelancers for your projects or find freelance jobs as a student. 10,000+ verified students, secure payments, and quality guaranteed. Join Freshlancer today!',
+      keywords: 'student freelancers, hire students, freelance jobs for students, student marketplace, freelance platform, find student talent, student jobs online, remote student work, hire freelance students, student gigs',
+      ogDescription: 'The premier platform connecting skilled students with clients worldwide. Find freelance work or hire top student talent.',
+      organizationDescription: 'Leading student freelance marketplace connecting talented students with businesses worldwide',
+      schemaDescription: 'Premier platform connecting skilled student freelancers with clients worldwide for remote work opportunities'
+    },
+    nav: {
+      features: 'Features',
+      howItWorks: 'How It Works',
+      about: 'About Us',
+      contact: 'Contact',
+      testimonials: 'Testimonials',
+      signIn: 'Sign In',
+      getStarted: 'Get Started Free',
+      dashboard: 'Go to Dashboard',
+      welcome: 'Welcome'
+    },
+    hero: {
+      badge: 'Top-Rated Student Freelance Marketplace 2025',
+      headingLine1: 'Hire Talented',
+      headingHighlight: 'Student Freelancers',
+      description: 'Connect with skilled university students for your projects or discover freelance opportunities. Join 10,000+ students and businesses building success together.',
+      primaryCta: 'Start Now - 100% Free',
+      secondaryCta: 'Sign In',
+      dashboardCta: 'Go to Dashboard',
+      noCreditCard: 'No credit card required',
+      quickSignup: '2-minute signup',
+      primaryAria: 'Start finding freelance jobs or hiring students',
+      secondaryAria: 'Sign in to existing account',
+      dashboardAria: 'Go to your dashboard'
+    },
+    featureSection: {
+      headingPrefix: 'Why Choose',
+      headingHighlight: 'Freshlancer',
+      headingSuffix: '?',
+      subheading: 'Everything you need to succeed in the student freelance marketplace'
+    },
+    stats: [
+      { number: '10,000+', label: 'Verified Student Freelancers' },
+      { number: '5,000+', label: 'Successful Projects Completed' },
+      { number: '95%', label: 'Client Satisfaction Rate' },
+      { number: '50+', label: 'Countries Worldwide' }
+    ],
+    features: [
+      {
+        title: 'Quality Freelance Jobs',
+        description: 'Access thousands of vetted freelance opportunities from verified clients across web development, design, writing, marketing, and more'
+      },
+      {
+        title: 'Skilled Student Freelancers',
+        description: 'Hire talented university students with fresh ideas and competitive rates for your projects in programming, graphic design, content creation'
+      },
+      {
+        title: 'Secure Payment Protection',
+        description: 'Industry-leading secure payment system with escrow protection, verified profiles, and fraud prevention for safe transactions'
+      },
+      {
+        title: 'Fast Hiring Process',
+        description: 'Find and hire qualified student freelancers in under 24 hours with our streamlined matching algorithm and instant communication'
+      },
+      {
+        title: 'Top-Rated Platform',
+        description: 'Trusted review and rating system with 95% client satisfaction rate, helping you choose the best freelancers for your needs'
+      },
+      {
+        title: 'Career Growth Opportunities',
+        description: 'Students build professional portfolios, gain real-world experience, and develop in-demand skills while earning money online'
+      }
+    ],
+    jobCategories: [
+      'Web Development',
+      'Mobile App Development',
+      'Graphic Design',
+      'UI/UX Design',
+      'Content Writing',
+      'Digital Marketing',
+      'Academic Tasks',
+      'Video Editing',
+      'Data Entry',
+      'Translation Services'
+    ],
+    categorySection: {
+      heading: 'Popular Freelance Categories',
+      subheading: 'Find skilled freelancers or discover jobs in these in-demand categories'
+    },
+    benefits: {
+      heading: 'Benefits for Everyone',
+      students: {
+        title: 'For Students',
+        tagline: 'Launch your career',
+        intro: 'Gain experience and earn money while studying',
+        list: [
+          'Apply to 100+ freelance jobs per month with Premium membership',
+          'Get verified student badge to increase profile visibility',
+          'Build professional portfolio with real client testimonials',
+          'Flexible remote working hours that fit your study schedule',
+          'Gain valuable real-world experience and industry skills in early stages of your career',
+          'Direct client communication and long-term project opportunities'
+        ],
+        cta: 'Join as Student Freelancer'
+      },
+      clients: {
+        title: 'For Clients',
+        tagline: 'Find top talent',
+        intro: 'Hire skilled students for quality work at competitive rates',
+        list: [
+          'Access to world wide verified student freelancers with diverse skills',
+          'Post unlimited job listings in programming, design, marketing, writing',
+          'Review detailed profiles, portfolios, and ratings before hiring',
+          'Secure escrow payment system with secure payment gateways',
+          'Average response time from qualified freelancers',
+          'Quality guarantee with project milestone tracking'
+        ],
+        cta: 'Hire Student Talent Today'
+      }
+    },
+    testimonials: {
+      heading: 'Success Stories',
+      subheading: 'Real results from students and clients on our platform',
+      list: [
+        {
+          name: 'Sarah Johnson',
+          role: 'Marketing Manager',
+          company: 'Tech Startup Inc.',
+          text: 'Found an amazing graphic design student who delivered exceptional work at a fraction of traditional agency costs.',
+          rating: 5,
+          avatar: 'SJ'
+        },
+        {
+          name: 'Mohammed Ahmed',
+          role: 'Computer Science Student',
+          company: 'University Graduate',
+          text: 'Earned over $5,000 in my first semester while building a professional portfolio. This platform changed my life!',
+          rating: 5,
+          avatar: 'MA'
+        }
+      ]
+    },
+    howItWorks: {
+      heading: 'How It Works',
+      subheading: 'Get started in three simple steps',
+      steps: [
+        { title: 'Create Your Profile', description: 'Sign up in 2 minutes with your skills, portfolio, and experience' },
+        { title: 'Browse & Connect', description: 'Find jobs or talent, review profiles, and start conversations' },
+        { title: 'Work & Succeed', description: 'Complete projects with secure payments and build lasting success' }
+      ]
+    },
+    about: {
+      heading: 'About Freshlancer',
+      subheading: 'Empowering students and businesses to connect, collaborate, and succeed together',
+      missionTitle: 'Our Mission',
+      missionParagraphs: [
+        'Freshlancer is dedicated to bridging the gap between talented university students and businesses seeking quality freelance work. We believe that students bring fresh perspectives, innovative ideas, and competitive rates to the marketplace.',
+        'Our platform provides a secure, verified environment where students can build their professional portfolios while earning income, and businesses can access top-tier talent at affordable rates.'
+      ],
+      cards: [
+        { title: 'Verified Students', description: 'Our platform hosts thousands of verified student freelancers from universities worldwide, each with unique skills and fresh perspectives.' },
+        { title: 'Secure Payment System', description: 'We use industry-leading escrow protection to ensure safe transactions for both students and clients, with money-back guarantees.' },
+        { title: 'Market competitive prices', description: 'We offer competitive rates for students, allowing you to earn more while learning and building your portfolio.' }
+      ]
+    },
+    contact: {
+      heading: 'Contact Us',
+      subheading: "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+      getInTouch: 'Get in Touch',
+      methods: {
+        email: 'Email',
+        phone: 'Phone',
+        address: 'Address',
+        addressLines: ['123 Business Street', 'City, State 12345', 'Country']
+      },
+      followUs: 'Follow Us',
+      form: {
+        name: 'Name',
+        email: 'Email',
+        subject: 'Subject',
+        message: 'Message',
+        placeholders: {
+          name: 'Your name',
+          email: 'your.email@example.com',
+          subject: 'What is this regarding?',
+          message: 'Your message here...'
+        },
+        success: 'Thank you for your message! We will get back to you soon.',
+        sending: 'Sending...',
+        submit: 'Send Message',
+        defaultError: 'Failed to send message. Please try again later.'
+      }
+    },
+    faq: {
+      heading: 'Frequently Asked Questions',
+      list: [
+        {
+          q: 'How much does it cost to use Freshlancer?',
+          a: 'Creating an account is 100% free for both students and clients. Students can apply to 10 jobs per month on the free plan, or upgrade to Premium for $4.99/month to apply to 100 jobs. Clients can post unlimited jobs and only pay when they hire.'
+        },
+        {
+          q: 'Are student freelancers on Freshlancer verified?',
+          a: 'Yes! All student freelancers go through a verification process where they submit student ID and enrollment proof. Verified students get a badge on their profile, ensuring clients work with legitimate, talented university students.'
+        },
+        {
+          q: 'What types of freelance jobs are available for students?',
+          a: 'We have opportunities in web development, mobile apps, graphic design, UI/UX design, content writing, copywriting, digital marketing, SEO, social media management, video editing, data entry, translation, virtual assistant, and more.'
+        },
+        {
+          q: 'How does payment protection work on Freshlancer?',
+          a: 'We use secure escrow payment systems (Paymob for EGP, PayPal for USD) to protect both parties. Funds are held securely and released upon project completion, ensuring safe transactions for students and clients.'
+        }
+      ]
+    },
+    cta: {
+      heading: 'Ready to Get Started?',
+      subheading: 'Join 10,000+ students and businesses finding success on Freshlancer. Sign up free today - no credit card required!',
+      primary: 'Start Now - 100% Free',
+      secondary: 'Sign In to Account'
+    },
+    footer: {
+      brandCopy: 'The leading student freelance marketplace connecting talented university students with businesses worldwide for remote work opportunities.',
+      studentsTitle: 'For Students',
+      studentsLinks: ['Find Jobs', 'Build Portfolio', 'Premium Plans', 'Success Stories'],
+      clientsTitle: 'For Clients',
+      clientsLinks: ['Post Jobs', 'Find Talent', 'Pricing', 'How It Works'],
+      copyright: '© 2025 Freshlancer - Premier Student Freelance Platform. All rights reserved.'
+    }
+  },
+  it: {
+    languageLabel: 'Lingua',
+    languageOptions: { en: 'Inglese', it: 'Italiano' },
+    seo: {
+      title: 'Freshlancer - Assumi studenti talentuosi e trova lavori freelance | Piattaforma n.1 per studenti freelance',
+      description: 'Metti in contatto studenti freelance qualificati con i tuoi progetti oppure trova lavori freelance come studente. Oltre 10.000 studenti verificati, pagamenti sicuri e qualità garantita. Unisciti a Freshlancer oggi.',
+      keywords: 'studenti freelance, assumere studenti, lavori freelance per studenti, marketplace studenti, piattaforma freelance, trovare talenti studenti, lavori online per studenti, lavoro remoto studenti, assumere studenti freelance, incarichi per studenti',
+      ogDescription: 'La principale piattaforma che mette in contatto studenti qualificati con clienti in tutto il mondo. Trova lavoro freelance o assumi i migliori talenti studenti.',
+      organizationDescription: 'Marketplace leader per studenti freelance che collega studenti di talento con aziende in tutto il mondo',
+      schemaDescription: 'Piattaforma leader che collega studenti freelance qualificati con clienti in tutto il mondo per opportunità di lavoro remoto'
+    },
+    nav: {
+      features: 'Caratteristiche',
+      howItWorks: 'Come funziona',
+      about: 'Chi siamo',
+      contact: 'Contatti',
+      testimonials: 'Testimonianze',
+      signIn: 'Accedi',
+      getStarted: 'Inizia gratis',
+      dashboard: 'Vai alla dashboard',
+      welcome: 'Ciao'
+    },
+    hero: {
+      badge: 'Marketplace freelance per studenti valutato al top 2025',
+      headingLine1: 'Assumi talentuosi',
+      headingHighlight: 'studenti freelance',
+      description: 'Metti in contatto studenti universitari qualificati con i tuoi progetti oppure scopri opportunità freelance. Oltre 10.000 studenti e aziende che costruiscono il successo insieme.',
+      primaryCta: 'Inizia ora - 100% gratis',
+      secondaryCta: 'Accedi',
+      dashboardCta: 'Vai alla dashboard',
+      noCreditCard: 'Nessuna carta di credito richiesta',
+      quickSignup: 'Registrazione in 2 minuti',
+      primaryAria: 'Inizia a trovare lavori freelance o ad assumere studenti',
+      secondaryAria: 'Accedi al tuo account',
+      dashboardAria: 'Vai alla tua dashboard'
+    },
+    featureSection: {
+      headingPrefix: 'Perché scegliere',
+      headingHighlight: 'Freshlancer',
+      headingSuffix: '?',
+      subheading: 'Tutto ciò che ti serve per avere successo nel marketplace freelance per studenti'
+    },
+    stats: [
+      { number: '10,000+', label: 'Studenti freelance verificati' },
+      { number: '5,000+', label: 'Progetti completati con successo' },
+      { number: '95%', label: 'Tasso di soddisfazione dei clienti' },
+      { number: '50+', label: 'Paesi nel mondo' }
+    ],
+    features: [
+      {
+        title: 'Lavori freelance di qualità',
+        description: 'Accedi a migliaia di opportunità freelance verificate da clienti in sviluppo web, design, scrittura, marketing e altro'
+      },
+      {
+        title: 'Studenti freelance qualificati',
+        description: 'Assumi studenti universitari talentuosi con idee fresche e tariffe competitive per progetti di programmazione, grafica, contenuti'
+      },
+      {
+        title: 'Pagamenti sicuri con protezione',
+        description: 'Sistema di pagamento sicuro con escrow, profili verificati e prevenzione delle frodi per transazioni protette'
+      },
+      {
+        title: 'Assunzioni rapide',
+        description: 'Trova e assumi studenti qualificati in meno di 24 ore grazie al nostro algoritmo e alla comunicazione immediata'
+      },
+      {
+        title: 'Piattaforma con valutazioni eccellenti',
+        description: 'Sistema di recensioni affidabile con il 95% di clienti soddisfatti per scegliere i freelancer migliori per le tue esigenze'
+      },
+      {
+        title: 'Opportunità di crescita professionale',
+        description: 'Gli studenti creano portfoli professionali, fanno esperienza reale e sviluppano competenze richieste mentre guadagnano online'
+      }
+    ],
+    jobCategories: [
+      'Sviluppo web',
+      'Sviluppo app mobile',
+      'Graphic design',
+      'UI/UX design',
+      'Content writing',
+      'Digital marketing',
+      'Compiti accademici',
+      'Montaggio video',
+      'Data entry',
+      'Servizi di traduzione'
+    ],
+    categorySection: {
+      heading: 'Categorie freelance più richieste',
+      subheading: 'Trova freelancer qualificati o scopri lavori in queste categorie in crescita'
+    },
+    benefits: {
+      heading: 'Vantaggi per tutti',
+      students: {
+        title: 'Per gli studenti',
+        tagline: 'Lancia la tua carriera',
+        intro: 'Fai esperienza e guadagna mentre studi',
+        list: [
+          "Candidati a oltre 100 lavori freelance al mese con l'abbonamento Premium",
+          'Ottieni il badge studente verificato per aumentare la visibilità del profilo',
+          'Costruisci un portfolio professionale con testimonianze reali dei clienti',
+          'Orari di lavoro flessibili da remoto che si adattano allo studio',
+          "Acquisisci esperienza reale e competenze richieste nelle prime fasi della carriera",
+          'Comunicazione diretta con i clienti e opportunità di progetti a lungo termine'
+        ],
+        cta: 'Unisciti come studente freelance'
+      },
+      clients: {
+        title: 'Per i clienti',
+        tagline: 'Trova i migliori talenti',
+        intro: 'Assumi studenti qualificati per lavori di qualità a tariffe competitive',
+        list: [
+          'Accesso a studenti freelance verificati in tutto il mondo con competenze diverse',
+          'Pubblica offerte di lavoro illimitate in programmazione, design, marketing, scrittura',
+          'Consulta profili dettagliati, portfolio e recensioni prima di assumere',
+          'Sistema di pagamento sicuro con escrow e gateway affidabili',
+          'Tempi di risposta rapidi da freelancer qualificati',
+          'Garanzia di qualità con tracciamento delle milestone di progetto'
+        ],
+        cta: 'Assumi studenti di talento oggi'
+      }
+    },
+    testimonials: {
+      heading: 'Storie di successo',
+      subheading: 'Risultati reali di studenti e clienti sulla nostra piattaforma',
+      list: [
+        {
+          name: 'Sarah Johnson',
+          role: 'Marketing Manager',
+          company: 'Tech Startup Inc.',
+          text: "Ho trovato una studentessa di graphic design straordinaria che ha consegnato un lavoro eccellente a una frazione dei costi di un'agenzia.",
+          rating: 5,
+          avatar: 'SJ'
+        },
+        {
+          name: 'Mohammed Ahmed',
+          role: 'Studente di Informatica',
+          company: 'University Graduate',
+          text: 'Ho guadagnato oltre 5.000 $ nel primo semestre mentre costruivo un portfolio professionale. Questa piattaforma mi ha cambiato la vita!',
+          rating: 5,
+          avatar: 'MA'
+        }
+      ]
+    },
+    howItWorks: {
+      heading: 'Come funziona',
+      subheading: 'Inizia in tre semplici passaggi',
+      steps: [
+        { title: 'Crea il tuo profilo', description: 'Registrati in 2 minuti con competenze, portfolio ed esperienza' },
+        { title: 'Cerca e contatta', description: 'Trova lavori o talenti, consulta i profili e avvia le conversazioni' },
+        { title: 'Lavora e cresci', description: 'Completa i progetti con pagamenti sicuri e costruisci il tuo successo' }
+      ]
+    },
+    about: {
+      heading: 'Chi è Freshlancer',
+      subheading: 'Mettiamo in contatto studenti e aziende per collaborare e avere successo insieme',
+      missionTitle: 'La nostra missione',
+      missionParagraphs: [
+        'Freshlancer vuole colmare il divario tra studenti universitari talentuosi e aziende che cercano lavori freelance di qualità. Crediamo che gli studenti portino prospettive fresche, idee innovative e tariffe competitive.',
+        'La nostra piattaforma offre un ambiente sicuro e verificato dove gli studenti possono costruire il proprio portfolio professionale mentre guadagnano, e le aziende possono accedere a talenti di alto livello a costi accessibili.'
+      ],
+      cards: [
+        { title: 'Studenti verificati', description: 'Ospitiamo migliaia di studenti freelance verificati da università di tutto il mondo, ciascuno con competenze uniche e idee fresche.' },
+        { title: 'Pagamenti sicuri', description: 'Usiamo protezione escrow di livello enterprise per garantire transazioni sicure per studenti e clienti, con garanzie di rimborso.' },
+        { title: 'Prezzi competitivi', description: 'Offriamo tariffe competitive per gli studenti, permettendoti di guadagnare di più mentre impari e costruisci il tuo portfolio.' }
+      ]
+    },
+    contact: {
+      heading: 'Contattaci',
+      subheading: 'Domande? Ci farebbe piacere sentirti. Inviaci un messaggio e ti risponderemo il prima possibile.',
+      getInTouch: 'Mettiti in contatto',
+      methods: {
+        email: 'Email',
+        phone: 'Telefono',
+        address: 'Indirizzo',
+        addressLines: ['123 Business Street', 'Città, Provincia 12345', 'Paese']
+      },
+      followUs: 'Seguici',
+      form: {
+        name: 'Nome',
+        email: 'Email',
+        subject: 'Oggetto',
+        message: 'Messaggio',
+        placeholders: {
+          name: 'Il tuo nome',
+          email: 'la.tua.email@example.com',
+          subject: 'Di cosa si tratta?',
+          message: 'Il tuo messaggio...'
+        },
+        success: 'Grazie per il messaggio! Ti ricontatteremo al più presto.',
+        sending: 'Invio in corso...',
+        submit: 'Invia messaggio',
+        defaultError: 'Invio non riuscito. Riprova più tardi.'
+      }
+    },
+    faq: {
+      heading: 'Domande frequenti',
+      list: [
+        {
+          q: 'Quanto costa usare Freshlancer?',
+          a: "Creare un account è gratuito al 100% per studenti e clienti. Gli studenti possono candidarsi a 10 lavori al mese con il piano gratuito o passare a Premium a 4,99 $/mese per candidarsi a 100 lavori. I clienti possono pubblicare lavori illimitati e pagano solo quando assumono."
+        },
+        {
+          q: 'Gli studenti freelance su Freshlancer sono verificati?',
+          a: 'Sì! Tutti gli studenti freelance passano un processo di verifica con documento universitario e prova di iscrizione. Gli studenti verificati ottengono un badge sul profilo, così i clienti lavorano con studenti affidabili e talentuosi.'
+        },
+        {
+          q: 'Che tipo di lavori freelance sono disponibili per gli studenti?',
+          a: 'Abbiamo opportunità in sviluppo web, app mobile, graphic design, UI/UX, content writing, copywriting, digital marketing, SEO, social media, video editing, data entry, traduzione, assistenza virtuale e altro.'
+        },
+        {
+          q: 'Come funziona la protezione dei pagamenti su Freshlancer?',
+          a: 'Usiamo sistemi di pagamento sicuri con escrow (Paymob per EGP, PayPal per USD) per proteggere entrambe le parti. I fondi sono conservati in sicurezza e rilasciati al completamento del progetto, garantendo transazioni sicure.'
+        }
+      ]
+    },
+    cta: {
+      heading: 'Pronto per iniziare?',
+      subheading: 'Unisciti a oltre 10.000 studenti e aziende che trovano successo su Freshlancer. Iscriviti gratis oggi: nessuna carta di credito richiesta!',
+      primary: 'Inizia ora - 100% gratis',
+      secondary: 'Accedi al tuo account'
+    },
+    footer: {
+      brandCopy: 'Il marketplace leader per studenti freelance che mette in contatto studenti universitari di talento con aziende in tutto il mondo per opportunità di lavoro remoto.',
+      studentsTitle: 'Per studenti',
+      studentsLinks: ['Trova lavori', 'Crea portfolio', 'Piani Premium', 'Storie di successo'],
+      clientsTitle: 'Per clienti',
+      clientsLinks: ['Pubblica lavori', 'Trova talenti', 'Prezzi', 'Come funziona'],
+      copyright: '© 2025 Freshlancer - Piattaforma leader per studenti freelance. Tutti i diritti riservati.'
+    }
+  }
+};
+
+const featureMeta = [
+  { icon: <Code className="w-6 h-6" />, color: 'bg-blue-600' },
+  { icon: <Users className="w-6 h-6" />, color: 'bg-[#25aaad]' },
+  { icon: <Shield className="w-6 h-6" />, color: 'bg-green-600' },
+  { icon: <Clock className="w-6 h-6" />, color: 'bg-orange-600' },
+  { icon: <Star className="w-6 h-6" />, color: 'bg-yellow-600' },
+  { icon: <TrendingUp className="w-6 h-6" />, color: 'bg-indigo-600' }
+];
+
+const statMeta = [
+  { icon: <Users className="w-8 h-8" /> },
+  { icon: <CheckCircle className="w-8 h-8" /> },
+  { icon: <Star className="w-8 h-8" /> },
+  { icon: <Globe className="w-8 h-8" /> }
+];
+
+const categoryMeta = [
+  { icon: <Code className="w-5 h-5" />, color: 'bg-blue-500' },
+  { icon: <Code className="w-5 h-5" />, color: 'bg-purple-500' },
+  { icon: <Palette className="w-5 h-5" />, color: 'bg-pink-500' },
+  { icon: <Palette className="w-5 h-5" />, color: 'bg-indigo-500' },
+  { icon: <FileText className="w-5 h-5" />, color: 'bg-green-500' },
+  { icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-500' },
+  { icon: <MessageCircle className="w-5 h-5" />, color: 'bg-cyan-500' },
+  { icon: <Play className="w-5 h-5" />, color: 'bg-red-500' },
+  { icon: <FileText className="w-5 h-5" />, color: 'bg-gray-500' },
+  { icon: <Globe className="w-5 h-5" />, color: 'bg-teal-500' }
+];
+
 const Landing = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
+  const [language, setLanguage] = useState('en');
   const [contactFormData, setContactFormData] = useState({
     name: '',
     email: '',
@@ -52,6 +545,27 @@ const Landing = () => {
   const [contactFormError, setContactFormError] = useState('');
   const [contactFormSuccess, setContactFormSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = translations[language];
+
+  const features = featureMeta.map((meta, index) => ({
+    ...meta,
+    ...t.features[index]
+  }));
+
+  const stats = statMeta.map((meta, index) => ({
+    ...meta,
+    ...t.stats[index]
+  }));
+
+  const jobCategories = categoryMeta.map((meta, index) => ({
+    ...meta,
+    name: t.jobCategories[index]
+  }));
+
+  const testimonials = t.testimonials.list;
+  const howItWorksSteps = t.howItWorks.steps;
+  const faqItems = t.faq.list;
+  const benefits = t.benefits;
 
   // Get dashboard path based on user role
   const getDashboardPath = () => {
@@ -68,28 +582,34 @@ const Landing = () => {
     }
   };
 
+  useEffect(() => {
+    document.documentElement.lang = language;
+    setContactFormError('');
+    setContactFormSuccess('');
+  }, [language]);
+
   // SEO Meta Tags
   useEffect(() => {
-    document.title = 'Freshlancer - Hire Talented Students & Find Freelance Jobs | #1 Student Freelance Platform';
+    const { seo } = t;
+    document.title = seo.title;
 
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Connect with skilled student freelancers for your projects or find freelance jobs as a student. 10,000+ verified students, secure payments, and quality guaranteed. Join Freshlancer today!');
+      metaDescription.setAttribute('content', seo.description);
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Connect with skilled student freelancers for your projects or find freelance jobs as a student. 10,000+ verified students, secure payments, and quality guaranteed. Join Freshlancer today!';
+      meta.content = seo.description;
       document.head.appendChild(meta);
     }
 
     const metaKeywords = document.querySelector('meta[name="keywords"]');
-    const keywords = 'student freelancers, hire students, freelance jobs for students, student marketplace, freelance platform, find student talent, student jobs online, remote student work, hire freelance students, student gigs';
     if (metaKeywords) {
-      metaKeywords.setAttribute('content', keywords);
+      metaKeywords.setAttribute('content', seo.keywords);
     } else {
       const meta = document.createElement('meta');
       meta.name = 'keywords';
-      meta.content = keywords;
+      meta.content = seo.keywords;
       document.head.appendChild(meta);
     }
 
@@ -97,16 +617,20 @@ const Landing = () => {
     if (!ogTitle) {
       const meta = document.createElement('meta');
       meta.setAttribute('property', 'og:title');
-      meta.content = 'Freshlancer - Connect Students with Freelance Opportunities';
+      meta.content = seo.title;
       document.head.appendChild(meta);
+    } else {
+      ogTitle.content = seo.title;
     }
 
     const ogDescription = document.querySelector('meta[property="og:description"]');
     if (!ogDescription) {
       const meta = document.createElement('meta');
       meta.setAttribute('property', 'og:description');
-      meta.content = 'The premier platform connecting skilled students with clients worldwide. Find freelance work or hire top student talent.';
+      meta.content = seo.ogDescription;
       document.head.appendChild(meta);
+    } else {
+      ogDescription.content = seo.ogDescription;
     }
 
     const twitterCard = document.querySelector('meta[name="twitter:card"]');
@@ -125,110 +649,7 @@ const Landing = () => {
       document.head.appendChild(link);
     }
 
-  }, []);
-
-  const features = [
-    {
-      icon: <Code className="w-6 h-6" />,
-      title: 'Quality Freelance Jobs',
-      description: 'Access thousands of vetted freelance opportunities from verified clients across web development, design, writing, marketing, and more',
-      keywords: 'freelance jobs, student jobs, online work',
-      color: 'bg-blue-600'
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: 'Skilled Student Freelancers',
-      description: 'Hire talented university students with fresh ideas and competitive rates for your projects in programming, graphic design, content creation',
-      keywords: 'hire students, student talent, freelance students',
-      color: 'bg-[#25aaad]'
-    },
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: 'Secure Payment Protection',
-      description: 'Industry-leading secure payment system with escrow protection, verified profiles, and fraud prevention for safe transactions',
-      keywords: 'secure payments, payment protection, safe freelancing',
-      color: 'bg-green-600'
-    },
-    {
-      icon: <Clock className="w-6 h-6" />,
-      title: 'Fast Hiring Process',
-      description: 'Find and hire qualified student freelancers in under 24 hours with our streamlined matching algorithm and instant communication',
-      keywords: 'quick hiring, fast recruitment, instant hire',
-      color: 'bg-orange-600'
-    },
-    {
-      icon: <Star className="w-6 h-6" />,
-      title: 'Top-Rated Platform',
-      description: 'Trusted review and rating system with 95% client satisfaction rate, helping you choose the best freelancers for your needs',
-      keywords: 'top rated, best freelance platform, trusted marketplace',
-      color: 'bg-yellow-600'
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: 'Career Growth Opportunities',
-      description: 'Students build professional portfolios, gain real-world experience, and develop in-demand skills while earning money online',
-      keywords: 'career growth, portfolio building, skill development',
-      color: 'bg-indigo-600'
-    }
-  ];
-
-  const stats = [
-    { number: '10,000+', label: 'Verified Student Freelancers', icon: <Users className="w-8 h-8" /> },
-    { number: '5,000+', label: 'Successful Projects Completed', icon: <CheckCircle className="w-8 h-8" /> },
-    { number: '95%', label: 'Client Satisfaction Rate', icon: <Star className="w-8 h-8" /> },
-    { number: '50+', label: 'Countries Worldwide', icon: <Globe className="w-8 h-8" /> }
-  ];
-
-  const benefits = {
-    students: [
-      'Apply to 100+ freelance jobs per month with Premium membership',
-      'Get verified student badge to increase profile visibility',
-      'Build professional portfolio with real client testimonials',
-      'Flexible remote working hours that fit your study schedule',
-      'Gain valuable real-world experience and industry skills in early stages of your career',
-      'Direct client communication and long-term project opportunities'
-    ],
-    clients: [
-      'Access to world wide verified student freelancers with diverse skills',
-      'Post unlimited job listings in programming, design, marketing, writing',
-      'Review detailed profiles, portfolios, and ratings before hiring',
-      'Secure escrow payment system with secure payment gateways',
-      'Average response time from qualified freelancers',
-      'Quality guarantee with project milestone tracking'
-    ]
-  };
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Marketing Manager',
-      company: 'Tech Startup Inc.',
-      text: 'Found an amazing graphic design student who delivered exceptional work at a fraction of traditional agency costs.',
-      rating: 5,
-      avatar: 'SJ'
-    },
-    {
-      name: 'Mohammed Ahmed',
-      role: 'Computer Science Student',
-      company: 'University Graduate',
-      text: 'Earned over $5,000 in my first semester while building a professional portfolio. This platform changed my life!',
-      rating: 5,
-      avatar: 'MA'
-    }
-  ];
-
-  const jobCategories = [
-    { name: 'Web Development', icon: <Code className="w-5 h-5" />, color: 'bg-blue-500' },
-    { name: 'Mobile App Development', icon: <Code className="w-5 h-5" />, color: 'bg-purple-500' },
-    { name: 'Graphic Design', icon: <Palette className="w-5 h-5" />, color: 'bg-pink-500' },
-    { name: 'UI/UX Design', icon: <Palette className="w-5 h-5" />, color: 'bg-indigo-500' },
-    { name: 'Content Writing', icon: <FileText className="w-5 h-5" />, color: 'bg-green-500' },
-    { name: 'Digital Marketing', icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-500' },
-    { name: 'Academic Tasks', icon: <MessageCircle className="w-5 h-5" />, color: 'bg-cyan-500' },
-    { name: 'Video Editing', icon: <Play className="w-5 h-5" />, color: 'bg-red-500' },
-    { name: 'Data Entry', icon: <FileText className="w-5 h-5" />, color: 'bg-gray-500' },
-    { name: 'Translation Services', icon: <Globe className="w-5 h-5" />, color: 'bg-teal-500' },
-  ];
+  }, [t, language]);
 
   // Smooth scroll handler for anchor links
   useEffect(() => {
@@ -264,7 +685,7 @@ const Landing = () => {
           "name": "Freshlancer",
           "alternateName": "Freshlancer Student Freelance Platform",
           "url": window.location.origin,
-          "description": "Premier platform connecting skilled student freelancers with clients worldwide for remote work opportunities"
+          "description": t.seo.schemaDescription
         })}
       </script>
 
@@ -275,7 +696,7 @@ const Landing = () => {
           "name": "Freshlancer",
           "url": window.location.origin,
           "logo": `${window.location.origin}/logo.png`,
-          "description": "Leading student freelance marketplace connecting talented students with businesses worldwide"
+          "description": t.seo.organizationDescription
         })}
       </script>
 
@@ -295,44 +716,58 @@ const Landing = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">Features</a>
-              <a href="#how-it-works" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">How It Works</a>
-              <a href="#about" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">About Us</a>
-              <a href="#contact" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">Contact</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">Testimonials</a>
+              <a href="#features" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.features}</a>
+              <a href="#how-it-works" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.howItWorks}</a>
+              <a href="#about" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.about}</a>
+              <a href="#contact" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.contact}</a>
+              <a href="#testimonials" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.testimonials}</a>
             </div>
 
             <div className="flex items-center gap-4">
+              <div className="flex items-center">
+                <label htmlFor="language-select" className="sr-only">
+                  {t.languageLabel}
+                </label>
+      
+              </div>
               {isAuthenticated ? (
                 <>
-                  <span className="text-gray-700 font-medium">
-                    Welcome, {user?.name}
-                  </span>
                   <Button
                     onClick={() => navigate(getDashboardPath())}
-                    aria-label="Go to your dashboard"
+                    aria-label={t.hero.dashboardAria}
                     className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all"
                   >
                     <LayoutDashboard className="w-4 h-4 mr-2" aria-hidden="true" />
-                    Go to Dashboard
+                    {t.nav.dashboard}
                   </Button>
+
+                  <select
+                  id="language-select"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#065084] bg-white"
+                  aria-label={t.languageLabel}
+                >
+                  <option value="en">{t.languageOptions.en}</option>
+                  <option value="it">{t.languageOptions.it}</option>
+                </select>
                 </>
               ) : (
                 <>
                   <Button
                     variant="outline"
                     onClick={() => navigate('/login')}
-                    aria-label="Sign in to your account"
+                    aria-label={t.hero.secondaryAria}
                     className="border-gray-300 text-gray-700 hover:border-[#065084] hover:text-[#065084]"
                   >
-                    Sign In
+                    {t.nav.signIn}
                   </Button>
                   <Button
                     onClick={() => navigate('/register')}
-                    aria-label="Create a free account"
+                    aria-label={t.nav.getStarted}
                     className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all"
                   >
-                    Get Started Free
+                    {t.nav.getStarted}
                   </Button>
                 </>
               )}
@@ -349,20 +784,19 @@ const Landing = () => {
             <article className="space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#065084]/10 rounded-md text-sm font-medium text-[#065084] border border-[#065084]/20">
                 <Zap className="w-4 h-4" aria-hidden="true" />
-                <span>Top-Rated Student Freelance Marketplace 2025</span>
+                <span>{t.hero.badge}</span>
               </div>
 
               <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Hire Talented
+                {t.hero.headingLine1}
                 <br />
                 <span className="text-[#065084] font-extrabold" style={{ fontWeight: 900 }}>
-                  Student Freelancers
+                  {t.hero.headingHighlight}
                 </span>
               </h2>
 
               <p className="text-xl text-gray-600 leading-relaxed">
-                Connect with skilled university students for your projects or discover freelance opportunities.
-                Join 10,000+ students and businesses building success together.
+                {t.hero.description}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -371,10 +805,10 @@ const Landing = () => {
                     size="lg"
                     onClick={() => navigate(getDashboardPath())}
                     className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-lg px-8 py-4"
-                    aria-label="Go to your dashboard"
+                    aria-label={t.hero.dashboardAria}
                   >
                     <LayoutDashboard className="w-5 h-5 mr-2" aria-hidden="true" />
-                    Go to Dashboard
+                    {t.hero.dashboardCta}
                     <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
                   </Button>
                 ) : (
@@ -383,9 +817,9 @@ const Landing = () => {
                       size="lg"
                       onClick={() => navigate('/register')}
                       className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-lg px-8 py-4"
-                      aria-label="Start finding freelance jobs or hiring students"
+                      aria-label={t.hero.primaryAria}
                     >
-                      Start Now - 100% Free
+                      {t.hero.primaryCta}
                       <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
                     </Button>
                     <Button
@@ -393,9 +827,9 @@ const Landing = () => {
                       size="lg"
                       onClick={() => navigate('/login')}
                       className="border-2 border-gray-300 text-gray-700 hover:border-[#065084] hover:text-[#065084] text-lg px-8 py-4"
-                      aria-label="Sign in to existing account"
+                      aria-label={t.hero.secondaryAria}
                     >
-                      Sign In
+                      {t.hero.secondaryCta}
                     </Button>
                   </>
                 )}
@@ -404,11 +838,11 @@ const Landing = () => {
               <div className="flex items-center gap-6 pt-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">No credit card required</span>
+                  <span className="text-sm text-gray-600">{t.hero.noCreditCard}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">2-minute signup</span>
+                  <span className="text-sm text-gray-600">{t.hero.quickSignup}</span>
                 </div>
               </div>
             </article>
@@ -453,10 +887,12 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="features-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Why Choose <span className="text-[#065084]">Freshlancer</span>?
+              {t.featureSection.headingPrefix}{' '}
+              <span className="text-[#065084]">{t.featureSection.headingHighlight}</span>
+              {t.featureSection.headingSuffix}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to succeed in the student freelance marketplace
+              {t.featureSection.subheading}
             </p>
           </div>
 
@@ -486,10 +922,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="categories-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Popular Freelance Categories
+              {t.categorySection.heading}
             </h2>
             <p className="text-xl text-gray-600">
-              Find skilled freelancers or discover jobs in these in-demand categories
+              {t.categorySection.subheading}
             </p>
           </div>
 
@@ -515,7 +951,7 @@ const Landing = () => {
       <section className="py-24 bg-white" aria-labelledby="benefits-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 id="benefits-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16 text-center">
-            Benefits for Everyone
+            {benefits.heading}
           </h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -527,17 +963,17 @@ const Landing = () => {
                     <Award className="w-8 h-8 text-white" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-bold text-gray-900">For Students</h3>
-                    <p className="text-[#25aaad] font-medium">Launch your career</p>
+                    <h3 className="text-3xl font-bold text-gray-900">{benefits.students.title}</h3>
+                    <p className="text-[#25aaad] font-medium">{benefits.students.tagline}</p>
                   </div>
                 </div>
 
                 <p className="text-gray-600 mb-8 text-lg">
-                  Gain experience and earn money while studying
+                  {benefits.students.intro}
                 </p>
 
                 <ul className="space-y-4 mb-8">
-                  {benefits.students.map((benefit, index) => (
+                  {benefits.students.list.map((benefit, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-[#25aaad] mt-0.5 flex-shrink-0" aria-hidden="true" />
                       <span className="text-gray-700">{benefit}</span>
@@ -557,9 +993,9 @@ const Landing = () => {
                 <Button
                   className="w-full bg-[#25aaad] text-white hover:bg-[#1a8b8d] text-lg py-6"
                   onClick={() => navigate('/register')}
-                  aria-label="Join as student freelancer"
+                  aria-label={benefits.students.cta}
                 >
-                  Join as Student Freelancer
+                  {benefits.students.cta}
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
@@ -573,17 +1009,17 @@ const Landing = () => {
                     <Search className="w-8 h-8 text-white" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-bold text-gray-900">For Clients</h3>
-                    <p className="text-[#065084] font-medium">Find top talent</p>
+                    <h3 className="text-3xl font-bold text-gray-900">{benefits.clients.title}</h3>
+                    <p className="text-[#065084] font-medium">{benefits.clients.tagline}</p>
                   </div>
                 </div>
 
                 <p className="text-gray-600 mb-8 text-lg">
-                  Hire skilled students for quality work at competitive rates
+                  {benefits.clients.intro}
                 </p>
 
                 <ul className="space-y-4 mb-8">
-                  {benefits.clients.map((benefit, index) => (
+                  {benefits.clients.list.map((benefit, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-[#065084] mt-0.5 flex-shrink-0" aria-hidden="true" />
                       <span className="text-gray-700">{benefit}</span>
@@ -603,9 +1039,9 @@ const Landing = () => {
                 <Button
                   className="w-full bg-[#065084] text-white hover:bg-[#043d6b] text-lg py-6"
                   onClick={() => navigate('/register')}
-                  aria-label="Hire student talent"
+                  aria-label={benefits.clients.cta}
                 >
-                  Hire Student Talent Today
+                  {benefits.clients.cta}
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
@@ -619,10 +1055,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="testimonials-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Success Stories
+              {t.testimonials.heading}
             </h2>
             <p className="text-xl text-gray-600">
-              Real results from students and clients on our platform
+              {t.testimonials.subheading}
             </p>
           </div>
 
@@ -663,10 +1099,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="how-it-works-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              How It Works
+              {t.howItWorks.heading}
             </h2>
             <p className="text-xl text-gray-600">
-              Get started in three simple steps
+              {t.howItWorks.subheading}
             </p>
           </div>
 
@@ -674,41 +1110,19 @@ const Landing = () => {
             {/* Connection lines */}
             <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-1 bg-gray-300 -z-10"></div>
 
-            <article className="text-center">
-              <div className="w-20 h-20 bg-[#065084] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
-                1
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Create Your Profile
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Sign up in 2 minutes with your skills, portfolio, and experience
-              </p>
-            </article>
-
-            <article className="text-center">
-              <div className="w-20 h-20 bg-[#065084] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
-                2
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Browse & Connect
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Find jobs or talent, review profiles, and start conversations
-              </p>
-            </article>
-
-            <article className="text-center">
-              <div className="w-20 h-20 bg-[#065084] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
-                3
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Work & Succeed
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Complete projects with secure payments and build lasting success
-              </p>
-            </article>
+            {howItWorksSteps.map((step, index) => (
+              <article key={step.title} className="text-center">
+                <div className="w-20 h-20 bg-[#065084] rounded-lg flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-md">
+                  {index + 1}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {step.description}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -718,22 +1132,23 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="about-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              About <span className="text-[#065084]">Freshlancer</span>
+              {t.about.heading.split('Freshlancer')[0]}
+              <span className="text-[#065084]">Freshlancer</span>
+              {t.about.heading.split('Freshlancer')[1] || ''}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Empowering students and businesses to connect, collaborate, and succeed together
+              {t.about.subheading}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h3>
-              <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                Freshlancer is dedicated to bridging the gap between talented university students and businesses seeking quality freelance work. We believe that students bring fresh perspectives, innovative ideas, and competitive rates to the marketplace.
-              </p>
-              <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                Our platform provides a secure, verified environment where students can build their professional portfolios while earning income, and businesses can access top-tier talent at affordable rates.
-              </p>
+              <h3 className="text-3xl font-bold text-gray-900 mb-6">{t.about.missionTitle}</h3>
+              {t.about.missionParagraphs.map((paragraph, index) => (
+                <p key={index} className="text-lg text-gray-600 leading-relaxed mb-6">
+                  {paragraph}
+                </p>
+              ))}
               <div className="flex gap-4 mt-8">
                 <a href="https://facebook.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Facebook className="w-6 h-6" />
@@ -750,18 +1165,12 @@ const Landing = () => {
               </div>
             </div>
             <div className="space-y-6">
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <h4 className="text-xl font-bold text-gray-900 mb-3">Verified Students</h4>
-                <p className="text-gray-600">Our platform hosts thousands of verified student freelancers from universities worldwide, each with unique skills and fresh perspectives.</p>
-              </div>
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <h4 className="text-xl font-bold text-gray-900 mb-3">Secure Payment System</h4>
-                <p className="text-gray-600">We use industry-leading escrow protection to ensure safe transactions for both students and clients, with money-back guarantees.</p>
-              </div>
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <h4 className="text-xl font-bold text-gray-900 mb-3">Market competitive prices</h4>
-                <p className="text-gray-600">We offer competitive rates for students, allowing you to earn more while learning and building your portfolio.</p>
-              </div>
+              {t.about.cards.map((card) => (
+                <div key={card.title} className="p-6 bg-gray-50 rounded-lg">
+                  <h4 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h4>
+                  <p className="text-gray-600">{card.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -772,24 +1181,24 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 id="contact-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Contact <span className="text-[#065084]">Us</span>
+              <span className="text-[#065084]">{t.contact.heading}</span>
             </h2>
             <p className="text-xl text-gray-600">
-              Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              {t.contact.subheading}
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Information */}
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Get in Touch</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">{t.contact.getInTouch}</h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white flex-shrink-0">
                     <Mail className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-1">Email</h4>
+                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.email}</h4>
                     <a href="mailto:support@freshlancer.com" className="text-gray-600 hover:text-[#065084] transition-colors">
                       support@freshlancer.com
                     </a>
@@ -800,7 +1209,7 @@ const Landing = () => {
                     <Phone className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-1">Phone</h4>
+                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.phone}</h4>
                     <a href="tel:+1234567890" className="text-gray-600 hover:text-[#065084] transition-colors">
                       +1 (234) 567-890
                     </a>
@@ -811,17 +1220,17 @@ const Landing = () => {
                     <MapPin className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-1">Address</h4>
+                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.address}</h4>
                     <p className="text-gray-600">
-                      123 Business Street<br />
-                      City, State 12345<br />
-                      Country
+                      {t.contact.methods.addressLines[0]}<br />
+                      {t.contact.methods.addressLines[1]}<br />
+                      {t.contact.methods.addressLines[2]}
                     </p>
                   </div>
                 </div>
               </div>
               <div className="mt-8">
-                <h4 className="font-bold text-gray-900 mb-4">Follow Us</h4>
+                <h4 className="font-bold text-gray-900 mb-4">{t.contact.followUs}</h4>
                 <div className="flex gap-4">
                   <a href="https://facebook.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Facebook className="w-5 h-5" />
@@ -867,7 +1276,7 @@ const Landing = () => {
                     });
                     
                     // Show success message
-                    setContactFormSuccess('Thank you for your message! We will get back to you soon.');
+                    setContactFormSuccess(t.contact.form.success);
                     
                     // Scroll to success message
                     setTimeout(() => {
@@ -879,7 +1288,7 @@ const Landing = () => {
                   } catch (error) {
                     setContactFormError(
                       error.response?.data?.message ||
-                      'Failed to send message. Please try again later.'
+                      t.contact.form.defaultError
                     );
                   } finally {
                     setIsSubmitting(false);
@@ -888,7 +1297,7 @@ const Landing = () => {
               >
                 <div>
                   <label htmlFor="name" className="block text-sm font-bold text-gray-700 mb-2">
-                    Name
+                    {t.contact.form.name}
                   </label>
                   <input
                     type="text"
@@ -900,12 +1309,12 @@ const Landing = () => {
                       setContactFormData({ ...contactFormData, name: e.target.value })
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#065084] focus:border-transparent"
-                    placeholder="Your name"
+                    placeholder={t.contact.form.placeholders.name}
                   />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-2">
-                    Email
+                    {t.contact.form.email}
                   </label>
                   <input
                     type="email"
@@ -917,12 +1326,12 @@ const Landing = () => {
                       setContactFormData({ ...contactFormData, email: e.target.value })
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#065084] focus:border-transparent"
-                    placeholder="your.email@example.com"
+                    placeholder={t.contact.form.placeholders.email}
                   />
                 </div>
                 <div>
                   <label htmlFor="subject" className="block text-sm font-bold text-gray-700 mb-2">
-                    Subject
+                    {t.contact.form.subject}
                   </label>
                   <input
                     type="text"
@@ -934,12 +1343,12 @@ const Landing = () => {
                       setContactFormData({ ...contactFormData, subject: e.target.value })
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#065084] focus:border-transparent"
-                    placeholder="What is this regarding?"
+                    placeholder={t.contact.form.placeholders.subject}
                   />
                 </div>
                 <div>
                   <label htmlFor="message" className="block text-sm font-bold text-gray-700 mb-2">
-                    Message
+                    {t.contact.form.message}
                   </label>
                   <textarea
                     id="message"
@@ -951,7 +1360,7 @@ const Landing = () => {
                       setContactFormData({ ...contactFormData, message: e.target.value })
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#065084] focus:border-transparent resize-none"
-                    placeholder="Your message here..."
+                    placeholder={t.contact.form.placeholders.message}
                   />
                 </div>
                 <Button
@@ -960,7 +1369,7 @@ const Landing = () => {
                   className="w-full bg-[#065084] text-white hover:bg-[#043d6b] text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-5 h-5 mr-2" />
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  {isSubmitting ? t.contact.form.sending : t.contact.form.submit}
                 </Button>
               </form>
             </div>
@@ -972,28 +1381,11 @@ const Landing = () => {
       <section className="py-24 bg-gray-50" aria-labelledby="faq-heading">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 id="faq-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16 text-center">
-            Frequently Asked Questions
+            {t.faq.heading}
           </h2>
 
           <div className="space-y-6">
-            {[
-              {
-                q: 'How much does it cost to use Freshlancer?',
-                a: 'Creating an account is 100% free for both students and clients. Students can apply to 10 jobs per month on the free plan, or upgrade to Premium for $4.99/month to apply to 100 jobs. Clients can post unlimited jobs and only pay when they hire.'
-              },
-              {
-                q: 'Are student freelancers on Freshlancer verified?',
-                a: 'Yes! All student freelancers go through a verification process where they submit student ID and enrollment proof. Verified students get a badge on their profile, ensuring clients work with legitimate, talented university students.'
-              },
-              {
-                q: 'What types of freelance jobs are available for students?',
-                a: 'We have opportunities in web development, mobile apps, graphic design, UI/UX design, content writing, copywriting, digital marketing, SEO, social media management, video editing, data entry, translation, virtual assistant, and more.'
-              },
-              {
-                q: 'How does payment protection work on Freshlancer?',
-                a: 'We use secure escrow payment systems (Paymob for EGP, PayPal for USD) to protect both parties. Funds are held securely and released upon project completion, ensuring safe transactions for students and clients.'
-              }
-            ].map((faq, index) => (
+            {faqItems.map((faq, index) => (
               <article key={index} className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   {faq.q}
@@ -1013,21 +1405,19 @@ const Landing = () => {
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Globe className="w-20 h-20 text-white mx-auto mb-8" aria-hidden="true" />
           <h2 id="cta-heading" className="text-4xl lg:text-5xl font-bold text-white mb-6">
-            Ready to Get Started?
+            {t.cta.heading}
           </h2>
           <p className="text-xl text-white/90 mb-10 leading-relaxed">
-            Join 10,000+ students and businesses finding success on Freshlancer.
-            <br />
-            Sign up free today - no credit card required!
+            {t.cta.subheading}
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8">
             <Button
               size="lg"
               onClick={() => navigate('/register')}
               className="bg-white text-[#065084] hover:bg-gray-50 hover:shadow-2xl text-lg px-10 py-6 font-semibold"
-              aria-label="Create free account now"
+              aria-label={t.cta.primary}
             >
-              Start Now - 100% Free
+              {t.cta.primary}
               <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
             </Button>
             <Button
@@ -1035,9 +1425,9 @@ const Landing = () => {
               size="lg"
               onClick={() => navigate('/login')}
               className="border-2 border-white text-white hover:bg-white/10 text-lg px-10 py-6 font-semibold"
-              aria-label="Sign in to account"
+              aria-label={t.cta.secondary}
             >
-              Sign In to Account
+              {t.cta.secondary}
             </Button>
           </div>
       
@@ -1058,8 +1448,7 @@ const Landing = () => {
                 </div>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
-                The leading student freelance marketplace connecting talented university students
-                with businesses worldwide for remote work opportunities.
+                {t.footer.brandCopy}
               </p>
               <div className="flex gap-4">
                 <a href="https://facebook.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#25aaad] transition-colors">
@@ -1079,30 +1468,28 @@ const Landing = () => {
 
             {/* For Students */}
             <div>
-              <h3 className="text-white font-bold mb-4 text-lg">For Students</h3>
+              <h3 className="text-white font-bold mb-4 text-lg">{t.footer.studentsTitle}</h3>
               <ul className="space-y-3">
-                <li><a href="/register" className="text-gray-400 hover:text-[#25aaad] transition-colors">Find Jobs</a></li>
-                <li><a href="/register" className="text-gray-400 hover:text-[#25aaad] transition-colors">Build Portfolio</a></li>
-                <li><a href="/register" className="text-gray-400 hover:text-[#25aaad] transition-colors">Premium Plans</a></li>
-                <li><a href="/register" className="text-gray-400 hover:text-[#25aaad] transition-colors">Success Stories</a></li>
+                {t.footer.studentsLinks.map((link) => (
+                  <li key={link}><a href="/register" className="text-gray-400 hover:text-[#25aaad] transition-colors">{link}</a></li>
+                ))}
               </ul>
             </div>
 
             {/* For Clients */}
             <div>
-              <h3 className="text-white font-bold mb-4 text-lg">For Clients</h3>
+              <h3 className="text-white font-bold mb-4 text-lg">{t.footer.clientsTitle}</h3>
               <ul className="space-y-3">
-                <li><a href="/register" className="text-gray-400 hover:text-[#065084] transition-colors">Post Jobs</a></li>
-                <li><a href="/register" className="text-gray-400 hover:text-[#065084] transition-colors">Find Talent</a></li>
-                <li><a href="/register" className="text-gray-400 hover:text-[#065084] transition-colors">Pricing</a></li>
-                <li><a href="/register" className="text-gray-400 hover:text-[#065084] transition-colors">How It Works</a></li>
+                {t.footer.clientsLinks.map((link) => (
+                  <li key={link}><a href="/register" className="text-gray-400 hover:text-[#065084] transition-colors">{link}</a></li>
+                ))}
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-800 pt-8">
             <p className="text-center text-gray-500 text-sm">
-              &copy; 2025 Freshlancer - Premier Student Freelance Platform. All rights reserved.
+              {t.footer.copyright}
             </p>
           </div>
         </div>

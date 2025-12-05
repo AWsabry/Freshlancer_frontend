@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
@@ -26,6 +26,103 @@ import {
   Rocket,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading jobs...',
+    browseJobs: 'Browse Jobs',
+    findOpportunity: 'Find your next opportunity via Freshlancer',
+    availableJobs: 'Available Jobs',
+    appliedJobs: 'Applied Jobs',
+    searchPlaceholder: 'Search by title, skills, or keywords... (Press Enter to search)',
+    search: 'Search',
+    clear: 'Clear',
+    filters: 'Filters',
+    aiRecommendations: 'AI Recommendations',
+    soon: 'Soon',
+    category: 'Category',
+    allCategories: 'All Categories',
+    sortByBudget: 'Sort by Budget',
+    sortByBudgetPremium: 'Sort by Budget (Premium Only)',
+    createdByDesc: 'Created By (Desc)',
+    createdByAsc: 'Created By (Asc)',
+    highestBudgetFirst: 'Highest Budget First',
+    highestBudgetFirstPremium: 'Highest Budget First 🔒 Premium',
+    lowestBudgetFirst: 'Lowest Budget First',
+    lowestBudgetFirstPremium: 'Lowest Budget First 🔒 Premium',
+    upgradeToSort: 'Upgrade to Premium to sort by budget',
+    filterByCurrency: 'Filter by Currency',
+    filterByCurrencyPremium: 'Filter by Currency (Premium Only)',
+    allCurrencies: 'All Currencies',
+    upgradeToFilterCurrency: 'Upgrade to Premium to filter by currency',
+    showStartupJobsOnly: 'Show Startup Jobs Only',
+    showStartupJobsOnlyPremium: 'Show Startup Jobs Only (Premium Only)',
+    upgradeToFilterStartups: 'Upgrade to Premium to filter by startups',
+    noJobsFound: 'No jobs found',
+    tryAdjusting: 'Try adjusting your search criteria',
+    premiumMembersOnly: 'Premium members only',
+    appliedOn: 'Applied on',
+    more: 'more',
+    applicants: 'applicant',
+    applicantsPlural: 'applicants',
+    viewDetails: 'View Details',
+    loadMore: 'Load More Jobs',
+    loadingMore: 'Loading more...',
+    endOfList: "You've reached the end of the list",
+    urgent: 'Urgent',
+    accepted: 'accepted',
+    rejected: 'rejected',
+    shortlisted: 'shortlisted',
+    pending: 'pending',
+  },
+  it: {
+    loading: 'Caricamento lavori...',
+    browseJobs: 'Sfoglia Lavori',
+    findOpportunity: 'Trova la tua prossima opportunità tramite Freshlancer',
+    availableJobs: 'Lavori Disponibili',
+    appliedJobs: 'Lavori a cui hai fatto domanda',
+    searchPlaceholder: 'Cerca per titolo, competenze o parole chiave... (Premi Invio per cercare)',
+    search: 'Cerca',
+    clear: 'Cancella',
+    filters: 'Filtri',
+    aiRecommendations: 'Raccomandazioni IA',
+    soon: 'Presto',
+    category: 'Categoria',
+    allCategories: 'Tutte le Categorie',
+    sortByBudget: 'Ordina per Budget',
+    sortByBudgetPremium: 'Ordina per Budget (Solo Premium)',
+    createdByDesc: 'Creato Per (Disc)',
+    createdByAsc: 'Creato Per (Cresc)',
+    highestBudgetFirst: 'Budget Più Alto Prima',
+    highestBudgetFirstPremium: 'Budget Più Alto Prima 🔒 Premium',
+    lowestBudgetFirst: 'Budget Più Basso Prima',
+    lowestBudgetFirstPremium: 'Budget Più Basso Prima 🔒 Premium',
+    upgradeToSort: 'Passa a Premium per ordinare per budget',
+    filterByCurrency: 'Filtra per Valuta',
+    filterByCurrencyPremium: 'Filtra per Valuta (Solo Premium)',
+    allCurrencies: 'Tutte le Valute',
+    upgradeToFilterCurrency: 'Passa a Premium per filtrare per valuta',
+    showStartupJobsOnly: 'Mostra Solo Lavori Startup',
+    showStartupJobsOnlyPremium: 'Mostra Solo Lavori Startup (Solo Premium)',
+    upgradeToFilterStartups: 'Passa a Premium per filtrare per startup',
+    noJobsFound: 'Nessun lavoro trovato',
+    tryAdjusting: 'Prova a modificare i criteri di ricerca',
+    premiumMembersOnly: 'Solo membri Premium',
+    appliedOn: 'Candidato il',
+    more: 'altri',
+    applicants: 'candidato',
+    applicantsPlural: 'candidati',
+    viewDetails: 'Visualizza Dettagli',
+    loadMore: 'Carica Altri Lavori',
+    loadingMore: 'Caricamento altri...',
+    endOfList: 'Hai raggiunto la fine dell\'elenco',
+    urgent: 'Urgente',
+    accepted: 'accettato',
+    rejected: 'rifiutato',
+    shortlisted: 'in lista',
+    pending: 'in attesa',
+  },
+};
+
 const Jobs = () => {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
@@ -36,6 +133,32 @@ const Jobs = () => {
   const [activeTab, setActiveTab] = useState('available'); // 'available' or 'applied'
   const [startupsOnly, setStartupsOnly] = useState(false); // Filter for startup jobs only
   const [currency, setCurrency] = useState(''); // Filter by currency (premium only)
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Check subscription/application limit
   const { data: subscriptionData } = useQuery({
@@ -227,16 +350,16 @@ const Jobs = () => {
     console.log('Jobs Data:', subscription);
 
   if (isLoading) {
-    return <Loading text="Loading jobs..." />;
+    return <Loading text={t.loading} />;
   }
 
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Browse Jobs</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.browseJobs}</h1>
         <p className="text-gray-600">
-          Find your next opportunity via Freshlancer
+          {t.findOpportunity}
         </p>
       </div>
 
@@ -253,7 +376,7 @@ const Jobs = () => {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
             >
               <Briefcase className="w-5 h-5" />
-              Available Jobs ({availableJobs.length})
+              {t.availableJobs} ({availableJobs.length})
             </button>
             <button
               onClick={() => setActiveTab('applied')}
@@ -264,7 +387,7 @@ const Jobs = () => {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
             >
               <CheckCircle className="w-5 h-5" />
-              Applied Jobs ({appliedJobs.length})
+              {t.appliedJobs} ({appliedJobs.length})
             </button>
           </nav>
         </div>
@@ -278,7 +401,7 @@ const Jobs = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search by title, skills, or keywords... (Press Enter to search)"
+                placeholder={t.searchPlaceholder}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -291,7 +414,7 @@ const Jobs = () => {
               className="flex items-center gap-2"
             >
               <Search className="w-5 h-5" />
-              Search
+              {t.search}
             </Button>
             {searchQuery && (
               <Button
@@ -300,7 +423,7 @@ const Jobs = () => {
                 onClick={handleClearSearch}
                 className="flex items-center gap-2"
               >
-                Clear
+                {t.clear}
               </Button>
             )}
             <Button
@@ -310,7 +433,7 @@ const Jobs = () => {
               className="flex items-center gap-2"
             >
               <Filter className="w-5 h-5" />
-              Filters
+              {t.filters}
             </Button>
             <Button
               type="button"
@@ -320,9 +443,9 @@ const Jobs = () => {
               title="Coming Soon: AI-powered job recommendations based on your profile"
             >
               <Sparkles className="w-5 h-5" />
-              AI Recommendations
+              {t.aiRecommendations}
               <span className="ml-1 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-                Soon
+                {t.soon}
               </span>
             </Button>
           </div>
@@ -330,9 +453,9 @@ const Jobs = () => {
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
               <Select
-                label="Category"
+                label={t.category}
                 placeholder=""
-                options={[{ value: '', label: 'All Categories' }, ...categories]}
+                options={[{ value: '', label: t.allCategories }, ...categories]}
                 value={category}
                 onChange={(e) => {
                   setCategory(e.target.value);
@@ -345,12 +468,12 @@ const Jobs = () => {
                   {isPremium ? (
                     <>
                       <Crown className="w-4 h-4 text-yellow-500" />
-                      Sort by Budget
+                      {t.sortByBudget}
                     </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4 text-gray-400" />
-                      Sort by Budget (Premium Only)
+                      {t.sortByBudgetPremium}
                     </>
                   )}
                 </label>
@@ -371,27 +494,27 @@ const Jobs = () => {
                       : ''
                   }`}
                 >
-                  <option value="createdAt-desc">Created By (Desc)</option>
-                  <option value="createdAt-asc">Created By (Asc)</option>
+                  <option value="createdAt-desc">{t.createdByDesc}</option>
+                  <option value="createdAt-asc">{t.createdByAsc}</option>
                   <option
                     value="budget-desc"
                     disabled={!isPremium}
                     className={!isPremium ? 'text-gray-400 bg-gray-100' : ''}
                   >
-                    {isPremium ? 'Highest Budget First' : 'Highest Budget First 🔒 Premium'}
+                    {isPremium ? t.highestBudgetFirst : t.highestBudgetFirstPremium}
                   </option>
                   <option
                     value="budget-asc"
                     disabled={!isPremium}
                     className={!isPremium ? 'text-gray-400 bg-gray-100' : ''}
                   >
-                    {isPremium ? 'Lowest Budget First' : 'Lowest Budget First 🔒 Premium'}
+                    {isPremium ? t.lowestBudgetFirst : t.lowestBudgetFirstPremium}
                   </option>
                 </select>
                 {!isPremium && (
                   <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     <Lock className="w-3 h-3" />
-                    Upgrade to Premium to sort by budget
+                    {t.upgradeToSort}
                   </p>
                 )}
               </div>
@@ -402,18 +525,18 @@ const Jobs = () => {
                   {isPremium ? (
                     <>
                       <Crown className="w-4 h-4 text-yellow-500" />
-                      Filter by Currency
+                      {t.filterByCurrency}
                     </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4 text-gray-400" />
-                      Filter by Currency (Premium Only)
+                      {t.filterByCurrencyPremium}
                     </>
                   )}
                 </label>
                 <Select
                   options={[
-                    { value: '', label: 'All Currencies' },
+                    { value: '', label: t.allCurrencies },
                     { value: 'USD', label: 'USD ($) - US Dollar' },
                     { value: 'EUR', label: 'EUR (€) - Euro' },
                     { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
@@ -467,7 +590,7 @@ const Jobs = () => {
                 {!isPremium && (
                   <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     <Lock className="w-3 h-3" />
-                    Upgrade to Premium to filter by currency
+                    {t.upgradeToFilterCurrency}
                   </p>
                 )}
               </div>
@@ -499,19 +622,19 @@ const Jobs = () => {
                   {isPremium ? (
                     <>
                       <Rocket className="w-4 h-4 text-primary-600" />
-                      Show Startup Jobs Only
+                      {t.showStartupJobsOnly}
                     </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4 text-gray-400" />
-                      Show Startup Jobs Only (Premium Only)
+                      {t.showStartupJobsOnlyPremium}
                     </>
                   )}
                 </label>
                 {!isPremium && (
                   <p className="text-xs text-gray-500 ml-2 flex items-center gap-1">
                     <Lock className="w-3 h-3" />
-                    Upgrade to Premium to filter by startups
+                    {t.upgradeToFilterStartups}
                   </p>
                 )}
               </div>
@@ -525,9 +648,9 @@ const Jobs = () => {
         {jobs.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-md">
             <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">No jobs found</p>
+            <p className="text-gray-600 text-lg">{t.noJobsFound}</p>
             <p className="text-gray-500 text-sm mt-2">
-              Try adjusting your search criteria
+              {t.tryAdjusting}
             </p>
           </div>
         ) : (
@@ -549,7 +672,7 @@ const Jobs = () => {
                         <Briefcase className="w-4 h-4" />
                         {isPremium && job.client && !job.client.message 
                           ? (job.client?.clientProfile?.companyEmail || job.client?.email || job.client?.name || 'N/A')
-                          : (job.client?.message || 'Premium members only')}
+                          : (job.client?.message || t.premiumMembersOnly)}
                       </span>
                       {job.location && (
                         <span className="flex items-center gap-1">
@@ -565,7 +688,7 @@ const Jobs = () => {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <Badge variant="info">{job.category}</Badge>
-                    {job.urgent && <Badge variant="error">Urgent</Badge>}
+                    {job.urgent && <Badge variant="error">{t.urgent}</Badge>}
                     {/* Show startup name tag if premium and startup exists */}
                     {isPremium && job.startup && !job.startup.message && job.startup.startupName && (
                       <Badge variant="secondary" className="bg-purple-100 text-purple-700">
@@ -584,7 +707,11 @@ const Jobs = () => {
                             : 'secondary'
                         }
                       >
-                        {job.applicationStatus}
+                        {job.applicationStatus === 'accepted' ? t.accepted :
+                         job.applicationStatus === 'rejected' ? t.rejected :
+                         job.applicationStatus === 'shortlisted' ? t.shortlisted :
+                         job.applicationStatus === 'pending' ? t.pending :
+                         job.applicationStatus}
                       </Badge>
                     )}
                   </div>
@@ -594,7 +721,7 @@ const Jobs = () => {
                 {activeTab === 'applied' && job.appliedAt && (
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span>Applied on {new Date(job.appliedAt).toLocaleDateString()}</span>
+                    <span>{t.appliedOn} {new Date(job.appliedAt).toLocaleDateString()}</span>
                   </div>
                 )}
 
@@ -616,7 +743,7 @@ const Jobs = () => {
                     ))}
                     {job.skillsRequired.length > 5 && (
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                        +{job.skillsRequired.length - 5} more
+                        +{job.skillsRequired.length - 5} {t.more}
                       </span>
                     )}
                   </div>
@@ -631,7 +758,7 @@ const Jobs = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-sm text-gray-500 italic">
-                  {job.budget?.message || 'Premium members only'}
+                  {job.budget?.message || t.premiumMembersOnly}
                 </div>
               )}
                     {job.duration && (
@@ -642,7 +769,7 @@ const Jobs = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">
-                      {job.applicationsCount || 0} applicant{job.applicationsCount !== 1 ? 's' : ''}
+                      {job.applicationsCount || 0} {job.applicationsCount !== 1 ? t.applicantsPlural : t.applicants}
                     </span>
                     <Button
                       variant="primary"
@@ -652,7 +779,7 @@ const Jobs = () => {
                         navigate(`/student/jobs/${job._id}`);
                       }}
                     >
-                      View Details
+                      {t.viewDetails}
                     </Button>
                   </div>
                 </div>
@@ -671,7 +798,7 @@ const Jobs = () => {
               disabled={isFetchingNextPage}
               className="flex items-center gap-2 mx-auto"
             >
-              {isFetchingNextPage ? 'Loading more...' : 'Load More Jobs'}
+              {isFetchingNextPage ? t.loadingMore : t.loadMore}
               <ChevronDown className="w-5 h-5" />
             </Button>
           </div>
@@ -679,7 +806,7 @@ const Jobs = () => {
 
         {!hasNextPage && jobs.length > 0 && (
           <div className="text-center py-6 text-gray-500">
-            You've reached the end of the list
+            {t.endOfList}
           </div>
         )}
       </div>

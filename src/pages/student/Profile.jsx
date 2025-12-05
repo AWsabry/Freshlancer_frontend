@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { authService } from '../../services/authService';
@@ -40,6 +40,371 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
+
+const translations = {
+  en: {
+    loading: 'Loading profile...',
+    failedToLoad: 'Failed to load profile data',
+    refreshVerification: 'Refresh verification status',
+    profileUpdated: 'Profile updated successfully!',
+    updateFailed: 'Failed to update profile. Please check your input and try again.',
+    resumeUploaded: 'Resume uploaded successfully!',
+    resumeUploadFailed: 'Failed to upload resume',
+    resumeDeleted: 'Resume deleted successfully!',
+    resumeDeleteFailed: 'Failed to delete resume',
+    deleteResumeConfirm: 'Are you sure you want to delete your resume?',
+    documentUploaded: 'Document uploaded successfully!',
+    documentUploadFailed: 'Failed to upload document',
+    documentDeleted: 'Document deleted successfully!',
+    documentDeleteFailed: 'Failed to delete document',
+    deleteDocumentConfirm: 'Are you sure you want to delete this document?',
+    verificationSubmitted: 'Verification document submitted successfully! Our team will review it within 24-48 hours.',
+    verificationFailed: 'Failed to submit verification document. Please try again.',
+    selectDocument: 'Please select a document to upload',
+    invalidFileType: 'Please upload a PDF, DOC, or DOCX file',
+    fileSizeTooLarge: 'File size must be less than 5MB',
+    verificationFileSizeTooLarge: 'File size must be less than 10MB',
+    editProfile: 'Edit Profile',
+    personalInformation: 'Personal Information',
+    fullName: 'Full Name',
+    nameRequired: 'Name is required',
+    enterFullName: 'Enter your full name',
+    phone: 'Phone',
+    enterPhone: 'Enter your phone number',
+    age: 'Age',
+    ageMin: 'Must be at least 16 years old',
+    ageMax: 'Invalid age',
+    enterAge: 'Enter your age',
+    yearsOld: 'years old',
+    nationality: 'Nationality',
+    nationalityCannotChange: 'Nationality cannot be changed after registration',
+    location: 'Location',
+    countryOfStudy: 'Country of Study',
+    countryCannotChange: 'Country of study cannot be changed after registration',
+    city: 'City',
+    enterCity: 'Enter your city',
+    timezone: 'Timezone',
+    timezonePlaceholder: 'e.g., UTC+3, EST',
+    professionalInformation: 'Professional Information',
+    university: 'University',
+    universityPlaceholder: 'University of...',
+    universityWebsite: 'University Website (Optional)',
+    universityWebsitePlaceholder: 'https://university.edu',
+    invalidUrl: 'Please enter a valid URL starting with http:// or https://',
+    bio: 'Bio',
+    bioPlaceholder: 'Tell us about yourself, your expertise, and what you\'re passionate about...',
+    experienceLevel: 'Experience Level',
+    experienceLevelRequired: 'Experience level is required',
+    selectExperienceLevel: 'Select experience level...',
+    beginner: 'Beginner',
+    intermediate: 'Intermediate',
+    advanced: 'Advanced',
+    expert: 'Expert',
+    yearsOfExperience: 'Years of Experience',
+    cannotBeNegative: 'Cannot be negative',
+    invalidYears: 'Invalid years',
+    availability: 'Availability',
+    available: 'Available',
+    busy: 'Busy',
+    currencyAutoSet: 'Currency (Auto-set based on country)',
+    currencyAutoSetInfo: 'Currency is automatically set based on your selected country',
+    selectCountryFirst: 'Select country first',
+    hourlyRateMin: 'Hourly Rate (Min)',
+    hourlyRateMax: 'Hourly Rate (Max)',
+    minimumRate: 'Minimum rate',
+    maximumRate: 'Maximum rate',
+    socialLinks: 'Social Links',
+    github: 'GitHub',
+    githubPlaceholder: 'https://github.com/username',
+    linkedin: 'LinkedIn',
+    linkedinPlaceholder: 'https://linkedin.com/in/username',
+    personalWebsite: 'Personal Website',
+    websitePlaceholder: 'https://yourwebsite.com',
+    behance: 'Behance',
+    behancePlaceholder: 'https://behance.net/username',
+    telegram: 'Telegram (Optional)',
+    telegramPlaceholder: 'https://t.me/username',
+    whatsapp: 'WhatsApp (Optional)',
+    whatsappPlaceholder: 'https://wa.me/1234567890',
+    cancel: 'Cancel',
+    saveChanges: 'Save Changes',
+    name: 'Name',
+    email: 'Email',
+    gender: 'Gender',
+    locationLabel: 'Location',
+    personalDetails: 'Personal Information',
+    professionalDetails: 'Professional Details',
+    major: 'Major',
+    graduationYear: 'Graduation Year',
+    experienceLevelLabel: 'Experience Level',
+    hourlyRate: 'Hourly Rate',
+    skillsExpertise: 'Skills & Expertise',
+    addSkills: 'Add your skills (e.g., JavaScript, Python, Design)',
+    skillsInfo: 'Add your skills as tags. Press Enter or comma to add each skill.',
+    education: 'Education',
+    visitUniversity: 'Visit university website',
+    languages: 'Languages',
+    certifications: 'Certifications',
+    credentialId: 'ID:',
+    expired: 'Expired',
+    viewCredential: 'View Credential',
+    portfolio: 'Portfolio',
+    viewProject: 'View Project',
+    technologies: 'Technologies:',
+    socialLinksTitle: 'Social Links',
+    studentVerification: 'Student Verification',
+    loadingVerification: 'Loading verification status...',
+    verificationLoadFailed: 'Failed to load verification status. Please refresh the page.',
+    verificationComplete: 'Verification Complete',
+    verificationCompleteMessage: 'Your student status has been verified. You can now apply for jobs!',
+    approved: 'Approved',
+    approvedOn: 'Approved:',
+    verificationPending: 'Verification Pending',
+    verificationPendingMessage: 'Your verification is being reviewed by our admin team. This usually takes 24-48 hours.',
+    pendingReview: 'Pending Review',
+    submitted: 'Submitted:',
+    verificationRequired: 'Verification Required',
+    verificationRequiredMessage: 'Please submit your student verification documents to start applying for jobs.',
+    documentType: 'Document Type',
+    documentTypeRequired: 'Document type is required',
+    studentIdCard: 'Student ID Card',
+    enrollmentCertificate: 'Enrollment Certificate',
+    officialTranscript: 'Official Transcript',
+    other: 'Other',
+    institutionName: 'Institution Name',
+    institutionNameRequired: 'Institution name is required',
+    institutionPlaceholder: 'University of...',
+    studentIdNumber: 'Student ID Number',
+    studentIdRequired: 'Student ID is required',
+    studentIdPlaceholder: '123456789',
+    enrollmentYear: 'Enrollment Year',
+    enrollmentYearRequired: 'Enrollment year is required',
+    validYear: 'Please enter a valid year',
+    cannotBeFuture: 'Cannot be in the future',
+    enrollmentYearPlaceholder: '2020',
+    expectedGraduationYear: 'Expected Graduation Year',
+    graduationYearRequired: 'Graduation year is required',
+    validFutureYear: 'Please enter a valid future year',
+    graduationYearPlaceholder: '2025',
+    uploadDocument: 'Upload Document',
+    uploadFile: 'Upload a file',
+    dragAndDrop: 'or drag and drop',
+    fileFormats: 'PDF, JPG, PNG up to 10MB',
+    selected: 'Selected:',
+    submitForVerification: 'Submit for Verification',
+    verificationHistory: 'Verification History',
+    rejected: 'Rejected',
+    rejectionReason: 'Rejection reason:',
+    resumeCv: 'Resume / CV',
+    uploaded: 'Uploaded:',
+    download: 'Download',
+    replaceResume: 'Replace Resume',
+    noResumeUploaded: 'No resume uploaded yet',
+    uploadResume: 'Upload Resume',
+    supportedFormats: 'Supported formats: PDF, DOC, DOCX (Max 5MB)',
+    additionalDocuments: 'Additional Documents (Optional)',
+    documentDescription: 'Document Description (Optional)',
+    documentDescriptionPlaceholder: 'e.g., Portfolio, Certificates, References',
+    uploading: 'Uploading...',
+    uploadDocumentButton: 'Upload Document',
+    supportedFormatsAdditional: 'Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)',
+    view: 'View',
+    noAdditionalDocuments: 'No additional documents uploaded yet',
+    verified: 'Verified',
+    unverified: 'Unverified',
+    pending: 'Pending',
+    na: 'N/A',
+    emailVerified: 'Email Verified',
+    memberSince: 'Member Since',
+    expectedGraduation: 'Expected Graduation',
+    years: 'years',
+    noSkillsAdded: 'No skills added yet. Start typing and press Enter to add skills.',
+    expires: 'Expires',
+    completed: 'Completed',
+    verificationDocument: 'Verification Document',
+  },
+  it: {
+    loading: 'Caricamento profilo...',
+    failedToLoad: 'Impossibile caricare i dati del profilo',
+    refreshVerification: 'Aggiorna stato verifica',
+    profileUpdated: 'Profilo aggiornato con successo!',
+    updateFailed: 'Aggiornamento profilo fallito. Controlla i tuoi dati e riprova.',
+    resumeUploaded: 'CV caricato con successo!',
+    resumeUploadFailed: 'Caricamento CV fallito',
+    resumeDeleted: 'CV eliminato con successo!',
+    resumeDeleteFailed: 'Eliminazione CV fallita',
+    deleteResumeConfirm: 'Sei sicuro di voler eliminare il tuo CV?',
+    documentUploaded: 'Documento caricato con successo!',
+    documentUploadFailed: 'Caricamento documento fallito',
+    documentDeleted: 'Documento eliminato con successo!',
+    documentDeleteFailed: 'Eliminazione documento fallita',
+    deleteDocumentConfirm: 'Sei sicuro di voler eliminare questo documento?',
+    verificationSubmitted: 'Documento di verifica inviato con successo! Il nostro team lo esaminerà entro 24-48 ore.',
+    verificationFailed: 'Invio documento di verifica fallito. Riprova.',
+    selectDocument: 'Seleziona un documento da caricare',
+    invalidFileType: 'Carica un file PDF, DOC o DOCX',
+    fileSizeTooLarge: 'La dimensione del file deve essere inferiore a 5MB',
+    verificationFileSizeTooLarge: 'La dimensione del file deve essere inferiore a 10MB',
+    editProfile: 'Modifica Profilo',
+    personalInformation: 'Informazioni Personali',
+    fullName: 'Nome Completo',
+    nameRequired: 'Il nome è obbligatorio',
+    enterFullName: 'Inserisci il tuo nome completo',
+    phone: 'Telefono',
+    enterPhone: 'Inserisci il tuo numero di telefono',
+    age: 'Età',
+    ageMin: 'Devi avere almeno 16 anni',
+    ageMax: 'Età non valida',
+    enterAge: 'Inserisci la tua età',
+    yearsOld: 'anni',
+    nationality: 'Nazionalità',
+    nationalityCannotChange: 'La nazionalità non può essere modificata dopo la registrazione',
+    location: 'Posizione',
+    countryOfStudy: 'Paese di Studio',
+    countryCannotChange: 'Il paese di studio non può essere modificato dopo la registrazione',
+    city: 'Città',
+    enterCity: 'Inserisci la tua città',
+    timezone: 'Fuso Orario',
+    timezonePlaceholder: 'es. UTC+3, EST',
+    professionalInformation: 'Informazioni Professionali',
+    university: 'Università',
+    universityPlaceholder: 'Università di...',
+    universityWebsite: 'Sito Web Università (Opzionale)',
+    universityWebsitePlaceholder: 'https://university.edu',
+    invalidUrl: 'Inserisci un URL valido che inizi con http:// o https://',
+    bio: 'Biografia',
+    bioPlaceholder: 'Raccontaci di te, le tue competenze e le tue passioni...',
+    experienceLevel: 'Livello di Esperienza',
+    experienceLevelRequired: 'Il livello di esperienza è obbligatorio',
+    selectExperienceLevel: 'Seleziona livello di esperienza...',
+    beginner: 'Principiante',
+    intermediate: 'Intermedio',
+    advanced: 'Avanzato',
+    expert: 'Esperto',
+    yearsOfExperience: 'Anni di Esperienza',
+    cannotBeNegative: 'Non può essere negativo',
+    invalidYears: 'Anni non validi',
+    availability: 'Disponibilità',
+    available: 'Disponibile',
+    busy: 'Occupato',
+    currencyAutoSet: 'Valuta (Impostata automaticamente in base al paese)',
+    currencyAutoSetInfo: 'La valuta viene impostata automaticamente in base al paese selezionato',
+    selectCountryFirst: 'Seleziona prima il paese',
+    hourlyRateMin: 'Tariffa Oraria (Min)',
+    hourlyRateMax: 'Tariffa Oraria (Max)',
+    minimumRate: 'Tariffa minima',
+    maximumRate: 'Tariffa massima',
+    socialLinks: 'Link Social',
+    github: 'GitHub',
+    githubPlaceholder: 'https://github.com/username',
+    linkedin: 'LinkedIn',
+    linkedinPlaceholder: 'https://linkedin.com/in/username',
+    personalWebsite: 'Sito Web Personale',
+    websitePlaceholder: 'https://yourwebsite.com',
+    behance: 'Behance',
+    behancePlaceholder: 'https://behance.net/username',
+    telegram: 'Telegram (Opzionale)',
+    telegramPlaceholder: 'https://t.me/username',
+    whatsapp: 'WhatsApp (Opzionale)',
+    whatsappPlaceholder: 'https://wa.me/1234567890',
+    cancel: 'Annulla',
+    saveChanges: 'Salva Modifiche',
+    name: 'Nome',
+    email: 'Email',
+    gender: 'Genere',
+    locationLabel: 'Posizione',
+    personalDetails: 'Informazioni Personali',
+    professionalDetails: 'Dettagli Professionali',
+    major: 'Indirizzo di Studio',
+    graduationYear: 'Anno di Laurea',
+    experienceLevelLabel: 'Livello di Esperienza',
+    hourlyRate: 'Tariffa Oraria',
+    skillsExpertise: 'Competenze ed Esperienza',
+    addSkills: 'Aggiungi le tue competenze (es. JavaScript, Python, Design)',
+    skillsInfo: 'Aggiungi le tue competenze come tag. Premi Invio o virgola per aggiungere ogni competenza.',
+    education: 'Istruzione',
+    visitUniversity: 'Visita il sito web dell\'università',
+    languages: 'Lingue',
+    certifications: 'Certificazioni',
+    credentialId: 'ID:',
+    expired: 'Scaduto',
+    viewCredential: 'Visualizza Credenziale',
+    portfolio: 'Portfolio',
+    viewProject: 'Visualizza Progetto',
+    technologies: 'Tecnologie:',
+    socialLinksTitle: 'Link Social',
+    studentVerification: 'Verifica Studente',
+    loadingVerification: 'Caricamento stato verifica...',
+    verificationLoadFailed: 'Impossibile caricare lo stato di verifica. Ricarica la pagina.',
+    verificationComplete: 'Verifica Completata',
+    verificationCompleteMessage: 'Il tuo stato di studente è stato verificato. Ora puoi candidarti per i lavori!',
+    approved: 'Approvato',
+    approvedOn: 'Approvato il:',
+    verificationPending: 'Verifica in Attesa',
+    verificationPendingMessage: 'La tua verifica è in fase di revisione dal nostro team amministrativo. Di solito richiede 24-48 ore.',
+    pendingReview: 'In Attesa di Revisione',
+    submitted: 'Inviato il:',
+    verificationRequired: 'Verifica Richiesta',
+    verificationRequiredMessage: 'Invia i tuoi documenti di verifica studente per iniziare a candidarti per i lavori.',
+    documentType: 'Tipo di Documento',
+    documentTypeRequired: 'Il tipo di documento è obbligatorio',
+    studentIdCard: 'Carta d\'Identità Studente',
+    enrollmentCertificate: 'Certificato di Iscrizione',
+    officialTranscript: 'Trascrizione Ufficiale',
+    other: 'Altro',
+    institutionName: 'Nome Istituzione',
+    institutionNameRequired: 'Il nome dell\'istituzione è obbligatorio',
+    institutionPlaceholder: 'Università di...',
+    studentIdNumber: 'Numero ID Studente',
+    studentIdRequired: 'L\'ID studente è obbligatorio',
+    studentIdPlaceholder: '123456789',
+    enrollmentYear: 'Anno di Iscrizione',
+    enrollmentYearRequired: 'L\'anno di iscrizione è obbligatorio',
+    validYear: 'Inserisci un anno valido',
+    cannotBeFuture: 'Non può essere nel futuro',
+    enrollmentYearPlaceholder: '2020',
+    expectedGraduationYear: 'Anno di Laurea Previsto',
+    graduationYearRequired: 'L\'anno di laurea è obbligatorio',
+    validFutureYear: 'Inserisci un anno futuro valido',
+    graduationYearPlaceholder: '2025',
+    uploadDocument: 'Carica Documento',
+    uploadFile: 'Carica un file',
+    dragAndDrop: 'o trascina e rilascia',
+    fileFormats: 'PDF, JPG, PNG fino a 10MB',
+    selected: 'Selezionato:',
+    submitForVerification: 'Invia per Verifica',
+    verificationHistory: 'Cronologia Verifiche',
+    rejected: 'Rifiutato',
+    rejectionReason: 'Motivo del rifiuto:',
+    resumeCv: 'CV / Curriculum',
+    uploaded: 'Caricato il:',
+    download: 'Scarica',
+    replaceResume: 'Sostituisci CV',
+    noResumeUploaded: 'Nessun CV caricato ancora',
+    uploadResume: 'Carica CV',
+    supportedFormats: 'Formati supportati: PDF, DOC, DOCX (Max 5MB)',
+    additionalDocuments: 'Documenti Aggiuntivi (Opzionale)',
+    documentDescription: 'Descrizione Documento (Opzionale)',
+    documentDescriptionPlaceholder: 'es. Portfolio, Certificati, Referenze',
+    uploading: 'Caricamento...',
+    uploadDocumentButton: 'Carica Documento',
+    supportedFormatsAdditional: 'Formati supportati: PDF, DOC, DOCX, JPG, PNG (Max 10MB)',
+    view: 'Visualizza',
+    noAdditionalDocuments: 'Nessun documento aggiuntivo caricato ancora',
+    verified: 'Verificato',
+    unverified: 'Non Verificato',
+    pending: 'In Attesa',
+    na: 'N/D',
+    emailVerified: 'Email Verificata',
+    memberSince: 'Membro dal',
+    expectedGraduation: 'Laurea Prevista',
+    years: 'anni',
+    noSkillsAdded: 'Nessuna competenza aggiunta ancora. Inizia a digitare e premi Invio per aggiungere competenze.',
+    expires: 'Scade',
+    completed: 'Completato',
+    verificationDocument: 'Documento di Verifica',
+  },
+};
 
 // Country to Currency mapping
 const COUNTRY_CURRENCY_MAP = {
@@ -223,6 +588,33 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const verificationFileInputRef = useRef(null);
   const additionalDocumentInputRef = useRef(null);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
+
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
   const { register: registerVerification, handleSubmit: handleSubmitVerification, formState: { errors: verificationErrors }, reset: resetVerification } = useForm();
 
@@ -273,13 +665,13 @@ const Profile = () => {
       setFormError(null);
       // Only show alert if it's not a skills-only update (skills update shows no alert)
       if (variables.studentProfile && Object.keys(variables.studentProfile).length > 1 || !variables.studentProfile?.skills) {
-        alert('Profile updated successfully!');
+        alert(t.profileUpdated);
       }
     },
     onError: (error) => {
       const errorMessage = error.response?.data?.message || 
                           error.message || 
-                          'Failed to update profile. Please check your input and try again.';
+                          t.updateFailed;
       setFormError(errorMessage);
       console.error('Profile update error:', error);
       // Scroll to top of form to show error
@@ -338,11 +730,11 @@ const Profile = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['userProfile']);
       setUploadingResume(false);
-      alert('Resume uploaded successfully!');
+      alert(t.resumeUploaded);
     },
     onError: (error) => {
       setUploadingResume(false);
-      alert(error.response?.data?.message || 'Failed to upload resume');
+      alert(error.response?.data?.message || t.resumeUploadFailed);
     },
   });
 
@@ -351,10 +743,10 @@ const Profile = () => {
     mutationFn: () => authService.deleteResume(),
     onSuccess: () => {
       queryClient.invalidateQueries(['userProfile']);
-      alert('Resume deleted successfully!');
+      alert(t.resumeDeleted);
     },
     onError: (error) => {
-      alert(error.response?.data?.message || 'Failed to delete resume');
+      alert(error.response?.data?.message || t.resumeDeleteFailed);
     },
   });
 
@@ -368,11 +760,11 @@ const Profile = () => {
       if (additionalDocumentInputRef.current) {
         additionalDocumentInputRef.current.value = '';
       }
-      alert('Document uploaded successfully!');
+      alert(t.documentUploaded);
     },
     onError: (error) => {
       setUploadingDocument(false);
-      alert(error.response?.data?.message || 'Failed to upload document');
+      alert(error.response?.data?.message || t.documentUploadFailed);
     },
   });
 
@@ -381,10 +773,10 @@ const Profile = () => {
     mutationFn: (documentIndex) => authService.deleteAdditionalDocument(documentIndex),
     onSuccess: () => {
       queryClient.invalidateQueries(['userProfile']);
-      alert('Document deleted successfully!');
+      alert(t.documentDeleted);
     },
     onError: (error) => {
-      alert(error.response?.data?.message || 'Failed to delete document');
+      alert(error.response?.data?.message || t.documentDeleteFailed);
     },
   });
 
@@ -398,12 +790,12 @@ const Profile = () => {
       resetVerification();
       setVerificationFile(null);
       setVerificationError(null);
-      alert('Verification document submitted successfully! Our team will review it within 24-48 hours.');
+      alert(t.verificationSubmitted);
     },
     onError: (error) => {
       const errorMessage = error.response?.data?.message || 
                           error.message || 
-                          'Failed to submit verification document. Please try again.';
+                          t.verificationFailed;
       setVerificationError(errorMessage);
       console.error('Verification upload error:', error);
     },
@@ -412,7 +804,7 @@ const Profile = () => {
   // Handle verification form submission
   const onSubmitVerification = (data) => {
     if (!verificationFile) {
-      setVerificationError('Please select a document to upload');
+      setVerificationError(t.selectDocument);
       return;
     }
 
@@ -434,13 +826,13 @@ const Profile = () => {
       // Validate file type
       const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       if (!allowedTypes.includes(file.type)) {
-        alert('Please upload a PDF, DOC, or DOCX file');
+        alert(t.invalidFileType);
         return;
       }
 
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
+        alert(t.fileSizeTooLarge);
         return;
       }
 
@@ -451,7 +843,7 @@ const Profile = () => {
 
   // Handle delete resume
   const handleDeleteResume = () => {
-    if (window.confirm('Are you sure you want to delete your resume?')) {
+    if (window.confirm(t.deleteResumeConfirm)) {
       deleteResumeMutation.mutate();
     }
   };
@@ -470,7 +862,7 @@ const Profile = () => {
 
   // Handle additional document delete
   const handleDeleteAdditionalDocument = (index) => {
-    if (window.confirm('Are you sure you want to delete this document?')) {
+    if (window.confirm(t.deleteDocumentConfirm)) {
       deleteAdditionalDocumentMutation.mutate(index);
     }
   };
@@ -489,12 +881,12 @@ const Profile = () => {
   };
 
   if (isLoading || loadingVerification) {
-    return <Loading text="Loading profile..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (!user) {
     return (
-      <Alert type="error" message="Failed to load profile data" />
+      <Alert type="error" message={t.failedToLoad} />
     );
   }
 
@@ -515,17 +907,17 @@ const Profile = () => {
                 {isVerified ? (
                   <Badge variant="success" className="flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" />
-                    Verified
+                    {t.verified}
                   </Badge>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Badge variant={getVerificationBadgeVariant(verificationStatus)}>
-                      {verificationStatus === 'pending' ? 'Pending' : verificationStatus === 'rejected' ? 'Rejected' : 'Unverified'}
+                      {verificationStatus === 'pending' ? t.pending : verificationStatus === 'rejected' ? t.rejected : t.unverified}
                     </Badge>
                     <button
                       onClick={handleRefreshVerification}
                       className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                      title="Refresh verification status"
+                      title={t.refreshVerification}
                       disabled={isLoading || loadingVerification}
                     >
                       <RefreshCw 
@@ -541,7 +933,7 @@ const Profile = () => {
                   {user.email}
                 </span>
                 {user.emailVerified && (
-                  <Badge variant="info" size="sm">Email Verified</Badge>
+                  <Badge variant="info" size="sm">{t.emailVerified || 'Email Verified'}</Badge>
                 )}
               </div>
               {studentProfile?.bio && (
@@ -557,7 +949,7 @@ const Profile = () => {
               className="flex items-center gap-2"
             >
               <Edit className="w-4 h-4" />
-              Edit Profile
+              {t.editProfile}
             </Button>
           </div>
         </div>
@@ -567,12 +959,12 @@ const Profile = () => {
         {/* Left Column - Personal Information */}
         <div className="lg:col-span-1 space-y-6">
           {/* Personal Details */}
-          <Card title="Personal Information">
+          <Card title={t.personalDetails}>
             <div className="space-y-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                   <User className="w-4 h-4" />
-                  Full Name
+                  {t.fullName}
                 </label>
                 <p className="text-gray-900">{user.name}</p>
               </div>
@@ -580,7 +972,7 @@ const Profile = () => {
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                   <Mail className="w-4 h-4" />
-                  Email
+                  {t.email}
                 </label>
                 <p className="text-gray-900">{user.email}</p>
               </div>
@@ -589,7 +981,7 @@ const Profile = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                     <Phone className="w-4 h-4" />
-                    Phone
+                    {t.phone}
                   </label>
                   <p className="text-gray-900">{user.phone}</p>
                 </div>
@@ -599,9 +991,9 @@ const Profile = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                     <Calendar className="w-4 h-4" />
-                    Age
+                    {t.age}
                   </label>
-                  <p className="text-gray-900">{user.age} years old</p>
+                  <p className="text-gray-900">{user.age} {t.yearsOld}</p>
                 </div>
               )}
 
@@ -609,7 +1001,7 @@ const Profile = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                     <User className="w-4 h-4" />
-                    Gender
+                    {t.gender}
                   </label>
                   <p className="text-gray-900">{user.gender}</p>
                 </div>
@@ -619,7 +1011,7 @@ const Profile = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                     <Globe className="w-4 h-4" />
-                    Nationality
+                    {t.nationality}
                   </label>
                   <p className="text-gray-900">{user.nationality}</p>
                 </div>
@@ -629,7 +1021,7 @@ const Profile = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                     <MapPin className="w-4 h-4" />
-                    Location
+                    {t.locationLabel}
                   </label>
                   <p className="text-gray-900">
                     {[user.location.city, user.location.country].filter(Boolean).join(', ')}
@@ -641,7 +1033,7 @@ const Profile = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                     <Calendar className="w-4 h-4" />
-                    Member Since
+                    {t.memberSince || 'Member Since'}
                   </label>
                   <p className="text-gray-900">
                     {new Date(user.joinedAt || user.createdAt).toLocaleDateString('en-US', {
@@ -657,13 +1049,13 @@ const Profile = () => {
 
           {/* Professional Info */}
           {studentProfile && (
-            <Card title="Professional Details">
+            <Card title={t.professionalDetails}>
               <div className="space-y-4">
                 {studentProfile.university && (
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                       <BookOpen className="w-4 h-4" />
-                      University
+                      {t.university}
                     </label>
                     <p className="text-gray-900">{studentProfile.university}</p>
                   </div>
@@ -673,7 +1065,7 @@ const Profile = () => {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                       <Calendar className="w-4 h-4" />
-                      Expected Graduation
+                      {t.graduationYear}
                     </label>
                     <p className="text-gray-900">{studentProfile.graduationYear}</p>
                   </div>
@@ -683,7 +1075,7 @@ const Profile = () => {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                       <Briefcase className="w-4 h-4" />
-                      Experience Level
+                      {t.experienceLevelLabel}
                     </label>
                     <Badge variant="info">{studentProfile.experienceLevel}</Badge>
                   </div>
@@ -693,9 +1085,9 @@ const Profile = () => {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                       <Clock className="w-4 h-4" />
-                      Years of Experience
+                      {t.yearsOfExperience}
                     </label>
-                    <p className="text-gray-900">{studentProfile.yearsOfExperience} years</p>
+                    <p className="text-gray-900">{studentProfile.yearsOfExperience} {t.years || 'years'}</p>
                   </div>
                 )}
 
@@ -703,7 +1095,7 @@ const Profile = () => {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                       <Clock className="w-4 h-4" />
-                      Availability
+                      {t.availability}
                     </label>
                     <Badge
                       variant={
@@ -723,7 +1115,7 @@ const Profile = () => {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
                       <DollarSign className="w-4 h-4" />
-                      Hourly Rate
+                      {t.hourlyRate}
                     </label>
                     <p className="text-gray-900">
                       {studentProfile.hourlyRate.currency} {studentProfile.hourlyRate.min} - 
@@ -737,7 +1129,7 @@ const Profile = () => {
 
           {/* Skills Management Card */}
           {studentProfile && (
-            <Card title="Skills & Expertise">
+            <Card title={t.skillsExpertise}>
               <TagInput
                 label=""
                 tags={studentProfile.skills || []}
@@ -770,16 +1162,16 @@ const Profile = () => {
                     const errorMessage = error.response?.data?.message || 
                                         error.response?.data?.error ||
                                         error.message || 
-                                        'Failed to update skills. Please try again.';
+                                        t.updateFailed;
                     alert(errorMessage);
                   }
                 }}
-                placeholder="Add your skills (e.g., JavaScript, Python, Design)"
+                placeholder={t.addSkills}
                 maxTags={20}
               />
               {(!studentProfile.skills || studentProfile.skills.length === 0) && (
                 <p className="text-sm text-gray-500 mt-2">
-                  No skills added yet. Start typing and press Enter to add skills.
+                  {t.noSkillsAdded || 'No skills added yet. Start typing and press Enter to add skills.'}
                 </p>
               )}
             </Card>
@@ -793,14 +1185,14 @@ const Profile = () => {
             <Card>
               <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
                 <GraduationCap className="w-6 h-6 text-primary-600" />
-                Education
+                {t.education}
               </h3>
               <div className="space-y-4">
                 {/* University and Expected Graduation Year */}
                 <div className="border-l-4 border-primary-500 pl-4 py-2 bg-primary-50 rounded-r-lg">
                   {studentProfile.university && (
                     <div className="mb-2">
-                      <p className="text-sm text-gray-600 mb-1">University</p>
+                      <p className="text-sm text-gray-600 mb-1">{t.university}</p>
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-lg text-gray-900">{studentProfile.university}</p>
                         {studentProfile.universityLink && (
@@ -809,7 +1201,7 @@ const Profile = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary-600 hover:text-primary-700 flex items-center gap-1"
-                            title="Visit university website"
+                            title={t.visitUniversity}
                           >
                             <LinkIcon className="w-4 h-4" />
                           </a>
@@ -821,7 +1213,7 @@ const Profile = () => {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-primary-600" />
                       <span className="text-sm text-gray-700">
-                        <span className="font-semibold">Expected Graduation:</span> {studentProfile.graduationYear}
+                        <span className="font-semibold">{t.expectedGraduation || 'Expected Graduation'}:</span> {studentProfile.graduationYear}
                       </span>
                     </div>
                   )}
@@ -832,7 +1224,7 @@ const Profile = () => {
 
           {/* Languages */}
           {studentProfile?.languages && studentProfile.languages.length > 0 && (
-            <Card title="Languages">
+            <Card title={t.languages}>
               <div className="grid grid-cols-2 gap-4">
                 {studentProfile.languages.map((lang, index) => (
                   <div key={index} className="flex items-center justify-between">
@@ -846,7 +1238,7 @@ const Profile = () => {
 
           {/* Certifications */}
           {studentProfile?.certifications && studentProfile.certifications.length > 0 && (
-            <Card title="Certifications">
+            <Card title={t.certifications}>
               <div className="space-y-4">
                 {studentProfile.certifications.map((cert, index) => (
                   <div key={index} className="border-l-4 border-green-500 pl-4 py-2">
@@ -855,7 +1247,7 @@ const Profile = () => {
                         <h3 className="font-semibold text-gray-900">{cert.name}</h3>
                         <p className="text-gray-700">{cert.issuingOrganization}</p>
                         {cert.credentialId && (
-                          <p className="text-sm text-gray-600">ID: {cert.credentialId}</p>
+                          <p className="text-sm text-gray-600">{t.credentialId} {cert.credentialId}</p>
                         )}
                       </div>
                       <div className="text-right text-sm text-gray-600">
@@ -864,7 +1256,7 @@ const Profile = () => {
                         )}
                         {cert.expirationDate && (
                           <p className="text-red-600">
-                            Expires: {new Date(cert.expirationDate).toLocaleDateString()}
+                            {t.expires || 'Expires'}: {new Date(cert.expirationDate).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -877,7 +1269,7 @@ const Profile = () => {
                         className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-2"
                       >
                         <LinkIcon className="w-4 h-4" />
-                        View Credential
+                        {t.viewCredential}
                       </a>
                     )}
                   </div>
@@ -888,7 +1280,7 @@ const Profile = () => {
 
           {/* Portfolio */}
           {studentProfile?.portfolio && studentProfile.portfolio.length > 0 && (
-            <Card title="Portfolio">
+            <Card title={t.portfolio}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {studentProfile.portfolio.map((project, index) => (
                   <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -911,12 +1303,12 @@ const Profile = () => {
                         className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
                       >
                         <LinkIcon className="w-4 h-4" />
-                        View Project
+                        {t.viewProject}
                       </a>
                     )}
                     {project.completedDate && (
                       <p className="text-xs text-gray-500 mt-2">
-                        Completed: {new Date(project.completedDate).toLocaleDateString()}
+                        {t.completed || 'Completed'}: {new Date(project.completedDate).toLocaleDateString()}
                       </p>
                     )}
                   </div>
@@ -927,7 +1319,7 @@ const Profile = () => {
 
           {/* Social Links */}
           {studentProfile?.socialLinks && Object.values(studentProfile.socialLinks).some(link => link) && (
-            <Card title="Social Links">
+            <Card title={t.socialLinksTitle}>
               <div className="grid grid-cols-2 gap-4">
                 {studentProfile.socialLinks.github && (
                   <a
@@ -1000,20 +1392,20 @@ const Profile = () => {
           )}
 
           {/* Student Verification */}
-          <Card title="Student Verification">
+          <Card title={t.studentVerification}>
             {loadingVerification ? (
-              <Loading text="Loading verification status..." />
+              <Loading text={t.loadingVerification} />
             ) : verificationQueryError ? (
               <Alert
                 type="error"
-                message="Failed to load verification status. Please refresh the page."
+                message={t.verificationLoadFailed}
               />
             ) : hasApprovedVerification ? (
               <div className="space-y-4">
                 <Alert
                   type="success"
-                  title="Verification Complete"
-                  message="Your student status has been verified. You can now apply for jobs!"
+                  title={t.verificationComplete}
+                  message={t.verificationCompleteMessage}
                 />
                 {verifications.filter(v => v && v.status === 'approved').map((verification, index) => (
                   <div key={verification._id || `approved-${index}`} className="p-4 bg-green-50 rounded-lg border border-green-200">
@@ -1022,14 +1414,14 @@ const Profile = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="font-semibold text-gray-900 capitalize">
-                            {verification.documentType ? verification.documentType.replace(/_/g, ' ') : 'Verification Document'}
+                            {verification.documentType ? verification.documentType.replace(/_/g, ' ') : t.verificationDocument || 'Verification Document'}
                           </h4>
-                          <Badge variant="success">Approved</Badge>
+                          <Badge variant="success">{t.approved}</Badge>
                         </div>
-                        <p className="text-sm text-gray-700">{verification.institutionName || 'N/A'}</p>
+                        <p className="text-sm text-gray-700">{verification.institutionName || t.na}</p>
                         {verification.reviewedAt && (
                           <p className="text-xs text-gray-600 mt-1">
-                            Approved: {new Date(verification.reviewedAt).toLocaleDateString()}
+                            {t.approvedOn} {new Date(verification.reviewedAt).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -1041,8 +1433,8 @@ const Profile = () => {
               <div className="space-y-4">
                 <Alert
                   type="info"
-                  title="Verification Pending"
-                  message="Your verification is being reviewed by our admin team. This usually takes 24-48 hours."
+                  title={t.verificationPending}
+                  message={t.verificationPendingMessage}
                 />
                 {verifications.filter(v => v && v.status === 'pending').map((verification, index) => (
                   <div key={verification._id || `pending-${index}`} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -1051,13 +1443,13 @@ const Profile = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="font-semibold text-gray-900 capitalize">
-                            {verification.documentType ? verification.documentType.replace(/_/g, ' ') : 'Verification Document'}
+                            {verification.documentType ? verification.documentType.replace(/_/g, ' ') : t.verificationDocument || 'Verification Document'}
                           </h4>
-                          <Badge variant="warning">Pending Review</Badge>
+                          <Badge variant="warning">{t.pendingReview}</Badge>
                         </div>
-                        <p className="text-sm text-gray-700">{verification.institutionName || 'N/A'}</p>
+                        <p className="text-sm text-gray-700">{verification.institutionName || t.na}</p>
                         <p className="text-xs text-gray-600 mt-1">
-                          Submitted: {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : 'N/A'}
+                          {t.submitted} {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : t.na}
                         </p>
                       </div>
                     </div>
@@ -1068,8 +1460,8 @@ const Profile = () => {
               <div className="space-y-4">
                 <Alert
                   type="warning"
-                  title="Verification Required"
-                  message="Please submit your student verification documents to start applying for jobs."
+                  title={t.verificationRequired}
+                  message={t.verificationRequiredMessage}
                 />
                 
                 {/* Verification Upload Form */}
@@ -1083,67 +1475,67 @@ const Profile = () => {
                   )}
 
                   <Select
-                    label="Document Type"
+                    label={t.documentType}
                     options={[
-                      { value: 'student_id', label: 'Student ID Card' },
-                      { value: 'enrollment_certificate', label: 'Enrollment Certificate' },
-                      { value: 'transcript', label: 'Official Transcript' },
-                      { value: 'other', label: 'Other' },
+                      { value: 'student_id', label: t.studentIdCard },
+                      { value: 'enrollment_certificate', label: t.enrollmentCertificate },
+                      { value: 'transcript', label: t.officialTranscript },
+                      { value: 'other', label: t.other },
                     ]}
                     error={verificationErrors.documentType?.message}
-                    {...registerVerification('documentType', { required: 'Document type is required' })}
+                    {...registerVerification('documentType', { required: t.documentTypeRequired })}
                   />
 
                   <Input
-                    label="Institution Name"
-                    placeholder="University of..."
+                    label={t.institutionName}
+                    placeholder={t.institutionPlaceholder}
                     error={verificationErrors.institutionName?.message}
-                    {...registerVerification('institutionName', { required: 'Institution name is required' })}
+                    {...registerVerification('institutionName', { required: t.institutionNameRequired })}
                   />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                      label="Student ID Number"
-                      placeholder="123456789"
+                      label={t.studentIdNumber}
+                      placeholder={t.studentIdPlaceholder}
                       error={verificationErrors.studentIdNumber?.message}
-                      {...registerVerification('studentIdNumber', { required: 'Student ID is required' })}
+                      {...registerVerification('studentIdNumber', { required: t.studentIdRequired })}
                     />
 
                     <Input
-                      label="Enrollment Year"
+                      label={t.enrollmentYear}
                       type="number"
-                      placeholder="2020"
+                      placeholder={t.enrollmentYearPlaceholder}
                       error={verificationErrors.enrollmentYear?.message}
                       {...registerVerification('enrollmentYear', {
-                        required: 'Enrollment year is required',
-                        min: { value: 2000, message: 'Please enter a valid year' },
-                        max: { value: new Date().getFullYear(), message: 'Cannot be in the future' },
+                        required: t.enrollmentYearRequired,
+                        min: { value: 2000, message: t.validYear },
+                        max: { value: new Date().getFullYear(), message: t.cannotBeFuture },
                       })}
                     />
                   </div>
 
                   <Input
-                    label="Expected Graduation Year"
+                    label={t.expectedGraduationYear}
                     type="number"
-                    placeholder="2025"
+                    placeholder={t.graduationYearPlaceholder}
                     error={verificationErrors.expectedGraduationYear?.message}
                     {...registerVerification('expectedGraduationYear', {
-                      required: 'Graduation year is required',
-                      min: { value: new Date().getFullYear(), message: 'Please enter a valid future year' },
+                      required: t.graduationYearRequired,
+                      min: { value: new Date().getFullYear(), message: t.validFutureYear },
                     })}
                   />
 
                   {/* File Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Document <span className="text-red-500">*</span>
+                      {t.uploadDocument} <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
                       <div className="space-y-1 text-center">
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
                         <div className="flex text-sm text-gray-600">
                           <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
-                            <span>Upload a file</span>
+                            <span>{t.uploadFile}</span>
                             <input
                               ref={verificationFileInputRef}
                               type="file"
@@ -1154,7 +1546,7 @@ const Profile = () => {
                                 if (file) {
                                   // Validate file size (10MB max)
                                   if (file.size > 10 * 1024 * 1024) {
-                                    setVerificationError('File size must be less than 10MB');
+                                    setVerificationError(t.verificationFileSizeTooLarge);
                                     return;
                                   }
                                   setVerificationFile(file);
@@ -1163,14 +1555,14 @@ const Profile = () => {
                               }}
                             />
                           </label>
-                          <p className="pl-1">or drag and drop</p>
+                          <p className="pl-1">{t.dragAndDrop}</p>
                         </div>
                         <p className="text-xs text-gray-500">
-                          PDF, JPG, PNG up to 10MB
+                          {t.fileFormats}
                         </p>
                         {verificationFile && (
                           <p className="text-sm text-primary-600 font-medium">
-                            Selected: {verificationFile.name}
+                            {t.selected} {verificationFile.name}
                           </p>
                         )}
                       </div>
@@ -1185,7 +1577,7 @@ const Profile = () => {
                     disabled={uploadVerificationMutation.isPending}
                   >
                     <Shield className="w-4 h-4 mr-2" />
-                    Submit for Verification
+                    {t.submitForVerification}
                   </Button>
                 </form>
               </div>
@@ -1194,7 +1586,7 @@ const Profile = () => {
             {/* Verification History */}
             {verifications && verifications.length > 0 && verifications.some(v => v && v.status === 'rejected') && (
               <div className="mt-6 pt-6 border-t">
-                <h4 className="font-semibold text-gray-900 mb-3">Verification History</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">{t.verificationHistory}</h4>
                 <div className="space-y-3">
                   {verifications.filter(v => v && v.status === 'rejected').map((verification, index) => (
                     <div key={verification._id || `rejected-${index}`} className="p-4 bg-red-50 rounded-lg border border-red-200">
@@ -1205,18 +1597,18 @@ const Profile = () => {
                             <h4 className="font-semibold text-gray-900 capitalize">
                               {verification.documentType?.replace('_', ' ')}
                             </h4>
-                            <Badge variant="error">Rejected</Badge>
+                            <Badge variant="error">{t.rejected}</Badge>
                           </div>
-                          <p className="text-sm text-gray-700">{verification.institutionName || 'N/A'}</p>
+                          <p className="text-sm text-gray-700">{verification.institutionName || t.na}</p>
                           {verification.rejectionReason && (
                             <Alert
                               type="error"
-                              message={`Rejection reason: ${verification.rejectionReason}`}
+                              message={`${t.rejectionReason} ${verification.rejectionReason}`}
                               className="mt-2"
                             />
                           )}
                           <p className="text-xs text-gray-600 mt-1">
-                            Submitted: {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : 'N/A'}
+                            {t.submitted} {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : t.na}
                           </p>
                         </div>
                       </div>
@@ -1228,7 +1620,7 @@ const Profile = () => {
           </Card>
 
           {/* Resume */}
-          <Card title="Resume / CV">
+          <Card title={t.resumeCv}>
             {studentProfile?.resume && studentProfile.resume.url ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1238,7 +1630,7 @@ const Profile = () => {
                       <p className="font-medium text-gray-900">{studentProfile.resume.filename}</p>
                       {studentProfile.resume.uploadedAt && (
                         <p className="text-sm text-gray-600">
-                          Uploaded: {new Date(studentProfile.resume.uploadedAt).toLocaleDateString()}
+                          {t.uploaded} {new Date(studentProfile.resume.uploadedAt).toLocaleDateString()}
                         </p>
                       )}
                     </div>
@@ -1249,7 +1641,7 @@ const Profile = () => {
                       size="sm"
                   onClick={() => window.open(`${API_BASE_URL}${studentProfile.resume.url}`, '_blank')}
                     >
-                      Download
+                      {t.download}
                     </Button>
                     <Button
                       variant="outline"
@@ -1280,14 +1672,14 @@ const Profile = () => {
                     className="flex items-center gap-2"
                   >
                     <Upload className="w-4 h-4" />
-                    Replace Resume
+                    {t.replaceResume}
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">No resume uploaded yet</p>
+                <p className="text-gray-600 mb-4">{t.noResumeUploaded}</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1303,24 +1695,24 @@ const Profile = () => {
                   className="flex items-center gap-2 mx-auto"
                 >
                   <Upload className="w-4 h-4" />
-                  Upload Resume
+                  {t.uploadResume}
                 </Button>
                 <p className="text-xs text-gray-500 mt-2">
-                  Supported formats: PDF, DOC, DOCX (Max 5MB)
+                  {t.supportedFormats}
                 </p>
               </div>
             )}
           </Card>
 
           {/* Additional Documents */}
-          <Card title="Additional Documents (Optional)">
+          <Card title={t.additionalDocuments}>
             <div className="space-y-4">
               {/* Upload Form */}
               <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <div className="space-y-3">
                   <Input
-                    label="Document Description (Optional)"
-                    placeholder="e.g., Portfolio, Certificates, References"
+                    label={t.documentDescription}
+                    placeholder={t.documentDescriptionPlaceholder}
                     value={documentDescription}
                     onChange={(e) => setDocumentDescription(e.target.value)}
                     disabled={uploadingDocument}
@@ -1341,10 +1733,10 @@ const Profile = () => {
                     className="flex items-center gap-2 w-full"
                   >
                     <Upload className="w-4 h-4" />
-                    {uploadingDocument ? 'Uploading...' : 'Upload Document'}
+                    {uploadingDocument ? t.uploading : t.uploadDocumentButton}
                   </Button>
                   <p className="text-xs text-gray-500">
-                    Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+                    {t.supportedFormatsAdditional}
                   </p>
                 </div>
               </div>
@@ -1366,7 +1758,7 @@ const Profile = () => {
                           )}
                           {doc.uploadedAt && (
                             <p className="text-xs text-gray-500">
-                              Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                              {t.uploaded} {new Date(doc.uploadedAt).toLocaleDateString()}
                             </p>
                           )}
                         </div>
@@ -1377,7 +1769,7 @@ const Profile = () => {
                           size="sm"
                           onClick={() => window.open(`${API_BASE_URL}${doc.url}`, '_blank')}
                         >
-                          View
+                          {t.view}
                         </Button>
                         <Button
                           variant="outline"
@@ -1396,7 +1788,7 @@ const Profile = () => {
               ) : (
                 <div className="text-center py-6 text-gray-500">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm">No additional documents uploaded yet</p>
+                  <p className="text-sm">{t.noAdditionalDocuments}</p>
                 </div>
               )}
             </div>
@@ -1412,7 +1804,7 @@ const Profile = () => {
           setFormError(null);
           reset();
         }}
-        title="Edit Profile"
+        title={t.editProfile}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Error Alert */}
@@ -1426,38 +1818,38 @@ const Profile = () => {
           
           {/* Personal Information Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.personalInformation}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Full Name"
-                {...register('name', { required: 'Name is required' })}
+                label={t.fullName}
+                {...register('name', { required: t.nameRequired })}
                 error={errors.name?.message}
-                placeholder="Enter your full name"
+                placeholder={t.enterFullName}
               />
 
               <Input
-                label="Phone"
+                label={t.phone}
                 type="tel"
                 {...register('phone')}
                 error={errors.phone?.message}
-                placeholder="Enter your phone number"
+                placeholder={t.enterPhone}
               />
 
               <Input
-                label="Age"
+                label={t.age}
                 type="number"
                 {...register('age', {
-                  min: { value: 16, message: 'Must be at least 16 years old' },
-                  max: { value: 100, message: 'Invalid age' }
+                  min: { value: 16, message: t.ageMin },
+                  max: { value: 100, message: t.ageMax }
                 })}
                 error={errors.age?.message}
-                placeholder="Enter your age"
+                placeholder={t.enterAge}
               />
 
 
               <div>
                 <Select
-                  label="Nationality"
+                  label={t.nationality}
                   {...register('nationality')}
                   error={errors.nationality?.message}
                   disabled={true}
@@ -1535,18 +1927,18 @@ const Profile = () => {
                   { value: 'Other', label: 'Other' },
                 ]}
               />
-                <p className="text-xs text-gray-500 mt-1">Nationality cannot be changed after registration</p>
+                <p className="text-xs text-gray-500 mt-1">{t.nationalityCannotChange}</p>
               </div>
             </div>
           </div>
 
           {/* Location Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.location}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Select
-                  label="Country of Study"
+                  label={t.countryOfStudy}
                   {...register('location.country')}
                   error={errors.location?.country?.message}
                   disabled={true}
@@ -1746,33 +2138,33 @@ const Profile = () => {
                   { value: 'Zimbabwe', label: 'Zimbabwe' },
                 ]}
               />
-                <p className="text-xs text-gray-500 mt-1">Country of study cannot be changed after registration</p>
+                <p className="text-xs text-gray-500 mt-1">{t.countryCannotChange}</p>
               </div>
 
               <Input
-                label="City"
+                label={t.city}
                 {...register('location.city')}
                 error={errors.location?.city?.message}
-                placeholder="Enter your city"
+                placeholder={t.enterCity}
               />
 
               <Input
-                label="Timezone"
+                label={t.timezone}
                 {...register('location.timezone')}
                 error={errors.location?.timezone?.message}
-                placeholder="e.g., UTC+3, EST"
+                placeholder={t.timezonePlaceholder}
               />
             </div>
           </div>
 
           {/* Professional Information Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.professionalInformation}</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="col-span-full">
                 <Input
-                  label="University"
-                  placeholder="University of..."
+                  label={t.university}
+                  placeholder={t.universityPlaceholder}
                   error={errors.studentProfile?.university?.message}
                   {...register('studentProfile.university')}
                 />
@@ -1780,14 +2172,14 @@ const Profile = () => {
 
               <div className="col-span-full">
                 <Input
-                  label="University Website (Optional)"
+                  label={t.universityWebsite}
                   type="url"
-                  placeholder="https://university.edu"
+                  placeholder={t.universityWebsitePlaceholder}
                   error={errors.studentProfile?.universityLink?.message}
                   {...register('studentProfile.universityLink', {
                     pattern: {
                       value: /^https?:\/\/.+/,
-                      message: 'Please enter a valid URL starting with http:// or https://',
+                      message: t.invalidUrl,
                     },
                   })}
                 />
@@ -1795,13 +2187,13 @@ const Profile = () => {
 
               <div className="col-span-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bio
+                  {t.bio}
                 </label>
                 <textarea
                   {...register('studentProfile.bio')}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Tell us about yourself, your expertise, and what you're passionate about..."
+                  placeholder={t.bioPlaceholder}
                 />
                 {errors.studentProfile?.bio && (
                   <p className="mt-1 text-sm text-red-600">{errors.studentProfile.bio.message}</p>
@@ -1810,75 +2202,75 @@ const Profile = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
-                  label="Experience Level"
+                  label={t.experienceLevel}
                   required
                   {...register('studentProfile.experienceLevel', {
-                    required: 'Experience level is required',
+                    required: t.experienceLevelRequired,
                   })}
                   error={errors.studentProfile?.experienceLevel?.message}
                   options={[
-                    { value: 'Beginner', label: 'Beginner' },
-                    { value: 'Intermediate', label: 'Intermediate' },
-                    { value: 'Advanced', label: 'Advanced' },
-                    { value: 'Expert', label: 'Expert' },
+                    { value: 'Beginner', label: t.beginner },
+                    { value: 'Intermediate', label: t.intermediate },
+                    { value: 'Advanced', label: t.advanced },
+                    { value: 'Expert', label: t.expert },
                   ]}
-                  placeholder="Select experience level..."
+                  placeholder={t.selectExperienceLevel}
                 />
 
                 <Input
-                  label="Years of Experience"
+                  label={t.yearsOfExperience}
                   type="number"
                   {...register('studentProfile.yearsOfExperience', {
-                    min: { value: 0, message: 'Cannot be negative' },
-                    max: { value: 50, message: 'Invalid years' }
+                    min: { value: 0, message: t.cannotBeNegative },
+                    max: { value: 50, message: t.invalidYears }
                   })}
                   error={errors.studentProfile?.yearsOfExperience?.message}
                   placeholder="0"
                 />
 
                 <Select
-                  label="Availability"
+                  label={t.availability}
                   {...register('studentProfile.availability')}
                   error={errors.studentProfile?.availability?.message}
                   options={[
-                    { value: 'Available', label: 'Available' },
-                    { value: 'Busy', label: 'Busy' },
+                    { value: 'Available', label: t.available },
+                    { value: 'Busy', label: t.busy },
                   ]}
                 />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Currency (Auto-set based on country)
+                    {t.currencyAutoSet}
                   </label>
                   <Input
                     {...register('studentProfile.hourlyRate.currency')}
                     disabled
                     className="bg-gray-100 cursor-not-allowed"
-                    placeholder="Select country first"
+                    placeholder={t.selectCountryFirst}
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Currency is automatically set based on your selected country
+                    {t.currencyAutoSetInfo}
                   </p>
                 </div>
 
                 <Input
-                  label="Hourly Rate (Min)"
+                  label={t.hourlyRateMin}
                   type="number"
                   {...register('studentProfile.hourlyRate.min', {
-                    min: { value: 0, message: 'Cannot be negative' }
+                    min: { value: 0, message: t.cannotBeNegative }
                   })}
                   error={errors.studentProfile?.hourlyRate?.min?.message}
-                  placeholder="Minimum rate"
+                  placeholder={t.minimumRate}
                 />
 
                 <Input
-                  label="Hourly Rate (Max)"
+                  label={t.hourlyRateMax}
                   type="number"
                   {...register('studentProfile.hourlyRate.max', {
-                    min: { value: 0, message: 'Cannot be negative' }
+                    min: { value: 0, message: t.cannotBeNegative }
                   })}
                   error={errors.studentProfile?.hourlyRate?.max?.message}
-                  placeholder="Maximum rate"
+                  placeholder={t.maximumRate}
                 />
               </div>
             </div>
@@ -1886,48 +2278,48 @@ const Profile = () => {
 
           {/* Social Links Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Links</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.socialLinks}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="GitHub"
+                label={t.github}
                 {...register('studentProfile.socialLinks.github')}
                 error={errors.studentProfile?.socialLinks?.github?.message}
-                placeholder="https://github.com/username"
+                placeholder={t.githubPlaceholder}
               />
 
               <Input
-                label="LinkedIn"
+                label={t.linkedin}
                 {...register('studentProfile.socialLinks.linkedin')}
                 error={errors.studentProfile?.socialLinks?.linkedin?.message}
-                placeholder="https://linkedin.com/in/username"
+                placeholder={t.linkedinPlaceholder}
               />
 
               <Input
-                label="Personal Website"
+                label={t.personalWebsite}
                 {...register('studentProfile.socialLinks.website')}
                 error={errors.studentProfile?.socialLinks?.website?.message}
-                placeholder="https://yourwebsite.com"
+                placeholder={t.websitePlaceholder}
               />
 
               <Input
-                label="Behance"
+                label={t.behance}
                 {...register('studentProfile.socialLinks.behance')}
                 error={errors.studentProfile?.socialLinks?.behance?.message}
-                placeholder="https://behance.net/username"
+                placeholder={t.behancePlaceholder}
               />
 
               <Input
-                label="Telegram (Optional)"
+                label={t.telegram}
                 {...register('studentProfile.socialLinks.telegram')}
                 error={errors.studentProfile?.socialLinks?.telegram?.message}
-                placeholder="https://t.me/username"
+                placeholder={t.telegramPlaceholder}
               />
 
               <Input
-                label="WhatsApp (Optional)"
+                label={t.whatsapp}
                 {...register('studentProfile.socialLinks.whatsapp')}
                 error={errors.studentProfile?.socialLinks?.whatsapp?.message}
-                placeholder="https://wa.me/1234567890"
+                placeholder={t.whatsappPlaceholder}
               />
             </div>
           </div>
@@ -1940,7 +2332,7 @@ const Profile = () => {
               onClick={() => setShowEditModal(false)}
               disabled={updateProfileMutation.isLoading}
             >
-              Cancel
+              {t.cancel}
             </Button>
             <Button
               type="submit"
@@ -1950,7 +2342,7 @@ const Profile = () => {
               className="flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              Save Changes
+              {t.saveChanges}
             </Button>
           </div>
         </form>

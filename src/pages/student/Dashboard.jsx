@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../../services/subscriptionService';
@@ -12,8 +12,89 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import { Briefcase, FileText, DollarSign, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading dashboard...',
+    verificationRequired: 'Verification Required',
+    verificationRequiredMessage: 'Please complete your student verification to start applying for jobs.',
+    applicationsThisMonth: 'Applications This Month',
+    ofThisMonth: 'of {limit} this month',
+    applicationsRemaining: 'Applications Remaining',
+    premiumPlan: 'Premium Plan',
+    freePlan: 'Free Plan',
+    verification: 'Verification',
+    verified: 'Verified',
+    pending: 'Pending',
+    rejected: 'Rejected',
+    unverified: 'Unverified',
+    package: 'Package',
+    premium: 'Premium',
+    free: 'Free',
+    quickActions: 'Quick Actions',
+    completeVerification: 'Complete Verification',
+    browseJobs: 'Browse Jobs',
+    viewApplications: 'View Applications',
+    upgradeToPremium: 'Upgrade to Premium',
+    recentApplications: 'Recent Applications',
+    applied: 'Applied',
+    noApplicationsYet: 'No applications yet',
+  },
+  it: {
+    loading: 'Caricamento dashboard...',
+    verificationRequired: 'Verifica Richiesta',
+    verificationRequiredMessage: 'Completa la verifica dello studente per iniziare a candidarti per i lavori.',
+    applicationsThisMonth: 'Candidature Questo Mese',
+    ofThisMonth: 'di {limit} questo mese',
+    applicationsRemaining: 'Candidature Rimanenti',
+    premiumPlan: 'Piano Premium',
+    freePlan: 'Piano Gratuito',
+    verification: 'Verifica',
+    verified: 'Verificato',
+    pending: 'In Attesa',
+    rejected: 'Rifiutato',
+    unverified: 'Non Verificato',
+    package: 'Pacchetto',
+    premium: 'Premium',
+    free: 'Gratuito',
+    quickActions: 'Azioni Rapide',
+    completeVerification: 'Completa Verifica',
+    browseJobs: 'Sfoglia Lavori',
+    viewApplications: 'Visualizza Candidature',
+    upgradeToPremium: 'Passa a Premium',
+    recentApplications: 'Candidature Recenti',
+    applied: 'Candidato',
+    noApplicationsYet: 'Nessuna candidatura ancora',
+  },
+};
+
 const StudentDashboard = () => {
   const queryClient = useQueryClient();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch verification status
   const { data: verificationStatus, isLoading: loadingVerification } = useQuery({
@@ -53,7 +134,7 @@ const StudentDashboard = () => {
   });
 
   if (loadingVerification || loadingSubscription || loadingUser) {
-    return <Loading text="Loading dashboard..." />;
+    return <Loading text={t.loading} />;
   }
 
   const subscriptionData = subscription?.data?.subscription;
@@ -87,8 +168,8 @@ const StudentDashboard = () => {
       {!isVerified && (
         <Alert
           type="warning"
-          title="Verification Required"
-          message="Please complete your student verification to start applying for jobs."
+          title={t.verificationRequired}
+          message={t.verificationRequiredMessage}
         />
       )}
 
@@ -97,12 +178,12 @@ const StudentDashboard = () => {
         <Card className="border-l-4 border-primary-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Applications This Month</p>
+              <p className="text-sm text-gray-600">{t.applicationsThisMonth}</p>
               <p className="text-3xl font-bold text-gray-900">
                 {applicationsUsedThisMonth}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                of {applicationLimitPerMonth} this month
+                {t.ofThisMonth.replace('{limit}', applicationLimitPerMonth)}
               </p>
             </div>
             <Briefcase className="w-12 h-12 text-primary-500" />
@@ -112,12 +193,12 @@ const StudentDashboard = () => {
         <Card className="border-l-4 border-green-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Applications Remaining</p>
+              <p className="text-sm text-gray-600">{t.applicationsRemaining}</p>
               <p className="text-3xl font-bold text-green-600">
                 {applicationsRemaining}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                {subscriptionTier === 'premium' ? 'Premium Plan' : 'Free Plan'}
+                {subscriptionTier === 'premium' ? t.premiumPlan : t.freePlan}
               </p>
             </div>
             <FileText className="w-12 h-12 text-green-500" />
@@ -128,7 +209,7 @@ const StudentDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm text-gray-600">Verification</p>
+                <p className="text-sm text-gray-600">{t.verification}</p>
                 {!isVerified && (
                   <button
                     onClick={handleRefreshVerification}
@@ -143,7 +224,7 @@ const StudentDashboard = () => {
                 )}
               </div>
               <Badge variant={isVerified ? 'success' : verificationStatusText === 'pending' ? 'warning' : 'error'}>
-                {isVerified ? 'Verified' : verificationStatusText === 'pending' ? 'Pending' : verificationStatusText === 'rejected' ? 'Rejected' : 'Unverified'}
+                {isVerified ? t.verified : verificationStatusText === 'pending' ? t.pending : verificationStatusText === 'rejected' ? t.rejected : t.unverified}
               </Badge>
             </div>
             {isVerified ? (
@@ -157,9 +238,9 @@ const StudentDashboard = () => {
         <Card className="border-l-4 border-purple-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Package</p>
+              <p className="text-sm text-gray-600">{t.package}</p>
               <Badge variant="primary">
-                {subscriptionTier === 'premium' ? 'Premium' : 'Free'}
+                {subscriptionTier === 'premium' ? t.premium : t.free}
               </Badge>
             </div>
             <DollarSign className="w-12 h-12 text-purple-500" />
@@ -168,20 +249,20 @@ const StudentDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card title="Quick Actions">
+      <Card title={t.quickActions}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {!isVerified ? (
             <Link to="/student/verification">
               <Button variant="primary" className="w-full">
                 <AlertCircle className="w-5 h-5 mr-2" />
-                Complete Verification
+                {t.completeVerification}
               </Button>
             </Link>
           ) : (
             <Link to="/student/jobs">
               <Button variant="primary" className="w-full">
                 <Briefcase className="w-5 h-5 mr-2" />
-                Browse Jobs
+                {t.browseJobs}
               </Button>
             </Link>
           )}
@@ -189,14 +270,14 @@ const StudentDashboard = () => {
           <Link to="/student/applications">
             <Button variant="outline" className="w-full">
               <FileText className="w-5 h-5 mr-2" />
-              View Applications
+              {t.viewApplications}
             </Button>
           </Link>
 
           {subscriptionTier === 'free' && applicationsRemaining < 3 && (
             <Link to="/student/subscription">
               <Button variant="success" className="w-full">
-                Upgrade to Premium
+                {t.upgradeToPremium}
               </Button>
             </Link>
           )}
@@ -204,7 +285,7 @@ const StudentDashboard = () => {
       </Card>
 
       {/* Recent Applications */}
-      <Card title="Recent Applications">
+      <Card title={t.recentApplications}>
         {loadingApplications ? (
           <Loading />
         ) : applications?.data?.applications?.length > 0 ? (
@@ -215,7 +296,7 @@ const StudentDashboard = () => {
                   <h4 className="font-semibold text-gray-900">{app.jobPost?.title}</h4>
                   <p className="text-sm text-gray-600">{app.jobPost?.client?.companyName}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Applied {new Date(app.createdAt).toLocaleDateString()}
+                    {t.applied} {new Date(app.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <Badge
@@ -238,11 +319,11 @@ const StudentDashboard = () => {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <Briefcase className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No applications yet</p>
+            <p>{t.noApplicationsYet}</p>
             {isVerified && (
               <Link to="/student/jobs">
                 <Button variant="primary" size="sm" className="mt-4">
-                  Browse Jobs
+                  {t.browseJobs}
                 </Button>
               </Link>
             )}

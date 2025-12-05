@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../../services/subscriptionService';
@@ -10,11 +10,118 @@ import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X } from 'lucide-react';
 import paymobImage from '../../assets/images/paymob.png';
 
+const translations = {
+  en: {
+    noPaymentDetails: 'No payment details found',
+    goToSubscription: 'Go to Subscription',
+    backToSubscription: 'Back to Subscription',
+    completePayment: 'Complete Payment',
+    securePaymentWithPaymob: 'Secure Payment with Paymob',
+    paymobRedirect: 'You will be redirected to Paymob to securely complete your payment. Paymob accepts credit/debit cards, mobile wallets, and other payment methods.',
+    acceptedPaymentMethods: 'Accepted Payment Methods:',
+    creditDebitCards: '💳 Credit/Debit Cards',
+    cardsDescription: 'Visa, Mastercard, Meeza',
+    mobileWallets: '📱 Mobile Wallets',
+    walletsDescription: 'Vodafone, Etisalat, Orange',
+    yourPaymentIsSecure: 'Your payment is secure',
+    secureDescription: 'All transactions are encrypted and processed securely through Paymob\'s payment gateway. Your card details are never stored on our servers.',
+    paymentSummary: 'Payment Summary',
+    plan: 'Plan',
+    premium: 'Premium',
+    billingCycle: 'Billing Cycle',
+    monthly: 'Monthly',
+    havePromoCode: 'Have a promo code?',
+    enterCode: 'Enter code',
+    apply: 'Apply',
+    discount: 'discount',
+    subtotal: 'Subtotal',
+    processingFee: 'Processing Fee',
+    total: 'Total',
+    whatYoullGet: 'What you\'ll get:',
+    jobApplicationsPerMonth: '100 job applications/month',
+    priorityInSearch: 'Priority in search results',
+    featuredProfileBadge: 'Featured profile badge',
+    prioritySupport: 'Priority support',
+    proceedToPayment: 'Proceed to Payment',
+    securePaymentPoweredBy: 'Secure payment powered by Paymob',
+    pleaseEnterCouponCode: 'Please enter a coupon code',
+    invalidCouponCode: 'Invalid coupon code',
+    paymentSuccessful: 'Payment successful! Your Premium subscription is now active.',
+    paymentProcessingError: 'Payment processing error. Please contact support.',
+    paymentFailed: 'Payment failed. Please try again.',
+  },
+  it: {
+    noPaymentDetails: 'Nessun dettaglio di pagamento trovato',
+    goToSubscription: 'Vai all\'Abbonamento',
+    backToSubscription: 'Torna all\'Abbonamento',
+    completePayment: 'Completa Pagamento',
+    securePaymentWithPaymob: 'Pagamento Sicuro con Paymob',
+    paymobRedirect: 'Sarai reindirizzato a Paymob per completare in sicurezza il tuo pagamento. Paymob accetta carte di credito/debito, portafogli mobili e altri metodi di pagamento.',
+    acceptedPaymentMethods: 'Metodi di Pagamento Accettati:',
+    creditDebitCards: '💳 Carte di Credito/Debito',
+    cardsDescription: 'Visa, Mastercard, Meeza',
+    mobileWallets: '📱 Portafogli Mobili',
+    walletsDescription: 'Vodafone, Etisalat, Orange',
+    yourPaymentIsSecure: 'Il tuo pagamento è sicuro',
+    secureDescription: 'Tutte le transazioni sono crittografate ed elaborate in sicurezza tramite il gateway di pagamento di Paymob. I dettagli della tua carta non vengono mai memorizzati sui nostri server.',
+    paymentSummary: 'Riepilogo Pagamento',
+    plan: 'Piano',
+    premium: 'Premium',
+    billingCycle: 'Ciclo di Fatturazione',
+    monthly: 'Mensile',
+    havePromoCode: 'Hai un codice promozionale?',
+    enterCode: 'Inserisci codice',
+    apply: 'Applica',
+    discount: 'sconto',
+    subtotal: 'Subtotale',
+    processingFee: 'Commissione di Elaborazione',
+    total: 'Totale',
+    whatYoullGet: 'Cosa otterrai:',
+    jobApplicationsPerMonth: '100 candidature di lavoro/mese',
+    priorityInSearch: 'Priorità nei risultati di ricerca',
+    featuredProfileBadge: 'Badge profilo in evidenza',
+    prioritySupport: 'Supporto prioritario',
+    proceedToPayment: 'Procedi al Pagamento',
+    securePaymentPoweredBy: 'Pagamento sicuro fornito da Paymob',
+    pleaseEnterCouponCode: 'Inserisci un codice coupon',
+    invalidCouponCode: 'Codice coupon non valido',
+    paymentSuccessful: 'Pagamento completato con successo! Il tuo abbonamento Premium è ora attivo.',
+    paymentProcessingError: 'Errore nell\'elaborazione del pagamento. Contatta il supporto.',
+    paymentFailed: 'Pagamento fallito. Riprova.',
+  },
+};
+
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Get payment details from navigation state
   // Force EGP currency as it's the only supported currency for Paymob
@@ -90,7 +197,7 @@ const Payment = () => {
       setCouponCode('');
     },
     onError: (error) => {
-      setCouponError(error.response?.data?.message || error.message || 'Invalid coupon code');
+      setCouponError(error.response?.data?.message || error.message || t.invalidCouponCode);
       setAppliedCoupon(null);
     },
   });
@@ -124,24 +231,24 @@ const Payment = () => {
           // For non-EGP currencies or fallback
           queryClient.invalidateQueries(['subscription']);
           queryClient.invalidateQueries(['applicationLimit']);
-          alert('Payment successful! Your Premium subscription is now active.');
+          alert(t.paymentSuccessful);
           navigate('/student/subscription');
         }
       } catch (error) {
         console.error('Error processing payment response:', error);
-        alert('Payment processing error. Please contact support.');
+        alert(t.paymentProcessingError);
       }
     },
     onError: (error) => {
       console.error('Payment mutation error:', error);
       console.error('Error response:', error.response);
-      alert(error.response?.data?.message || 'Payment failed. Please try again.');
+      alert(error.response?.data?.message || t.paymentFailed);
     },
   });
 
   const handleApplyCoupon = () => {
     if (!couponCode.trim()) {
-      setCouponError('Please enter a coupon code');
+      setCouponError(t.pleaseEnterCouponCode);
       return;
     }
     setCouponError('');
@@ -179,9 +286,9 @@ const Payment = () => {
       <div className="max-w-2xl mx-auto mt-12">
         <Card>
           <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">No payment details found</p>
+            <p className="text-gray-600 mb-4">{t.noPaymentDetails}</p>
             <Button onClick={() => navigate('/student/subscription')}>
-              Go to Subscription
+              {t.goToSubscription}
             </Button>
           </div>
         </Card>
@@ -197,13 +304,13 @@ const Payment = () => {
         className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
       >
         <ArrowLeft className="w-5 h-5" />
-        Back to Subscription
+        {t.backToSubscription}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Information */}
         <div className="lg:col-span-2">
-          <Card title="Complete Payment">
+          <Card title={t.completePayment}>
             <div className="space-y-6">
               {/* Payment Info */}
               <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
@@ -216,26 +323,25 @@ const Payment = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">
-                    Secure Payment with Paymob
+                    {t.securePaymentWithPaymob}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    You will be redirected to Paymob to securely complete your payment.
-                    Paymob accepts credit/debit cards, mobile wallets, and other payment methods.
+                    {t.paymobRedirect}
                   </p>
                 </div>
               </div>
 
               {/* Payment Methods Info */}
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Accepted Payment Methods:</p>
+                <p className="text-sm font-medium text-gray-700">{t.acceptedPaymentMethods}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">💳 Credit/Debit Cards</p>
-                    <p className="text-xs text-gray-500">Visa, Mastercard, Meeza</p>
+                    <p className="text-sm text-gray-600">{t.creditDebitCards}</p>
+                    <p className="text-xs text-gray-500">{t.cardsDescription}</p>
                   </div>
                   <div className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">📱 Mobile Wallets</p>
-                    <p className="text-xs text-gray-500">Vodafone, Etisalat, Orange</p>
+                    <p className="text-sm text-gray-600">{t.mobileWallets}</p>
+                    <p className="text-xs text-gray-500">{t.walletsDescription}</p>
                   </div>
                 </div>
               </div>
@@ -246,11 +352,10 @@ const Payment = () => {
                   <Lock className="w-5 h-5 text-green-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-900 mb-1">
-                      Your payment is secure
+                      {t.yourPaymentIsSecure}
                     </p>
                     <p className="text-xs text-gray-600">
-                      All transactions are encrypted and processed securely through Paymob's
-                      payment gateway. Your card details are never stored on our servers.
+                      {t.secureDescription}
                     </p>
                   </div>
                 </div>
@@ -261,17 +366,17 @@ const Payment = () => {
 
         {/* Payment Summary */}
         <div className="lg:col-span-1">
-          <Card title="Payment Summary">
+          <Card title={t.paymentSummary}>
             <div className="space-y-4">
               {/* Plan Details */}
               <div className="pb-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Plan</p>
-                  <Badge variant="success">Premium</Badge>
+                  <p className="text-sm text-gray-600">{t.plan}</p>
+                  <Badge variant="success">{t.premium}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">Billing Cycle</p>
-                  <p className="text-sm font-medium text-gray-900">Monthly</p>
+                  <p className="text-sm text-gray-600">{t.billingCycle}</p>
+                  <p className="text-sm font-medium text-gray-900">{t.monthly}</p>
                 </div>
               </div>
 
@@ -279,13 +384,13 @@ const Payment = () => {
               <div className="pb-4 border-b border-gray-200">
                 {!appliedCoupon ? (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Have a promo code?</label>
+                    <label className="text-sm font-medium text-gray-700">{t.havePromoCode}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder="Enter code"
+                        placeholder={t.enterCode}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                         disabled={couponMutation.isPending}
                       />
@@ -296,7 +401,7 @@ const Payment = () => {
                         loading={couponMutation.isPending}
                         className="whitespace-nowrap"
                       >
-                        Apply
+                        {t.apply}
                       </Button>
                     </div>
                     {couponError && (
@@ -311,8 +416,8 @@ const Payment = () => {
                         <p className="text-sm font-medium text-green-900">{appliedCoupon.couponCode}</p>
                         <p className="text-xs text-green-600">
                           {appliedCoupon.discountType === 'percentage'
-                            ? `${appliedCoupon.discountValue}% discount`
-                            : `${currency} ${appliedCoupon.discountValue} discount`}
+                            ? `${appliedCoupon.discountValue}% ${t.discount}`
+                            : `${currency} ${appliedCoupon.discountValue} ${t.discount}`}
                         </p>
                       </div>
                     </div>
@@ -329,28 +434,28 @@ const Payment = () => {
               {/* Price Breakdown */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">Subtotal</p>
+                  <p className="text-sm text-gray-600">{t.subtotal}</p>
                   <p className="text-sm font-medium text-gray-900">
                     {currency} {subtotal.toFixed(2)}
                   </p>
                 </div>
                 {appliedCoupon && (
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-green-600">Discount</p>
+                    <p className="text-sm text-green-600">{t.discount}</p>
                     <p className="text-sm font-medium text-green-600">
                       - {currency} {discount.toFixed(2)}
                     </p>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">Processing Fee</p>
+                  <p className="text-sm text-gray-600">{t.processingFee}</p>
                   <p className="text-sm font-medium text-gray-900">
                     {currency} {processingFee.toFixed(2)}
                   </p>
                 </div>
                 <div className="pt-3 border-t border-gray-200">
                   <div className="flex items-center justify-between">
-                    <p className="text-base font-semibold text-gray-900">Total</p>
+                    <p className="text-base font-semibold text-gray-900">{t.total}</p>
                     <p className="text-2xl font-bold text-primary-600">
                       {currency} {total.toFixed(2)}
                     </p>
@@ -360,23 +465,23 @@ const Payment = () => {
 
               {/* Features */}
               <div className="pt-4 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">What you'll get:</p>
+                <p className="text-sm font-medium text-gray-700 mb-3">{t.whatYoullGet}</p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">100 job applications/month</span>
+                    <span className="text-sm text-gray-600">{t.jobApplicationsPerMonth}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">Priority in search results</span>
+                    <span className="text-sm text-gray-600">{t.priorityInSearch}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">Featured profile badge</span>
+                    <span className="text-sm text-gray-600">{t.featuredProfileBadge}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">Priority support</span>
+                    <span className="text-sm text-gray-600">{t.prioritySupport}</span>
                   </li>
                 </ul>
               </div>
@@ -389,13 +494,13 @@ const Payment = () => {
                 loading={upgradeMutation.isPending}
               >
                 <Lock className="w-5 h-5 mr-2" />
-                Proceed to Payment
+                {t.proceedToPayment}
               </Button>
 
               {/* Security Note */}
               <div className="flex items-center gap-2 text-xs text-gray-500 mt-4">
                 <Lock className="w-3 h-3" />
-                <p>Secure payment powered by Paymob</p>
+                <p>{t.securePaymentPoweredBy}</p>
               </div>
             </div>
           </Card>

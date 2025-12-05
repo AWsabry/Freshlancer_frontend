@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,14 +25,94 @@ import {
   Mail,
   Folder,
   BarChart3,
+  Globe,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
+
+const translations = {
+  en: {
+    dashboard: 'Dashboard',
+    browseJobs: 'Browse Jobs',
+    myApplications: 'My Applications',
+    subscription: 'Subscription',
+    transactions: 'Transactions',
+    profile: 'Profile',
+    myJobs: 'My Jobs',
+    applications: 'Applications',
+    packages: 'Packages',
+    startupProfile: 'Startup Profile',
+    analytics: 'Analytics',
+    users: 'Users',
+    verifications: 'Verifications',
+    jobs: 'Jobs',
+    categories: 'Categories',
+    clientPackages: 'Client Packages',
+    clientTransactions: 'Client Transactions',
+    studentSubscriptions: 'Student Subscriptions',
+    coupons: 'Coupons',
+    startups: 'Startups',
+    contactUs: 'Contact Us',
+    logout: 'Logout',
+    welcomeBack: 'Welcome back, {name}!',
+    points: 'Points',
+    role: {
+      student: 'student',
+      client: 'client',
+      admin: 'admin',
+    },
+  },
+  it: {
+    dashboard: 'Dashboard',
+    browseJobs: 'Sfoglia Lavori',
+    myApplications: 'Le Mie Candidature',
+    subscription: 'Abbonamento',
+    transactions: 'Transazioni',
+    profile: 'Profilo',
+    myJobs: 'I Miei Lavori',
+    applications: 'Candidature',
+    packages: 'Pacchetti',
+    startupProfile: 'Profilo Startup',
+    analytics: 'Analisi',
+    users: 'Utenti',
+    verifications: 'Verifiche',
+    jobs: 'Lavori',
+    categories: 'Categorie',
+    clientPackages: 'Pacchetti Clienti',
+    clientTransactions: 'Transazioni Clienti',
+    studentSubscriptions: 'Abbonamenti Studenti',
+    coupons: 'Coupon',
+    startups: 'Startup',
+    contactUs: 'Contattaci',
+    logout: 'Esci',
+    welcomeBack: 'Bentornato, {name}!',
+    points: 'Punti',
+    role: {
+      student: 'studente',
+      client: 'cliente',
+      admin: 'amministratore',
+    },
+  },
+};
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    // Get language from localStorage or default to 'en'
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Save language preference to localStorage and set HTML lang attribute
+  useEffect(() => {
+    localStorage.setItem('dashboardLanguage', language);
+    document.documentElement.lang = language;
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
+  }, [language]);
+
+  const t = translations[language] || translations.en;
 
   // Get unread notification count
   const { data: unreadCount } = useQuery({
@@ -83,7 +163,7 @@ const DashboardLayout = () => {
 
   const getNavigationItems = () => {
     const baseItems = [
-      { name: 'Dashboard', icon: Home, path: `/${user?.role}/dashboard` },
+      { name: t.dashboard, icon: Home, path: `/${user?.role}/dashboard` },
       // { name: 'Notifications', icon: Bell, path: `/${user?.role}/notifications`, badge: unreadCount?.data?.unreadCount },
       // { name: 'Messages', icon: MessageSquare, path: `/${user?.role}/messages` },
     
@@ -93,11 +173,11 @@ const DashboardLayout = () => {
     if (user?.role === 'student') {
       return [
         ...baseItems.slice(0, 1),
-        { name: 'Browse Jobs', icon: Briefcase, path: '/student/jobs' },
-        { name: 'My Applications', icon: FileText, path: '/student/applications' },
-        { name: 'Subscription', icon: CreditCard, path: '/student/subscription' },
-        { name: 'Transactions', icon: DollarSign, path: '/student/transactions' },
-        { name: 'Profile', icon: User, path: `/${user?.role}/profile` },
+        { name: t.browseJobs, icon: Briefcase, path: '/student/jobs' },
+        { name: t.myApplications, icon: FileText, path: '/student/applications' },
+        { name: t.subscription, icon: CreditCard, path: '/student/subscription' },
+        { name: t.transactions, icon: DollarSign, path: '/student/transactions' },
+        { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         // { name: 'Reviews', icon: Star, path: '/student/reviews' },
         ...baseItems.slice(1),
       ];
@@ -106,18 +186,18 @@ const DashboardLayout = () => {
     if (user?.role === 'client') {
       const items = [
         ...baseItems.slice(0, 1),
-        { name: 'My Jobs', icon: Briefcase, path: '/client/jobs' },
-        { name: 'Applications', icon: FileText, path: '/client/applications' },
-        { name: 'Packages', icon: CreditCard, path: '/client/packages' },
-        { name: 'Transactions', icon: DollarSign, path: '/client/transactions' },
-        { name: 'Profile', icon: User, path: `/${user?.role}/profile` },
+        { name: t.myJobs, icon: Briefcase, path: '/client/jobs' },
+        { name: t.applications, icon: FileText, path: '/client/applications' },
+        { name: t.packages, icon: CreditCard, path: '/client/packages' },
+        { name: t.transactions, icon: DollarSign, path: '/client/transactions' },
+        { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         ...baseItems.slice(1),
       ];
       
       // Add Startup Profile menu item if user is a startup
       if (user?.clientProfile?.isStartup || userData?.data?.user?.clientProfile?.isStartup) {
         // Insert after Packages
-        items.splice(4, 0, { name: 'Startup Profile', icon: Rocket, path: '/client/startup-profile' });
+        items.splice(4, 0, { name: t.startupProfile, icon: Rocket, path: '/client/startup-profile' });
       }
       
       return items;
@@ -126,18 +206,18 @@ const DashboardLayout = () => {
     if (user?.role === 'admin') {
       return [
         ...baseItems.slice(0, 1),
-        { name: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
-        { name: 'Users', icon: Users, path: '/admin/users' },
-        { name: 'Verifications', icon: Shield, path: '/admin/students' },
-        { name: 'Applications', icon: FileText, path: '/admin/applications' },
-        { name: 'Jobs', icon: Briefcase, path: '/admin/jobs' },
-        { name: 'Categories', icon: Folder, path: '/admin/categories' },
-        { name: 'Client Packages', icon: CreditCard, path: '/admin/client-packages' },
-        { name: 'Client Transactions', icon: DollarSign, path: '/admin/client-transactions' },
-        { name: 'Student Subscriptions', icon: User, path: '/admin/student-packages' },
-        { name: 'Coupons', icon: Tag, path: '/admin/coupons' },
-        { name: 'Startups', icon: Star, path: '/admin/startups' },
-        { name: 'Contact Us', icon: Mail, path: '/admin/contact-us' },
+        { name: t.analytics, icon: BarChart3, path: '/admin/analytics' },
+        { name: t.users, icon: Users, path: '/admin/users' },
+        { name: t.verifications, icon: Shield, path: '/admin/students' },
+        { name: t.applications, icon: FileText, path: '/admin/applications' },
+        { name: t.jobs, icon: Briefcase, path: '/admin/jobs' },
+        { name: t.categories, icon: Folder, path: '/admin/categories' },
+        { name: t.clientPackages, icon: CreditCard, path: '/admin/client-packages' },
+        { name: t.clientTransactions, icon: DollarSign, path: '/admin/client-transactions' },
+        { name: t.studentSubscriptions, icon: User, path: '/admin/student-packages' },
+        { name: t.coupons, icon: Tag, path: '/admin/coupons' },
+        { name: t.startups, icon: Star, path: '/admin/startups' },
+        { name: t.contactUs, icon: Mail, path: '/admin/contact-us' },
         ...baseItems.slice(1),
       ];
     }
@@ -188,7 +268,7 @@ const DashboardLayout = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                <p className="text-xs text-gray-500 capitalize">{t.role[user?.role] || user?.role}</p>
               </div>
             </div>
           </div>
@@ -225,7 +305,7 @@ const DashboardLayout = () => {
               className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-5 h-5 mr-3" />
-              Logout
+              {t.logout}
             </button>
           </div>
         </div>
@@ -243,11 +323,27 @@ const DashboardLayout = () => {
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-xl font-semibold text-gray-900">
-              Welcome back, {user?.name?.split(' ')[0]}!
+              {t.welcomeBack.replace('{name}', user?.name?.split(' ')[0] || '')}
             </h1>
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Language Selector for Students */}
+            {user?.role === 'student' && (
+              <div className="flex items-center gap-2">
+                <Globe className="w-5 h-5 text-gray-600" />
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white cursor-pointer"
+                  aria-label="Select language"
+                >
+                  <option value="en">English</option>
+                  <option value="it">Italiano</option>
+                </select>
+              </div>
+            )}
+
             {/* Notifications Bell Icon */}
             <Link
               to={`/${user?.role}/notifications`}
@@ -266,7 +362,7 @@ const DashboardLayout = () => {
               <div className="flex items-center gap-2 bg-primary-50 border border-primary-200 rounded-lg px-4 py-2">
                 <DollarSign className="w-5 h-5 text-primary-600" />
                 <div>
-                  <p className="text-xs text-primary-600 font-medium">Points</p>
+                  <p className="text-xs text-primary-600 font-medium">{t.points}</p>
                   <p className="text-lg font-bold text-[#8904aa]">
                     {userData.data.user.clientProfile.pointsRemaining}
                   </p>
@@ -279,7 +375,7 @@ const DashboardLayout = () => {
               <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
                 <Briefcase className="w-5 h-5 text-green-600" />
                 <div>
-                  <p className="text-xs text-green-600 font-medium">Applications</p>
+                  <p className="text-xs text-green-600 font-medium">{t.applications}</p>
                   <p className="text-lg font-bold text-green-700">
                     {userData.data.user.studentProfile.applicationsUsedThisMonth || 0} / {
                       userData.data.user.studentProfile.subscriptionTier === 'premium' ? 100 : 10

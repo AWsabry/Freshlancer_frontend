@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../../services/subscriptionService';
@@ -9,10 +9,131 @@ import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X, DollarSign } from 'lucide-react';
 import paypalImage from '../../assets/images/paypal.png';
 
+const translations = {
+  en: {
+    noPaymentDetails: 'No payment details found',
+    goToSubscription: 'Go to Subscription',
+    backToSubscription: 'Back to Subscription',
+    completePayment: 'Complete Payment',
+    securePaymentWithPaypal: 'Secure Payment with PayPal',
+    paypalRedirect: 'You will be redirected to PayPal to securely complete your payment. PayPal accepts credit/debit cards, bank accounts, and PayPal balance.',
+    paypalIntegrationArea: 'PayPal Integration Area',
+    paypalIntegrationDescription: 'This is where the PayPal SDK integration will be implemented. The PayPal button or checkout flow will appear here.',
+    implementationSteps: 'Implementation Steps:',
+    acceptedPaymentMethods: 'Accepted Payment Methods:',
+    creditDebitCards: '💳 Credit/Debit Cards',
+    cardsDescription: 'Visa, Mastercard',
+    paypalBalance: '💰 PayPal Balance',
+    paypalBalanceDescription: 'Pay with PayPal funds',
+    yourPaymentIsSecure: 'Your payment is secure',
+    secureDescription: 'All transactions are encrypted and processed securely through PayPal\'s payment gateway. Your card details are never stored on our servers. PayPal provides buyer protection and secure checkout.',
+    paymentSummary: 'Payment Summary',
+    plan: 'Plan',
+    premium: 'Premium',
+    billingCycle: 'Billing Cycle',
+    monthly: 'Monthly',
+    currency: 'Currency',
+    havePromoCode: 'Have a promo code?',
+    enterCode: 'Enter code',
+    apply: 'Apply',
+    discount: 'discount',
+    subtotal: 'Subtotal',
+    processingFee: 'Processing Fee',
+    processingFeeNote: '(2.9% + $0.30)',
+    total: 'Total',
+    whatYoullGet: 'What you\'ll get:',
+    jobApplicationsPerMonth: '100 job applications/month',
+    priorityInSearch: 'Priority in search results',
+    featuredProfileBadge: 'Featured profile badge',
+    prioritySupport: 'Priority support',
+    seeJobBudgets: 'See job budgets',
+    paypalIntegrationPending: 'PayPal Integration Pending',
+    paypalButtonWillAppear: 'PayPal button will appear here once integrated',
+    securePaymentPoweredBy: 'Secure payment powered by PayPal',
+    pleaseEnterCouponCode: 'Please enter a coupon code',
+    invalidCouponCode: 'Invalid coupon code',
+    paypalIntegrationComingSoon: 'PayPal integration coming soon! This is where PayPal payment flow will be implemented.',
+    paymentProcessingError: 'Payment processing error. Please contact support.',
+    paymentFailed: 'Payment failed. Please try again.',
+  },
+  it: {
+    noPaymentDetails: 'Nessun dettaglio di pagamento trovato',
+    goToSubscription: 'Vai all\'Abbonamento',
+    backToSubscription: 'Torna all\'Abbonamento',
+    completePayment: 'Completa Pagamento',
+    securePaymentWithPaypal: 'Pagamento Sicuro con PayPal',
+    paypalRedirect: 'Sarai reindirizzato a PayPal per completare in sicurezza il tuo pagamento. PayPal accetta carte di credito/debito, conti bancari e saldo PayPal.',
+    paypalIntegrationArea: 'Area Integrazione PayPal',
+    paypalIntegrationDescription: 'Qui verrà implementata l\'integrazione dell\'SDK PayPal. Il pulsante PayPal o il flusso di checkout apparirà qui.',
+    implementationSteps: 'Passaggi di Implementazione:',
+    acceptedPaymentMethods: 'Metodi di Pagamento Accettati:',
+    creditDebitCards: '💳 Carte di Credito/Debito',
+    cardsDescription: 'Visa, Mastercard',
+    paypalBalance: '💰 Saldo PayPal',
+    paypalBalanceDescription: 'Paga con fondi PayPal',
+    yourPaymentIsSecure: 'Il tuo pagamento è sicuro',
+    secureDescription: 'Tutte le transazioni sono crittografate ed elaborate in sicurezza tramite il gateway di pagamento di PayPal. I dettagli della tua carta non vengono mai memorizzati sui nostri server. PayPal fornisce protezione acquirenti e checkout sicuro.',
+    paymentSummary: 'Riepilogo Pagamento',
+    plan: 'Piano',
+    premium: 'Premium',
+    billingCycle: 'Ciclo di Fatturazione',
+    monthly: 'Mensile',
+    currency: 'Valuta',
+    havePromoCode: 'Hai un codice promozionale?',
+    enterCode: 'Inserisci codice',
+    apply: 'Applica',
+    discount: 'sconto',
+    subtotal: 'Subtotale',
+    processingFee: 'Commissione di Elaborazione',
+    processingFeeNote: '(2,9% + $0,30)',
+    total: 'Totale',
+    whatYoullGet: 'Cosa otterrai:',
+    jobApplicationsPerMonth: '100 candidature di lavoro/mese',
+    priorityInSearch: 'Priorità nei risultati di ricerca',
+    featuredProfileBadge: 'Badge profilo in evidenza',
+    prioritySupport: 'Supporto prioritario',
+    seeJobBudgets: 'Visualizza budget lavori',
+    paypalIntegrationPending: 'Integrazione PayPal in Attesa',
+    paypalButtonWillAppear: 'Il pulsante PayPal apparirà qui una volta integrato',
+    securePaymentPoweredBy: 'Pagamento sicuro fornito da PayPal',
+    pleaseEnterCouponCode: 'Inserisci un codice coupon',
+    invalidCouponCode: 'Codice coupon non valido',
+    paypalIntegrationComingSoon: 'Integrazione PayPal in arrivo! Qui verrà implementato il flusso di pagamento PayPal.',
+    paymentProcessingError: 'Errore nell\'elaborazione del pagamento. Contatta il supporto.',
+    paymentFailed: 'Pagamento fallito. Riprova.',
+  },
+};
+
 const PaymentUSD = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Get payment details from navigation state
   const { amount } = location.state || {};
@@ -39,7 +160,7 @@ const PaymentUSD = () => {
       setCouponCode('');
     },
     onError: (error) => {
-      setCouponError(error.response?.data?.message || 'Invalid coupon code');
+      setCouponError(error.response?.data?.message || t.invalidCouponCode);
       setAppliedCoupon(null);
     },
   });
@@ -53,7 +174,7 @@ const PaymentUSD = () => {
 
         // TODO: Integrate PayPal SDK here
         // For now, show placeholder
-        alert('PayPal integration coming soon! This is where PayPal payment flow will be implemented.');
+        alert(t.paypalIntegrationComingSoon);
 
         // After successful PayPal payment:
         // queryClient.invalidateQueries(['subscription']);
@@ -61,19 +182,19 @@ const PaymentUSD = () => {
         // navigate('/student/subscription');
       } catch (error) {
         console.error('Error processing PayPal payment:', error);
-        alert('Payment processing error. Please contact support.');
+        alert(t.paymentProcessingError);
       }
     },
     onError: (error) => {
       console.error('Payment mutation error:', error);
       console.error('Error response:', error.response);
-      alert(error.response?.data?.message || 'Payment failed. Please try again.');
+      alert(error.response?.data?.message || t.paymentFailed);
     },
   });
 
   const handleApplyCoupon = () => {
     if (!couponCode.trim()) {
-      setCouponError('Please enter a coupon code');
+      setCouponError(t.pleaseEnterCouponCode);
       return;
     }
     setCouponError('');
@@ -111,9 +232,9 @@ const PaymentUSD = () => {
       <div className="max-w-2xl mx-auto mt-12">
         <Card>
           <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">No payment details found</p>
+            <p className="text-gray-600 mb-4">{t.noPaymentDetails}</p>
             <Button onClick={() => navigate('/student/subscription')}>
-              Go to Subscription
+              {t.goToSubscription}
             </Button>
           </div>
         </Card>
@@ -129,13 +250,13 @@ const PaymentUSD = () => {
         className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
       >
         <ArrowLeft className="w-5 h-5" />
-        Back to Subscription
+        {t.backToSubscription}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Information */}
         <div className="lg:col-span-2">
-          <Card title="Complete Payment">
+          <Card title={t.completePayment}>
             <div className="space-y-6">
               {/* Payment Info */}
               <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
@@ -148,11 +269,10 @@ const PaymentUSD = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">
-                    Secure Payment with PayPal
+                    {t.securePaymentWithPaypal}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    You will be redirected to PayPal to securely complete your payment.
-                    PayPal accepts credit/debit cards, bank accounts, and PayPal balance.
+                    {t.paypalRedirect}
                   </p>
                 </div>
               </div>
@@ -165,13 +285,13 @@ const PaymentUSD = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-yellow-900 mb-2">
-                      PayPal Integration Area
+                      {t.paypalIntegrationArea}
                     </p>
                     <p className="text-xs text-yellow-700 mb-3">
-                      This is where the PayPal SDK integration will be implemented. The PayPal button or checkout flow will appear here.
+                      {t.paypalIntegrationDescription}
                     </p>
                     <div className="p-4 bg-white border border-yellow-300 rounded-lg">
-                      <p className="text-sm text-gray-600 mb-2">Implementation Steps:</p>
+                      <p className="text-sm text-gray-600 mb-2">{t.implementationSteps}</p>
                       <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
                         <li>Install PayPal SDK: <code className="bg-gray-100 px-1 rounded">npm install @paypal/react-paypal-js</code></li>
                         <li>Get PayPal Client ID from PayPal Developer Dashboard</li>
@@ -187,15 +307,15 @@ const PaymentUSD = () => {
 
               {/* Payment Methods Info */}
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Accepted Payment Methods:</p>
+                <p className="text-sm font-medium text-gray-700">{t.acceptedPaymentMethods}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">💳 Credit/Debit Cards</p>
-                    <p className="text-xs text-gray-500">Visa, Mastercard</p>
+                    <p className="text-sm text-gray-600">{t.creditDebitCards}</p>
+                    <p className="text-xs text-gray-500">{t.cardsDescription}</p>
                   </div>
                   <div className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">💰 PayPal Balance</p>
-                    <p className="text-xs text-gray-500">Pay with PayPal funds</p>
+                    <p className="text-sm text-gray-600">{t.paypalBalance}</p>
+                    <p className="text-xs text-gray-500">{t.paypalBalanceDescription}</p>
                   </div>
          
           
@@ -208,12 +328,10 @@ const PaymentUSD = () => {
                   <Lock className="w-5 h-5 text-green-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-900 mb-1">
-                      Your payment is secure
+                      {t.yourPaymentIsSecure}
                     </p>
                     <p className="text-xs text-gray-600">
-                      All transactions are encrypted and processed securely through PayPal's
-                      payment gateway. Your card details are never stored on our servers.
-                      PayPal provides buyer protection and secure checkout.
+                      {t.secureDescription}
                     </p>
                   </div>
                 </div>
@@ -224,20 +342,20 @@ const PaymentUSD = () => {
 
         {/* Payment Summary */}
         <div className="lg:col-span-1">
-          <Card title="Payment Summary">
+          <Card title={t.paymentSummary}>
             <div className="space-y-4">
               {/* Plan Details */}
               <div className="pb-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Plan</p>
-                  <Badge variant="success">Premium</Badge>
+                  <p className="text-sm text-gray-600">{t.plan}</p>
+                  <Badge variant="success">{t.premium}</Badge>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600">Billing Cycle</p>
-                  <p className="text-sm font-medium text-gray-900">Monthly</p>
+                  <p className="text-sm text-gray-600">{t.billingCycle}</p>
+                  <p className="text-sm font-medium text-gray-900">{t.monthly}</p>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">Currency</p>
+                  <p className="text-sm text-gray-600">{t.currency}</p>
                   <Badge variant="info">USD ($)</Badge>
                 </div>
               </div>
@@ -246,13 +364,13 @@ const PaymentUSD = () => {
               <div className="pb-4 border-b border-gray-200">
                 {!appliedCoupon ? (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Have a promo code?</label>
+                    <label className="text-sm font-medium text-gray-700">{t.havePromoCode}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder="Enter code"
+                        placeholder={t.enterCode}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                         disabled={couponMutation.isPending}
                       />
@@ -263,7 +381,7 @@ const PaymentUSD = () => {
                         loading={couponMutation.isPending}
                         className="whitespace-nowrap"
                       >
-                        Apply
+                        {t.apply}
                       </Button>
                     </div>
                     {couponError && (
@@ -278,8 +396,8 @@ const PaymentUSD = () => {
                         <p className="text-sm font-medium text-green-900">{appliedCoupon.couponCode}</p>
                         <p className="text-xs text-green-600">
                           {appliedCoupon.discountType === 'percentage'
-                            ? `${appliedCoupon.discountValue}% discount`
-                            : `${currency} ${appliedCoupon.discountValue} discount`}
+                            ? `${appliedCoupon.discountValue}% ${t.discount}`
+                            : `${currency} ${appliedCoupon.discountValue} ${t.discount}`}
                         </p>
                       </div>
                     </div>
@@ -296,29 +414,29 @@ const PaymentUSD = () => {
               {/* Price Breakdown */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">Subtotal</p>
+                  <p className="text-sm text-gray-600">{t.subtotal}</p>
                   <p className="text-sm font-medium text-gray-900">
                     ${subtotal.toFixed(2)}
                   </p>
                 </div>
                 {appliedCoupon && (
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-green-600">Discount</p>
+                    <p className="text-sm text-green-600">{t.discount}</p>
                     <p className="text-sm font-medium text-green-600">
                       - ${discount.toFixed(2)}
                     </p>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">Processing Fee</p>
+                  <p className="text-sm text-gray-600">{t.processingFee}</p>
                   <p className="text-sm font-medium text-gray-900">
                     ${processingFee.toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-500">(2.9% + $0.30)</p>
+                  <p className="text-xs text-gray-500">{t.processingFeeNote}</p>
                 </div>
                 <div className="pt-3 border-t border-gray-200">
                   <div className="flex items-center justify-between">
-                    <p className="text-base font-semibold text-gray-900">Total</p>
+                    <p className="text-base font-semibold text-gray-900">{t.total}</p>
                     <p className="text-2xl font-bold text-primary-600">
                       ${total.toFixed(2)}
                     </p>
@@ -328,27 +446,27 @@ const PaymentUSD = () => {
 
               {/* Features */}
               <div className="pt-4 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">What you'll get:</p>
+                <p className="text-sm font-medium text-gray-700 mb-3">{t.whatYoullGet}</p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">100 job applications/month</span>
+                    <span className="text-sm text-gray-600">{t.jobApplicationsPerMonth}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">Priority in search results</span>
+                    <span className="text-sm text-gray-600">{t.priorityInSearch}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">Featured profile badge</span>
+                    <span className="text-sm text-gray-600">{t.featuredProfileBadge}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">Priority support</span>
+                    <span className="text-sm text-gray-600">{t.prioritySupport}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">See job budgets</span>
+                    <span className="text-sm text-gray-600">{t.seeJobBudgets}</span>
                   </li>
                 </ul>
               </div>
@@ -363,17 +481,17 @@ const PaymentUSD = () => {
                   disabled={true}
                 >
                   <Lock className="w-5 h-5 mr-2" />
-                  PayPal Integration Pending
+                  {t.paypalIntegrationPending}
                 </Button>
                 <p className="text-xs text-center text-gray-500">
-                  PayPal button will appear here once integrated
+                  {t.paypalButtonWillAppear}
                 </p>
               </div>
 
               {/* Security Note */}
               <div className="flex items-center gap-2 text-xs text-gray-500 mt-4">
                 <Lock className="w-3 h-3" />
-                <p>Secure payment powered by PayPal</p>
+                <p>{t.securePaymentPoweredBy}</p>
               </div>
             </div>
           </Card>
