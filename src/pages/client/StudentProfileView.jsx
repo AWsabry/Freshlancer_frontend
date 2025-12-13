@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '../../services/profileService';
@@ -30,9 +30,100 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
+const translations = {
+  en: {
+    loading: 'Loading student profile...',
+    failedToLoad: 'Failed to load student profile:',
+    backToApplications: 'Back to Applications',
+    studentNotFound: 'Student not found',
+    yearsOld: 'years old',
+    socialLinks: 'Social Links:',
+    resumeCV: 'Resume / CV',
+    uploaded: 'Uploaded:',
+    downloadCV: 'Download CV',
+    additionalDocuments: 'Additional Documents',
+    view: 'View',
+    experienceRate: 'Experience & Rate',
+    experienceLevel: 'Experience Level',
+    yearsOfExperience: 'Years of Experience',
+    years: 'years',
+    hourlyRate: 'Hourly Rate',
+    skills: 'Skills',
+    education: 'Education',
+    university: 'University',
+    visitUniversityWebsite: 'Visit university website',
+    expectedGraduation: 'Expected Graduation:',
+    portfolio: 'Portfolio',
+    completed: 'Completed:',
+    certifications: 'Certifications',
+    issued: 'Issued:',
+    expires: 'Expires:',
+    credentialId: 'Credential ID:',
+    verify: 'Verify',
+    languages: 'Languages',
+    available: 'Available',
+    busy: 'Busy',
+  },
+  it: {
+    loading: 'Caricamento profilo studente...',
+    failedToLoad: 'Impossibile caricare il profilo studente:',
+    backToApplications: 'Torna alle Candidature',
+    studentNotFound: 'Studente non trovato',
+    yearsOld: 'anni',
+    socialLinks: 'Link Social:',
+    resumeCV: 'Curriculum / CV',
+    uploaded: 'Caricato:',
+    downloadCV: 'Scarica CV',
+    additionalDocuments: 'Documenti Aggiuntivi',
+    view: 'Visualizza',
+    experienceRate: 'Esperienza e Tariffa',
+    experienceLevel: 'Livello di Esperienza',
+    yearsOfExperience: 'Anni di Esperienza',
+    years: 'anni',
+    hourlyRate: 'Tariffa Oraria',
+    skills: 'Competenze',
+    education: 'Istruzione',
+    university: 'Università',
+    visitUniversityWebsite: 'Visita il sito web dell\'università',
+    expectedGraduation: 'Laurea Prevista:',
+    portfolio: 'Portfolio',
+    completed: 'Completato:',
+    certifications: 'Certificazioni',
+    issued: 'Rilasciato:',
+    expires: 'Scade:',
+    credentialId: 'ID Credenziale:',
+    verify: 'Verifica',
+    languages: 'Lingue',
+    available: 'Disponibile',
+    busy: 'Occupato',
+  },
+};
+
 const StudentProfileView = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch student profile
   const { data: profileData, isLoading, error } = useQuery({
@@ -41,7 +132,7 @@ const StudentProfileView = () => {
   });
 
   if (isLoading) {
-    return <Loading text="Loading student profile..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (error) {
@@ -49,11 +140,11 @@ const StudentProfileView = () => {
       <div className="space-y-4">
         <Alert
           type="error"
-          message={`Failed to load student profile: ${error.response?.data?.message || error.message}`}
+          message={`${t.failedToLoad} ${error.response?.data?.message || error.message}`}
         />
         <Button variant="secondary" onClick={() => navigate('/client/applications')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Applications
+          {t.backToApplications}
         </Button>
       </div>
     );
@@ -62,7 +153,7 @@ const StudentProfileView = () => {
   const student = profileData?.data?.student;
 
   if (!student) {
-    return <Alert type="error" message="Student not found" />;
+    return <Alert type="error" message={t.studentNotFound} />;
   }
 
   const profile = student.studentProfile || {};
@@ -73,7 +164,7 @@ const StudentProfileView = () => {
       <div className="flex items-center justify-between">
         <Button variant="secondary" onClick={() => navigate('/client/applications')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Applications
+          {t.backToApplications}
         </Button>
       </div>
 
@@ -119,7 +210,7 @@ const StudentProfileView = () => {
               {student.age && (
                 <div className="flex items-center gap-2 text-gray-700">
                   <User className="w-5 h-5 text-primary-600" />
-                  <span>{student.age} years old</span>
+                  <span>{student.age} {t.yearsOld}</span>
                 </div>
               )}
 
@@ -152,7 +243,9 @@ const StudentProfileView = () => {
                         : 'default'
                     }
                   >
-                    {profile.availability}
+                    {profile.availability === 'Available' ? t.available :
+                     profile.availability === 'Busy' ? t.busy :
+                     profile.availability}
                   </Badge>
                 </div>
               )}
@@ -161,7 +254,7 @@ const StudentProfileView = () => {
             {/* Social Links */}
             {profile.socialLinks && Object.values(profile.socialLinks).some(link => link) && (
               <div className="flex items-center gap-3 pt-4 border-t">
-                <span className="font-semibold text-gray-700">Social Links:</span>
+                <span className="font-semibold text-gray-700">{t.socialLinks}</span>
                 {profile.socialLinks.github && (
                   <a
                     href={profile.socialLinks.github}
@@ -247,11 +340,11 @@ const StudentProfileView = () => {
             <div className="flex items-center gap-3">
               <FileText className="w-6 h-6 text-primary-600" />
               <div>
-                <h3 className="font-bold text-lg">Resume / CV</h3>
+                <h3 className="font-bold text-lg">{t.resumeCV}</h3>
                 <p className="text-sm text-gray-600">{profile.resume.filename || 'resume.pdf'}</p>
                 {profile.resume.uploadedAt && (
                   <p className="text-xs text-gray-500">
-                    Uploaded: {new Date(profile.resume.uploadedAt).toLocaleDateString()}
+                    {t.uploaded} {new Date(profile.resume.uploadedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                   </p>
                 )}
               </div>
@@ -264,7 +357,7 @@ const StudentProfileView = () => {
             >
               <Button variant="primary">
                 <Download className="w-4 h-4 mr-2" />
-                Download CV
+                {t.downloadCV}
               </Button>
             </a>
           </div>
@@ -276,7 +369,7 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <FileText className="w-6 h-6 text-primary-600" />
-            Additional Documents
+            {t.additionalDocuments}
           </h3>
           <div className="space-y-3">
             {profile.additionalDocuments.map((doc, index) => (
@@ -293,7 +386,7 @@ const StudentProfileView = () => {
                     )}
                     {doc.uploadedAt && (
                       <p className="text-xs text-gray-500">
-                        Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                        {t.uploaded} {new Date(doc.uploadedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                       </p>
                     )}
                   </div>
@@ -306,7 +399,7 @@ const StudentProfileView = () => {
                 >
                   <Button variant="primary" size="sm">
                     <Download className="w-4 h-4 mr-2" />
-                    View
+                    {t.view}
                   </Button>
                 </a>
               </div>
@@ -320,12 +413,12 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <Briefcase className="w-6 h-6 text-primary-600" />
-            Experience & Rate
+            {t.experienceRate}
           </h3>
           <div className="grid grid-cols-3 gap-6">
             {profile.experienceLevel && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Experience Level</p>
+                <p className="text-sm text-gray-600 mb-1">{t.experienceLevel}</p>
                 <Badge variant="info" className="text-base">
                   {profile.experienceLevel}
                 </Badge>
@@ -333,13 +426,13 @@ const StudentProfileView = () => {
             )}
             {profile.yearsOfExperience !== undefined && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Years of Experience</p>
-                <p className="font-bold text-lg">{profile.yearsOfExperience} years</p>
+                <p className="text-sm text-gray-600 mb-1">{t.yearsOfExperience}</p>
+                <p className="font-bold text-lg">{profile.yearsOfExperience} {t.years}</p>
               </div>
             )}
             {profile.hourlyRate && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Hourly Rate</p>
+                <p className="text-sm text-gray-600 mb-1">{t.hourlyRate}</p>
                 <p className="font-bold text-lg text-green-600">
                   {profile.hourlyRate.min} - {profile.hourlyRate.max} {profile.hourlyRate.currency}
                 </p>
@@ -354,7 +447,7 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <Code className="w-6 h-6 text-primary-600" />
-            Skills
+            {t.skills}
           </h3>
           <div className="flex flex-wrap gap-3">
             {profile.skills.map((skill, index) => (
@@ -373,14 +466,14 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <GraduationCap className="w-6 h-6 text-primary-600" />
-            Education
+            {t.education}
           </h3>
           <div className="space-y-4">
             {/* University and Expected Graduation Year */}
             <div className="border-l-4 border-primary-500 pl-4 py-2 bg-primary-50 rounded-r-lg">
               {profile.university && (
                 <div className="mb-2">
-                  <p className="text-sm text-gray-600 mb-1">University</p>
+                  <p className="text-sm text-gray-600 mb-1">{t.university}</p>
                   <div className="flex items-center gap-2">
                     <p className="font-bold text-lg text-gray-900">{profile.university}</p>
                     {profile.universityLink && (
@@ -389,7 +482,7 @@ const StudentProfileView = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary-600 hover:text-primary-700 flex items-center gap-1"
-                        title="Visit university website"
+                        title={t.visitUniversityWebsite}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
@@ -401,7 +494,7 @@ const StudentProfileView = () => {
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-primary-600" />
                   <span className="text-sm text-gray-700">
-                    <span className="font-semibold">Expected Graduation:</span> {profile.graduationYear}
+                    <span className="font-semibold">{t.expectedGraduation}</span> {profile.graduationYear}
                   </span>
                 </div>
               )}
@@ -415,7 +508,7 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <Briefcase className="w-6 h-6 text-primary-600" />
-            Portfolio
+            {t.portfolio}
           </h3>
           <div className="grid gap-4">
             {profile.portfolio.map((project, index) => (
@@ -435,7 +528,7 @@ const StudentProfileView = () => {
                     )}
                     {project.completedDate && (
                       <p className="text-sm text-gray-500">
-                        Completed: {new Date(project.completedDate).toLocaleDateString()}
+                        {t.completed} {new Date(project.completedDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                       </p>
                     )}
                   </div>
@@ -448,7 +541,7 @@ const StudentProfileView = () => {
                     >
                       <Button variant="outline" size="sm">
                         <ExternalLink className="w-4 h-4 mr-2" />
-                        View
+                        {t.view}
                       </Button>
                     </a>
                   )}
@@ -464,7 +557,7 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <Award className="w-6 h-6 text-primary-600" />
-            Certifications
+            {t.certifications}
           </h3>
           <div className="space-y-4">
             {profile.certifications.map((cert, index) => (
@@ -476,18 +569,18 @@ const StudentProfileView = () => {
                     <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                       {cert.issueDate && (
                         <span>
-                          Issued: {new Date(cert.issueDate).toLocaleDateString()}
+                          {t.issued} {new Date(cert.issueDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                         </span>
                       )}
                       {cert.expirationDate && (
                         <span>
-                          Expires: {new Date(cert.expirationDate).toLocaleDateString()}
+                          {t.expires} {new Date(cert.expirationDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                         </span>
                       )}
                     </div>
                     {cert.credentialId && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Credential ID: {cert.credentialId}
+                        {t.credentialId} {cert.credentialId}
                       </p>
                     )}
                   </div>
@@ -500,7 +593,7 @@ const StudentProfileView = () => {
                     >
                       <Button variant="outline" size="sm">
                         <ExternalLink className="w-4 h-4 mr-2" />
-                        Verify
+                        {t.verify}
                       </Button>
                     </a>
                   )}
@@ -516,7 +609,7 @@ const StudentProfileView = () => {
         <Card>
           <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
             <Globe className="w-6 h-6 text-primary-600" />
-            Languages
+            {t.languages}
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {profile.languages.map((lang, index) => (

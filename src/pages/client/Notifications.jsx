@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../../services/notificationService';
@@ -26,12 +26,93 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    notifications: 'Notifications',
+    notification: 'notification',
+    notificationsPlural: 'notifications',
+    markAllRead: 'Mark All Read',
+    all: 'All',
+    unread: 'Unread',
+    read: 'Read',
+    noNotifications: 'No notifications',
+    noNotificationsYet: "You don't have any notifications yet.",
+    noUnreadNotifications: "You don't have any unread notifications.",
+    noReadNotifications: "You don't have any read notifications.",
+    viewDetails: 'View Details',
+    delete: 'Delete',
+    deleteConfirm: 'Are you sure you want to delete this notification?',
+    previous: 'Previous',
+    next: 'Next',
+    justNow: 'Just now',
+    minAgo: 'min ago',
+    minsAgo: 'mins ago',
+    hourAgo: 'hour ago',
+    hoursAgo: 'hours ago',
+    dayAgo: 'day ago',
+    daysAgo: 'days ago',
+    urgent: 'urgent',
+    high: 'high',
+    normal: 'normal',
+  },
+  it: {
+    notifications: 'Notifiche',
+    notification: 'notifica',
+    notificationsPlural: 'notifiche',
+    markAllRead: 'Segna Tutte come Lette',
+    all: 'Tutte',
+    unread: 'Non Lette',
+    read: 'Lette',
+    noNotifications: 'Nessuna notifica',
+    noNotificationsYet: 'Non hai ancora nessuna notifica.',
+    noUnreadNotifications: 'Non hai notifiche non lette.',
+    noReadNotifications: 'Non hai notifiche lette.',
+    viewDetails: 'Visualizza Dettagli',
+    delete: 'Elimina',
+    deleteConfirm: 'Sei sicuro di voler eliminare questa notifica?',
+    previous: 'Precedente',
+    next: 'Successivo',
+    justNow: 'Proprio ora',
+    minAgo: 'min fa',
+    minsAgo: 'min fa',
+    hourAgo: 'ora fa',
+    hoursAgo: 'ore fa',
+    dayAgo: 'giorno fa',
+    daysAgo: 'giorni fa',
+    urgent: 'urgente',
+    high: 'alta',
+    normal: 'normale',
+  },
+};
+
 const Notifications = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
   const [page, setPage] = useState(1);
   const [expandedNotification, setExpandedNotification] = useState(null); // Track expanded notification
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Get notifications
   const { data: notificationsData, isLoading } = useQuery({
@@ -129,11 +210,11 @@ const Notifications = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
+    if (diffMins < 1) return t.justNow;
+    if (diffMins < 60) return `${diffMins} ${diffMins > 1 ? t.minsAgo : t.minAgo}`;
+    if (diffHours < 24) return `${diffHours} ${diffHours > 1 ? t.hoursAgo : t.hourAgo}`;
+    if (diffDays < 7) return `${diffDays} ${diffDays > 1 ? t.daysAgo : t.dayAgo}`;
+    return date.toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US');
   };
 
   const notifications = notificationsData?.data?.notifications || [];
@@ -149,9 +230,9 @@ const Notifications = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.notifications}</h1>
           <p className="text-gray-600 mt-1">
-            {total} notification{total !== 1 ? 's' : ''}
+            {total} {total !== 1 ? t.notificationsPlural : t.notification}
           </p>
         </div>
 
@@ -163,7 +244,7 @@ const Notifications = () => {
             disabled={markAllAsReadMutation.isLoading || filter === 'read'}
           >
             <CheckCheck className="w-4 h-4 mr-2" />
-            Mark All Read
+            {t.markAllRead}
           </Button>
         </div>
       </div>
@@ -178,7 +259,7 @@ const Notifications = () => {
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          All
+          {t.all}
         </button>
         <button
           onClick={() => setFilter('unread')}
@@ -188,7 +269,7 @@ const Notifications = () => {
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          Unread
+          {t.unread}
         </button>
         <button
           onClick={() => setFilter('read')}
@@ -198,7 +279,7 @@ const Notifications = () => {
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          Read
+          {t.read}
         </button>
       </div>
 
@@ -209,14 +290,14 @@ const Notifications = () => {
             <div className="text-center py-12">
               <BellOff className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No notifications
+                {t.noNotifications}
               </h3>
               <p className="text-gray-600">
                 {filter === 'all'
-                  ? "You don't have any notifications yet."
+                  ? t.noNotificationsYet
                   : filter === 'unread'
-                  ? "You don't have any unread notifications."
-                  : "You don't have any read notifications."}
+                  ? t.noUnreadNotifications
+                  : t.noReadNotifications}
               </p>
             </div>
           </Card>
@@ -270,7 +351,9 @@ const Notifications = () => {
                           : 'info'
                       }
                     >
-                      {notification.priority}
+                      {notification.priority === 'urgent' ? t.urgent :
+                       notification.priority === 'high' ? t.high :
+                       notification.priority}
                     </Badge>
                   )}
                 </div>
@@ -289,7 +372,7 @@ const Notifications = () => {
                             onClick={() => navigate(notification.actionUrl)}
                             className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
                           >
-                            {notification.actionText || 'View Details'}
+                            {notification.actionText || t.viewDetails}
                             <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>
@@ -300,7 +383,7 @@ const Notifications = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm('Are you sure you want to delete this notification?')) {
+                            if (confirm(t.deleteConfirm)) {
                               deleteNotificationMutation.mutate(notification._id);
                               setExpandedNotification(null);
                             }
@@ -308,7 +391,7 @@ const Notifications = () => {
                           className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center gap-2"
                         >
                           <Trash2 className="w-4 h-4" />
-                          Delete
+                          {t.delete}
                         </button>
                       </div>
                     </div>
@@ -329,7 +412,7 @@ const Notifications = () => {
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
           >
-            Previous
+            {t.previous}
           </Button>
           <div className="flex items-center gap-2">
             {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
@@ -352,7 +435,7 @@ const Notifications = () => {
             disabled={page === pages}
             onClick={() => setPage(page + 1)}
           >
-            Next
+            {t.next}
           </Button>
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
@@ -8,9 +8,64 @@ import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 
+const translations = {
+  en: {
+    checkYourEmail: 'Check Your Email',
+    passwordResetSent: 'We\'ve sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.',
+    checkSpamFolder: 'If you don\'t see the email, please check your spam folder.',
+    backToLogin: 'Back to Login',
+    forgotPassword: 'Forgot Password?',
+    enterEmailReset: 'Enter your email address and we\'ll send you a link to reset your password.',
+    emailAddress: 'Email Address',
+    emailPlaceholder: 'your@email.com',
+    emailRequired: 'Email is required',
+    invalidEmail: 'Invalid email address',
+    sendResetLink: 'Send Reset Link',
+    unableToSend: 'Unable to send password reset email. Please try again.',
+    noAccountFound: 'No account found with this email address.',
+  },
+  it: {
+    checkYourEmail: 'Controlla la Tua Email',
+    passwordResetSent: 'Abbiamo inviato un link per reimpostare la password al tuo indirizzo email. Controlla la tua casella di posta e segui le istruzioni per reimpostare la password.',
+    checkSpamFolder: 'Se non vedi l\'email, controlla la cartella spam.',
+    backToLogin: 'Torna al Login',
+    forgotPassword: 'Password Dimenticata?',
+    enterEmailReset: 'Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.',
+    emailAddress: 'Indirizzo Email',
+    emailPlaceholder: 'tua@email.com',
+    emailRequired: 'L\'email è obbligatoria',
+    invalidEmail: 'Indirizzo email non valido',
+    sendResetLink: 'Invia Link di Reset',
+    unableToSend: 'Impossibile inviare l\'email di reset password. Riprova.',
+    noAccountFound: 'Nessun account trovato con questo indirizzo email.',
+  },
+};
+
 const ForgotPassword = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
@@ -21,7 +76,7 @@ const ForgotPassword = () => {
       setError('');
     },
     onError: (err) => {
-      let errorMessage = 'Unable to send password reset email. Please try again.';
+      let errorMessage = t.unableToSend;
       
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
@@ -30,7 +85,7 @@ const ForgotPassword = () => {
       }
 
       if (err.response?.status === 404) {
-        errorMessage = 'No account found with this email address.';
+        errorMessage = t.noAccountFound;
       }
 
       setError(errorMessage);
@@ -52,19 +107,19 @@ const ForgotPassword = () => {
               <CheckCircle className="h-10 w-10 text-green-600" />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-              Check Your Email
+              {t.checkYourEmail}
             </h2>
             <p className="text-gray-600 mb-6">
-              We've sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.
+              {t.passwordResetSent}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              If you don't see the email, please check your spam folder.
+              {t.checkSpamFolder}
             </p>
             <div className="space-y-3">
               <Link to="/login">
                 <Button variant="primary" className="w-full">
                   <ArrowLeft className="w-4 h-4 mr-2 inline" />
-                  Back to Login
+                  {t.backToLogin}
                 </Button>
               </Link>
             </div>
@@ -82,10 +137,10 @@ const ForgotPassword = () => {
             <Mail className="h-6 w-6 text-primary-600" />
           </div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Forgot Password?
+            {t.forgotPassword}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
+            {t.enterEmailReset}
           </p>
         </div>
 
@@ -95,15 +150,15 @@ const ForgotPassword = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            label="Email Address"
+            label={t.emailAddress}
             type="email"
-            placeholder="your@email.com"
+            placeholder={t.emailPlaceholder}
             error={errors.email?.message}
             {...register('email', {
-              required: 'Email is required',
+              required: t.emailRequired,
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: 'Invalid email address',
+                message: t.invalidEmail,
               },
             })}
           />
@@ -115,13 +170,13 @@ const ForgotPassword = () => {
             loading={forgotPasswordMutation.isPending}
             disabled={forgotPasswordMutation.isPending}
           >
-            Send Reset Link
+            {t.sendResetLink}
           </Button>
 
           <div className="text-center">
             <Link to="/login" className="text-sm font-medium text-primary-600 hover:text-primary-500 flex items-center justify-center gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Login
+              {t.backToLogin}
             </Link>
           </div>
         </form>

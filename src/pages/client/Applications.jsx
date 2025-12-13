@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '../../services/applicationService';
 import { authService } from '../../services/authService';
+import { packageService } from '../../services/packageService';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -16,8 +17,64 @@ import {
   Briefcase,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading applications...',
+    failedToLoad: 'Failed to load applications: {error}',
+    jobApplications: 'Job Applications',
+    reviewGrouped: 'Review applications grouped by job posting',
+    availablePoints: 'Available Points',
+    pointsPerContact: '10 points per contact',
+    getMorePoints: 'Get More Points',
+    insufficientPoints: 'You have insufficient points to unlock student contacts. Purchase a package to continue viewing applicant details.',
+    noApplicationsYet: 'No applications received yet.',
+    applicants: 'Applicant',
+    applicantsPlural: 'Applicants',
+    viewJob: 'View Job',
+    viewAllApplications: 'View All Applications',
+  },
+  it: {
+    loading: 'Caricamento candidature...',
+    failedToLoad: 'Impossibile caricare le candidature: {error}',
+    jobApplications: 'Candidature di Lavoro',
+    reviewGrouped: 'Rivedi le candidature raggruppate per annuncio di lavoro',
+    availablePoints: 'Punti Disponibili',
+    pointsPerContact: '10 punti per contatto',
+    getMorePoints: 'Ottieni Altri Punti',
+    insufficientPoints: 'Hai punti insufficienti per sbloccare i contatti degli studenti. Acquista un pacchetto per continuare a visualizzare i dettagli dei candidati.',
+    noApplicationsYet: 'Nessuna candidatura ricevuta ancora.',
+    applicants: 'Candidato',
+    applicantsPlural: 'Candidati',
+    viewJob: 'Visualizza Lavoro',
+    viewAllApplications: 'Visualizza Tutte le Candidature',
+  },
+};
+
 const Applications = () => {
   const navigate = useNavigate();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch applications for all jobs
   const { data: applicationsData, isLoading: loadingApplications, error: applicationsError } = useQuery({
@@ -75,14 +132,14 @@ const Applications = () => {
   }, [applicationsData]);
 
   if (loadingApplications || loadingPoints) {
-    return <Loading text="Loading applications..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (applicationsError) {
     return (
       <Alert
         type="error"
-        message={`Failed to load applications: ${applicationsError.response?.data?.message || applicationsError.message}`}
+        message={t.failedToLoad.replace('{error}', applicationsError.response?.data?.message || applicationsError.message)}
       />
     );
   }
@@ -96,24 +153,24 @@ const Applications = () => {
       {/* Header with Points */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
-          <p className="text-gray-600 mt-1">Review applications grouped by job posting</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t.jobApplications}</h1>
+          <p className="text-gray-600 mt-1">{t.reviewGrouped}</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="bg-primary-50 border border-primary-200 rounded-lg px-4 py-2">
-            <p className="text-sm text-primary-600 font-medium">Available Points</p>
+            <p className="text-sm text-primary-600 font-medium">{t.availablePoints}</p>
             <p className="text-2xl font-bold text-primary-700">{pointsRemaining}</p>
-            <p className="text-xs text-primary-500">10 points per contact</p>
+            <p className="text-xs text-primary-500">{t.pointsPerContact}</p>
           </div>
           <Button variant="primary" onClick={() => navigate('/client/packages')}>
-            Get More Points
+            {t.getMorePoints}
           </Button>
         </div>
       </div>
 
       {/* Low Points Warning */}
       {pointsRemaining < 10 && (
-        <Alert type="warning" message="You have insufficient points to unlock student contacts. Purchase a package to continue viewing applicant details." />
+        <Alert type="warning" message={t.insufficientPoints} />
       )}
 
       {/* Grouped Applications by Job */}
@@ -121,7 +178,7 @@ const Applications = () => {
         <Card>
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600 mb-4">No applications received yet.</p>
+            <p className="text-gray-600 mb-4">{t.noApplicationsYet}</p>
      
           </div>
         </Card>
@@ -149,14 +206,16 @@ const Applications = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="success">{applications.length} Applicant{applications.length !== 1 ? 's' : ''}</Badge>
+                  <Badge variant="success">
+                    {applications.length} {applications.length !== 1 ? t.applicantsPlural : t.applicants}
+                  </Badge>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/client/jobs/${job._id}`)}
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    View Job
+                    {t.viewJob}
                   </Button>
                   <Button
                     variant="primary"
@@ -164,7 +223,7 @@ const Applications = () => {
                     onClick={() => navigate(`/client/jobs/${job._id}/applications`)}
                   >
                     <FileText className="w-4 h-4 mr-2" />
-                    View All Applications
+                    {t.viewAllApplications}
                   </Button>
                 </div>
               </div>

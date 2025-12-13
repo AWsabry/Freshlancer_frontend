@@ -280,6 +280,291 @@ const COUNTRY_CODE_OPTIONS = [
   { value: '+968', label: '+968 (Oman)' },
 ];
 
+const translations = {
+  en: {
+    createAccount: 'Create your account',
+    step1of2: 'Step 1 of 2: Basic Information',
+    step2of2: 'Step 2 of 2: Complete Your Profile',
+    fullName: 'Full Name',
+    fullNamePlaceholder: 'John Doe',
+    fullNameRequired: 'Please enter your full name',
+    emailAddress: 'Email Address',
+    emailPlaceholder: 'your@email.com',
+    emailRequired: 'Please enter your email address',
+    invalidEmail: 'Please enter a valid email address (e.g., name@example.com)',
+    password: 'Password',
+    passwordRequired: 'Please create a password',
+    passwordMinLength: 'Your password must be at least 8 characters long',
+    confirmPassword: 'Confirm Password',
+    confirmPasswordRequired: 'Please confirm your password',
+    passwordsDoNotMatch: 'The passwords you entered do not match. Please try again.',
+    iAmA: 'I am a...',
+    roleRequired: 'Please select whether you\'re a student or client',
+    studentLookingForWork: 'Student - Looking for work',
+    clientHiringStudents: 'Client - Hiring students',
+    completeAllFields: 'Please complete all required fields to continue',
+    countryOfStudy: 'Country of Study',
+    selectCountryOfStudy: 'Select country of study',
+    countryOfStudyRequired: 'Please select the country where you study',
+    autoConfigured: 'Auto-configured based on your country:',
+    phoneCode: 'Phone Code:',
+    currency: 'Currency:',
+    nationality: 'Nationality',
+    selectNationality: 'Select your nationality',
+    nationalityRequired: 'Please select your nationality',
+    gender: 'Gender',
+    selectGender: 'Select your gender',
+    genderRequired: 'Please select your gender',
+    male: 'Male',
+    female: 'Female',
+    phoneNumber: 'Phone Number',
+    code: 'Code',
+    countryCodeRequired: 'Please select your country code',
+    phoneNumberRequired: 'Please enter your phone number',
+    invalidPhoneNumber: 'Please enter a valid phone number with 7 to 15 digits',
+    countryCodeAutoSet: 'Country code is automatically set based on your country of study',
+    university: 'University',
+    universityPlaceholder: 'University of...',
+    universityRequired: 'Please enter your university name',
+    major: 'Major',
+    majorPlaceholder: 'Computer Science',
+    majorRequired: 'Please enter your field of study or major',
+    expectedGraduationYear: 'Expected Graduation Year',
+    graduationYearPlaceholder: '2025',
+    graduationYearRequired: 'Please enter your expected graduation year',
+    invalidGraduationYear: 'Please enter a valid graduation year',
+    experienceLevel: 'Experience Level',
+    selectExperienceLevel: 'Select your experience level',
+    experienceLevelRequired: 'Please select your experience level',
+    beginner: 'Beginner',
+    intermediate: 'Intermediate',
+    advanced: 'Advanced',
+    expert: 'Expert',
+    country: 'Country',
+    selectCountry: 'Select your country',
+    countryRequired: 'Please select your country',
+    industry: 'Industry',
+    selectIndustry: 'Select your industry',
+    technology: 'Technology',
+    ecommerce: 'E-commerce',
+    healthcare: 'Healthcare',
+    finance: 'Finance',
+    education: 'Education',
+    marketing: 'Marketing',
+    realEstate: 'Real Estate',
+    manufacturing: 'Manufacturing',
+    consulting: 'Consulting',
+    nonProfit: 'Non-profit',
+    other: 'Other',
+    specifyIndustry: 'Please specify your industry',
+    enterIndustry: 'Enter your industry',
+    specifyIndustryRequired: 'Please specify your industry',
+    yearsOfExperience: 'Years of Experience',
+    yearsOfExperiencePlaceholder: '5',
+    yearsOfExperienceMin: 'Years of experience must be 0 or greater',
+    yearsOfExperienceMax: 'Years of experience must be 50 or less',
+    age: 'Age',
+    agePlaceholder: '25',
+    ageRequired: 'Please enter your age',
+    ageMin: 'You must be at least 18 years old',
+    ageMax: 'Please enter a valid age',
+    howDidYouHear: 'How did you hear about us?',
+    selectOption: 'Select an option',
+    howDidYouHearRequired: 'Please select how you heard about us',
+    googleSearch: 'Google Search',
+    socialMedia: 'Social Media',
+    friendColleague: 'Friend/Colleague',
+    universityCollege: 'University/College',
+    advertisement: 'Advertisement',
+    blogArticle: 'Blog/Article',
+    specifyHowYouHeard: 'Please specify how you heard about us',
+    enterDetails: 'Enter details',
+    iAmStartup: 'I am a startup',
+    startupInformation: 'Startup Information',
+    startupName: 'Startup Name',
+    startupNamePlaceholder: 'My Awesome Startup',
+    startupNameRequired: 'Startup name is required',
+    yourPosition: 'Your Position',
+    positionPlaceholder: 'CEO, Founder, CTO, etc.',
+    positionRequired: 'Your position is required',
+    numberOfEmployees: 'Number of Employees',
+    selectNumberOfEmployees: 'Select number of employees',
+    numberOfEmployeesRequired: 'Number of employees is required',
+    employees1_5: '1-5 employees',
+    employees6_10: '6-10 employees',
+    employees11_20: '11-20 employees',
+    employees21_50: '21-50 employees',
+    employees51_100: '51-100 employees',
+    employees100Plus: '100+ employees',
+    startupIndustry: 'Startup Industry',
+    selectStartupIndustry: 'Select your startup industry',
+    startupIndustryRequired: 'Startup industry is required',
+    specifyStartupIndustry: 'Please specify your startup industry',
+    startupStage: 'Startup Stage',
+    selectStartupStage: 'Select your startup stage',
+    startupStageRequired: 'Startup stage is required',
+    idea: 'Idea',
+    mvp: 'MVP',
+    earlyStage: 'Early Stage',
+    growth: 'Growth',
+    scale: 'Scale',
+    back: 'Back',
+    continue: 'Continue',
+    createAccount: 'Create Account',
+    alreadyHaveAccount: 'Already have an account?',
+    signIn: 'Sign in',
+    couldNotCreateAccount: 'We couldn\'t create your account. Please check your information and try again.',
+    emailAlreadyRegistered: 'This email address is already registered. Please sign in or use a different email.',
+    phoneRequired: 'Please enter your phone number to continue.',
+    nationalityRequiredError: 'Please select your nationality to continue.',
+    passwordIssue: 'There was an issue with your password. Please make sure it\'s at least 8 characters long.',
+    invalidEmailError: 'Please enter a valid email address.',
+    unableToConnect: 'Unable to connect to our servers. Please check your internet connection and try again.',
+    experienceLevelRequiredError: 'Experience level is required',
+  },
+  it: {
+    createAccount: 'Crea il tuo account',
+    step1of2: 'Passo 1 di 2: Informazioni Base',
+    step2of2: 'Passo 2 di 2: Completa il Tuo Profilo',
+    fullName: 'Nome Completo',
+    fullNamePlaceholder: 'Mario Rossi',
+    fullNameRequired: 'Inserisci il tuo nome completo',
+    emailAddress: 'Indirizzo Email',
+    emailPlaceholder: 'tua@email.com',
+    emailRequired: 'Inserisci il tuo indirizzo email',
+    invalidEmail: 'Inserisci un indirizzo email valido (es. nome@esempio.com)',
+    password: 'Password',
+    passwordRequired: 'Crea una password',
+    passwordMinLength: 'La tua password deve essere di almeno 8 caratteri',
+    confirmPassword: 'Conferma Password',
+    confirmPasswordRequired: 'Conferma la tua password',
+    passwordsDoNotMatch: 'Le password che hai inserito non corrispondono. Riprova.',
+    iAmA: 'Sono un...',
+    roleRequired: 'Seleziona se sei uno studente o un cliente',
+    studentLookingForWork: 'Studente - Cerco lavoro',
+    clientHiringStudents: 'Cliente - Assumo studenti',
+    completeAllFields: 'Completa tutti i campi obbligatori per continuare',
+    countryOfStudy: 'Paese di Studio',
+    selectCountryOfStudy: 'Seleziona il paese di studio',
+    countryOfStudyRequired: 'Seleziona il paese dove studi',
+    autoConfigured: 'Configurato automaticamente in base al tuo paese:',
+    phoneCode: 'Prefisso Telefonico:',
+    currency: 'Valuta:',
+    nationality: 'Nazionalità',
+    selectNationality: 'Seleziona la tua nazionalità',
+    nationalityRequired: 'Seleziona la tua nazionalità',
+    gender: 'Genere',
+    selectGender: 'Seleziona il tuo genere',
+    genderRequired: 'Seleziona il tuo genere',
+    male: 'Maschio',
+    female: 'Femmina',
+    phoneNumber: 'Numero di Telefono',
+    code: 'Codice',
+    countryCodeRequired: 'Seleziona il prefisso del tuo paese',
+    phoneNumberRequired: 'Inserisci il tuo numero di telefono',
+    invalidPhoneNumber: 'Inserisci un numero di telefono valido con 7-15 cifre',
+    countryCodeAutoSet: 'Il prefisso è impostato automaticamente in base al tuo paese di studio',
+    university: 'Università',
+    universityPlaceholder: 'Università di...',
+    universityRequired: 'Inserisci il nome della tua università',
+    major: 'Corso di Laurea',
+    majorPlaceholder: 'Informatica',
+    majorRequired: 'Inserisci il tuo campo di studio o corso di laurea',
+    expectedGraduationYear: 'Anno di Laurea Previsto',
+    graduationYearPlaceholder: '2025',
+    graduationYearRequired: 'Inserisci il tuo anno di laurea previsto',
+    invalidGraduationYear: 'Inserisci un anno di laurea valido',
+    experienceLevel: 'Livello di Esperienza',
+    selectExperienceLevel: 'Seleziona il tuo livello di esperienza',
+    experienceLevelRequired: 'Seleziona il tuo livello di esperienza',
+    beginner: 'Principiante',
+    intermediate: 'Intermedio',
+    advanced: 'Avanzato',
+    expert: 'Esperto',
+    country: 'Paese',
+    selectCountry: 'Seleziona il tuo paese',
+    countryRequired: 'Seleziona il tuo paese',
+    industry: 'Settore',
+    selectIndustry: 'Seleziona il tuo settore',
+    technology: 'Tecnologia',
+    ecommerce: 'E-commerce',
+    healthcare: 'Sanità',
+    finance: 'Finanza',
+    education: 'Istruzione',
+    marketing: 'Marketing',
+    realEstate: 'Immobiliare',
+    manufacturing: 'Manifatturiero',
+    consulting: 'Consulenza',
+    nonProfit: 'Non profit',
+    other: 'Altro',
+    specifyIndustry: 'Specifica il tuo settore',
+    enterIndustry: 'Inserisci il tuo settore',
+    specifyIndustryRequired: 'Specifica il tuo settore',
+    yearsOfExperience: 'Anni di Esperienza',
+    yearsOfExperiencePlaceholder: '5',
+    yearsOfExperienceMin: 'Gli anni di esperienza devono essere 0 o maggiori',
+    yearsOfExperienceMax: 'Gli anni di esperienza devono essere 50 o meno',
+    age: 'Età',
+    agePlaceholder: '25',
+    ageRequired: 'Inserisci la tua età',
+    ageMin: 'Devi avere almeno 18 anni',
+    ageMax: 'Inserisci un\'età valida',
+    howDidYouHear: 'Come hai saputo di noi?',
+    selectOption: 'Seleziona un\'opzione',
+    howDidYouHearRequired: 'Seleziona come hai saputo di noi',
+    googleSearch: 'Ricerca Google',
+    socialMedia: 'Social Media',
+    friendColleague: 'Amico/Collega',
+    universityCollege: 'Università/Collegio',
+    advertisement: 'Pubblicità',
+    blogArticle: 'Blog/Articolo',
+    specifyHowYouHeard: 'Specifica come hai saputo di noi',
+    enterDetails: 'Inserisci dettagli',
+    iAmStartup: 'Sono una startup',
+    startupInformation: 'Informazioni Startup',
+    startupName: 'Nome Startup',
+    startupNamePlaceholder: 'La Mia Fantastica Startup',
+    startupNameRequired: 'Il nome della startup è obbligatorio',
+    yourPosition: 'La Tua Posizione',
+    positionPlaceholder: 'CEO, Fondatore, CTO, ecc.',
+    positionRequired: 'La tua posizione è obbligatoria',
+    numberOfEmployees: 'Numero di Dipendenti',
+    selectNumberOfEmployees: 'Seleziona il numero di dipendenti',
+    numberOfEmployeesRequired: 'Il numero di dipendenti è obbligatorio',
+    employees1_5: '1-5 dipendenti',
+    employees6_10: '6-10 dipendenti',
+    employees11_20: '11-20 dipendenti',
+    employees21_50: '21-50 dipendenti',
+    employees51_100: '51-100 dipendenti',
+    employees100Plus: '100+ dipendenti',
+    startupIndustry: 'Settore Startup',
+    selectStartupIndustry: 'Seleziona il settore della tua startup',
+    startupIndustryRequired: 'Il settore della startup è obbligatorio',
+    specifyStartupIndustry: 'Specifica il settore della tua startup',
+    startupStage: 'Fase Startup',
+    selectStartupStage: 'Seleziona la fase della tua startup',
+    startupStageRequired: 'La fase della startup è obbligatoria',
+    idea: 'Idea',
+    mvp: 'MVP',
+    earlyStage: 'Fase Iniziale',
+    growth: 'Crescita',
+    scale: 'Scala',
+    back: 'Indietro',
+    continue: 'Continua',
+    createAccount: 'Crea Account',
+    alreadyHaveAccount: 'Hai già un account?',
+    signIn: 'Accedi',
+    couldNotCreateAccount: 'Impossibile creare il tuo account. Controlla le tue informazioni e riprova.',
+    emailAlreadyRegistered: 'Questo indirizzo email è già registrato. Accedi o usa un\'email diversa.',
+    phoneRequired: 'Inserisci il tuo numero di telefono per continuare.',
+    nationalityRequiredError: 'Seleziona la tua nazionalità per continuare.',
+    passwordIssue: 'C\'è stato un problema con la tua password. Assicurati che sia di almeno 8 caratteri.',
+    invalidEmailError: 'Inserisci un indirizzo email valido.',
+    unableToConnect: 'Impossibile connettersi ai nostri server. Controlla la tua connessione internet e riprova.',
+    experienceLevelRequiredError: 'Il livello di esperienza è obbligatorio',
+  },
+};
+
 const Register = () => {
   const navigate = useNavigate();
   const { register: registerUser } = useAuthStore();
@@ -287,6 +572,28 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('');
   const [step, setStep] = useState(1); // Step 1: Basic info, Step 2: Role-specific info
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
@@ -331,13 +638,13 @@ const Register = () => {
     setError('');
     // Validate basic fields are filled
     if (!data.name || !data.email || !data.password || !data.passwordConfirm || !data.role) {
-      setError('Please complete all required fields to continue');
+      setError(t.completeAllFields);
       return;
     }
 
     // Check password match
     if (data.password !== data.passwordConfirm) {
-      setError('The passwords you entered do not match. Please try again.');
+      setError(t.passwordsDoNotMatch);
       return;
     }
 
@@ -403,7 +710,7 @@ const Register = () => {
         
         // Ensure experienceLevel is provided
         if (!userData.studentProfile.experienceLevel) {
-          throw new Error('Experience level is required');
+          throw new Error(t.experienceLevelRequiredError);
         }
         
         // Remove graduationYear if it's invalid
@@ -467,7 +774,7 @@ const Register = () => {
       }
     } catch (err) {
       // Extract user-friendly error message
-      let errorMessage = 'We couldn\'t create your account. Please check your information and try again.';
+      let errorMessage = t.couldNotCreateAccount;
 
       if (err.response?.data?.message) {
         // Make backend error messages more user-friendly
@@ -475,15 +782,15 @@ const Register = () => {
         
         // Convert technical messages to user-friendly ones
         if (backendMessage.includes('already registered') || backendMessage.includes('already exists')) {
-          errorMessage = 'This email address is already registered. Please sign in or use a different email.';
+          errorMessage = t.emailAlreadyRegistered;
         } else if (backendMessage.includes('Phone number is required')) {
-          errorMessage = 'Please enter your phone number to continue.';
+          errorMessage = t.phoneRequired;
         } else if (backendMessage.includes('Nationality is required')) {
-          errorMessage = 'Please select your nationality to continue.';
+          errorMessage = t.nationalityRequiredError;
         } else if (backendMessage.includes('password')) {
-          errorMessage = 'There was an issue with your password. Please make sure it\'s at least 8 characters long.';
+          errorMessage = t.passwordIssue;
         } else if (backendMessage.includes('email')) {
-          errorMessage = 'Please enter a valid email address.';
+          errorMessage = t.invalidEmailError;
         } else {
           errorMessage = backendMessage;
         }
@@ -493,7 +800,7 @@ const Register = () => {
 
       // Handle network errors
       if (!err.response && err.message === 'Network Error') {
-        errorMessage = 'Unable to connect to our servers. Please check your internet connection and try again.';
+        errorMessage = t.unableToConnect;
       }
 
       setError(errorMessage);
@@ -503,8 +810,8 @@ const Register = () => {
   };
 
   const roleOptions = [
-    { value: 'student', label: 'Student - Looking for work' },
-    { value: 'client', label: 'Client - Hiring students' },
+    { value: 'student', label: t.studentLookingForWork },
+    { value: 'client', label: t.clientHiringStudents },
   ];
 
   return (
@@ -512,10 +819,10 @@ const Register = () => {
       <div className="max-w-2xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            {t.createAccount}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {step === 1 ? 'Step 1 of 2: Basic Information' : 'Step 2 of 2: Complete Your Profile'}
+            {step === 1 ? t.step1of2 : t.step2of2}
           </p>
         </div>
 
@@ -528,60 +835,60 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Input
-                  label="Full Name"
-                  placeholder="John Doe"
+                  label={t.fullName}
+                  placeholder={t.fullNamePlaceholder}
                   error={errors.name?.message}
-                  {...register('name', { required: 'Please enter your full name' })}
+                  {...register('name', { required: t.fullNameRequired })}
                 />
               </div>
 
               <div className="md:col-span-2">
                 <Input
-                  label="Email Address"
+                  label={t.emailAddress}
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t.emailPlaceholder}
                   error={errors.email?.message}
                   {...register('email', {
-                    required: 'Please enter your email address',
+                    required: t.emailRequired,
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Please enter a valid email address (e.g., name@example.com)',
+                      message: t.invalidEmail,
                     },
                   })}
                 />
               </div>
 
               <Input
-                label="Password"
+                label={t.password}
                 type="password"
                 placeholder="••••••••"
                 error={errors.password?.message}
                   {...register('password', {
-                    required: 'Please create a password',
+                    required: t.passwordRequired,
                     minLength: {
                       value: 8,
-                      message: 'Your password must be at least 8 characters long',
+                      message: t.passwordMinLength,
                     },
                   })}
               />
 
               <Input
-                label="Confirm Password"
+                label={t.confirmPassword}
                 type="password"
                 placeholder="••••••••"
                 error={errors.passwordConfirm?.message}
                   {...register('passwordConfirm', {
-                    required: 'Please confirm your password',
-                    validate: (value) => value === password || 'The passwords you entered do not match. Please try again.',
+                    required: t.confirmPasswordRequired,
+                    validate: (value) => value === password || t.passwordsDoNotMatch,
                   })}
               />
 
               <div className="md:col-span-2">
                 <Select
-                  label="I am a..."
+                  label={t.iAmA}
                   options={roleOptions}
                   error={errors.role?.message}
-                  {...register('role', { required: 'Please select whether you\'re a student or client' })}
+                  {...register('role', { required: t.roleRequired })}
                 />
               </div>
             </div>
@@ -591,22 +898,22 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Select
-                  label="Country of Study"
-                  placeholder="Select country of study"
+                  label={t.countryOfStudy}
+                  placeholder={t.selectCountryOfStudy}
                   error={errors.countryOfStudy?.message}
                   {...register('countryOfStudy', {
-                    required: 'Please select the country where you study',
+                    required: t.countryOfStudyRequired,
                   })}
                   options={COUNTRY_OPTIONS}
                 />
                 {countryOfStudy && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-xs text-blue-800">
-                      <strong>Auto-configured based on your country:</strong>
+                      <strong>{t.autoConfigured}</strong>
                     </p>
                     <ul className="text-xs text-blue-700 mt-1 space-y-1">
-                      <li>• Phone Code: {COUNTRY_PHONE_CODE_MAP[countryOfStudy] || '+1'}</li>
-                      <li>• Currency: {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'USD'}</li>
+                      <li>• {t.phoneCode} {COUNTRY_PHONE_CODE_MAP[countryOfStudy] || '+1'}</li>
+                      <li>• {t.currency} {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'USD'}</li>
                     </ul>
                   </div>
                 )}
@@ -614,39 +921,39 @@ const Register = () => {
 
               <div className="md:col-span-2">
                 <Select
-                  label="Nationality"
-                  placeholder="Select your nationality"
+                  label={t.nationality}
+                  placeholder={t.selectNationality}
                   error={errors.nationality?.message}
                   {...register('nationality', {
-                    required: 'Please select your nationality',
+                    required: t.nationalityRequired,
                   })}
                   options={NATIONALITY_OPTIONS}
                 />
               </div>
 
               <Select
-                label="Gender"
-                placeholder="Select your gender"
+                label={t.gender}
+                placeholder={t.selectGender}
                 error={errors.gender?.message}
                 {...register('gender', {
-                  required: 'Please select your gender',
+                  required: t.genderRequired,
                 })}
                 options={[
-                  { value: 'Male', label: 'Male' },
-                  { value: 'Female', label: 'Female' },
+                  { value: 'Male', label: t.male },
+                  { value: 'Female', label: t.female },
                 ]}
               />
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number *
+                  {t.phoneNumber} *
                 </label>
                 <div className="flex gap-2">
                   <div className="w-1/3">
                     <Input
-                      placeholder="Code"
+                      placeholder={t.code}
                       {...register('phoneCountryCode', {
-                        required: 'Please select your country code',
+                        required: t.countryCodeRequired,
                       })}
                       disabled
                       className="bg-gray-100 cursor-not-allowed"
@@ -658,62 +965,62 @@ const Register = () => {
                       placeholder="1234567890"
                       error={errors.phoneNumber?.message}
                       {...register('phoneNumber', {
-                        required: 'Please enter your phone number',
+                        required: t.phoneNumberRequired,
                         pattern: {
                           value: /^[0-9]{7,15}$/,
-                          message: 'Please enter a valid phone number with 7 to 15 digits',
+                          message: t.invalidPhoneNumber,
                         },
                       })}
                     />
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Country code is automatically set based on your country of study
+                  {t.countryCodeAutoSet}
                 </p>
               </div>
 
               <div className="md:col-span-2">
                 <Input
-                  label="University"
-                  placeholder="University of..."
+                  label={t.university}
+                  placeholder={t.universityPlaceholder}
                   error={errors.university?.message}
-                  {...register('university', { required: 'Please enter your university name' })}
+                  {...register('university', { required: t.universityRequired })}
                 />
               </div>
 
               <Input
-                label="Major"
-                placeholder="Computer Science"
+                label={t.major}
+                placeholder={t.majorPlaceholder}
                 error={errors.major?.message}
-                  {...register('major', { required: 'Please enter your field of study or major' })}
+                  {...register('major', { required: t.majorRequired })}
               />
 
               <Input
-                label="Expected Graduation Year"
+                label={t.expectedGraduationYear}
                 type="number"
-                placeholder="2025"
+                placeholder={t.graduationYearPlaceholder}
                 error={errors.graduationYear?.message}
                   {...register('graduationYear', {
-                    required: 'Please enter your expected graduation year',
+                    required: t.graduationYearRequired,
                     min: {
                       value: new Date().getFullYear(),
-                      message: 'Please enter a valid graduation year',
+                      message: t.invalidGraduationYear,
                     },
                   })}
               />
 
               <Select
-                label="Experience Level"
-                placeholder="Select your experience level"
+                label={t.experienceLevel}
+                placeholder={t.selectExperienceLevel}
                 error={errors.experienceLevel?.message}
                 {...register('experienceLevel', {
-                  required: 'Please select your experience level',
+                  required: t.experienceLevelRequired,
                 })}
                 options={[
-                  { value: 'Beginner', label: 'Beginner' },
-                  { value: 'Intermediate', label: 'Intermediate' },
-                  { value: 'Advanced', label: 'Advanced' },
-                  { value: 'Expert', label: 'Expert' },
+                  { value: 'Beginner', label: t.beginner },
+                  { value: 'Intermediate', label: t.intermediate },
+                  { value: 'Advanced', label: t.advanced },
+                  { value: 'Expert', label: t.expert },
                 ]}
               />
             </div>
@@ -723,11 +1030,11 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Select
-                  label="Country"
-                  placeholder="Select your country"
+                  label={t.country}
+                  placeholder={t.selectCountry}
                   error={errors.country?.message}
                   {...register('country', {
-                    required: 'Please select your country',
+                    required: t.countryRequired,
                   })}
                   options={COUNTRY_OPTIONS}
                 />
@@ -735,22 +1042,22 @@ const Register = () => {
 
               <div className="md:col-span-2">
                 <Select
-                  label="Industry"
-                  placeholder="Select your industry"
+                  label={t.industry}
+                  placeholder={t.selectIndustry}
                   error={errors.industry?.message}
                   {...register('industry')}
                   options={[
-                    { value: 'Technology', label: 'Technology' },
-                    { value: 'E-commerce', label: 'E-commerce' },
-                    { value: 'Healthcare', label: 'Healthcare' },
-                    { value: 'Finance', label: 'Finance' },
-                    { value: 'Education', label: 'Education' },
-                    { value: 'Marketing', label: 'Marketing' },
-                    { value: 'Real Estate', label: 'Real Estate' },
-                    { value: 'Manufacturing', label: 'Manufacturing' },
-                    { value: 'Consulting', label: 'Consulting' },
-                    { value: 'Non-profit', label: 'Non-profit' },
-                    { value: 'Other', label: 'Other' },
+                    { value: 'Technology', label: t.technology },
+                    { value: 'E-commerce', label: t.ecommerce },
+                    { value: 'Healthcare', label: t.healthcare },
+                    { value: 'Finance', label: t.finance },
+                    { value: 'Education', label: t.education },
+                    { value: 'Marketing', label: t.marketing },
+                    { value: 'Real Estate', label: t.realEstate },
+                    { value: 'Manufacturing', label: t.manufacturing },
+                    { value: 'Consulting', label: t.consulting },
+                    { value: 'Non-profit', label: t.nonProfit },
+                    { value: 'Other', label: t.other },
                   ]}
                 />
               </div>
@@ -758,67 +1065,67 @@ const Register = () => {
               {industry === 'Other' && (
                 <div className="md:col-span-2">
                   <Input
-                    label="Please specify your industry"
-                    placeholder="Enter your industry"
+                    label={t.specifyIndustry}
+                    placeholder={t.enterIndustry}
                     error={errors.industryOther?.message}
                     {...register('industryOther', {
-                      required: industry === 'Other' ? 'Please specify your industry' : false,
+                      required: industry === 'Other' ? t.specifyIndustryRequired : false,
                     })}
                   />
                 </div>
               )}
 
               <Input
-                label="Years of Experience"
+                label={t.yearsOfExperience}
                 type="number"
-                placeholder="5"
+                placeholder={t.yearsOfExperiencePlaceholder}
                 error={errors.yearsOfExperience?.message}
                 {...register('yearsOfExperience', {
                   min: {
                     value: 0,
-                    message: 'Years of experience must be 0 or greater',
+                    message: t.yearsOfExperienceMin,
                   },
                   max: {
                     value: 50,
-                    message: 'Years of experience must be 50 or less',
+                    message: t.yearsOfExperienceMax,
                   },
                 })}
               />
 
               <Input
-                label="Age"
+                label={t.age}
                 type="number"
-                placeholder="25"
+                placeholder={t.agePlaceholder}
                 error={errors.age?.message}
                 {...register('age', {
-                  required: 'Please enter your age',
+                  required: t.ageRequired,
                   min: {
                     value: 18,
-                    message: 'You must be at least 18 years old',
+                    message: t.ageMin,
                   },
                   max: {
                     value: 100,
-                    message: 'Please enter a valid age',
+                    message: t.ageMax,
                   },
                 })}
               />
 
               <div className="md:col-span-2">
                 <Select
-                  label="How did you hear about us?"
-                  placeholder="Select an option"
+                  label={t.howDidYouHear}
+                  placeholder={t.selectOption}
                   error={errors.howDidYouHear?.message}
                   {...register('howDidYouHear', {
-                    required: 'Please select how you heard about us',
+                    required: t.howDidYouHearRequired,
                   })}
                   options={[
-                    { value: 'Google Search', label: 'Google Search' },
-                    { value: 'Social Media', label: 'Social Media' },
-                    { value: 'Friend/Colleague', label: 'Friend/Colleague' },
-                    { value: 'University/College', label: 'University/College' },
-                    { value: 'Advertisement', label: 'Advertisement' },
-                    { value: 'Blog/Article', label: 'Blog/Article' },
-                    { value: 'Other', label: 'Other' },
+                    { value: 'Google Search', label: t.googleSearch },
+                    { value: 'Social Media', label: t.socialMedia },
+                    { value: 'Friend/Colleague', label: t.friendColleague },
+                    { value: 'University/College', label: t.universityCollege },
+                    { value: 'Advertisement', label: t.advertisement },
+                    { value: 'Blog/Article', label: t.blogArticle },
+                    { value: 'Other', label: t.other },
                   ]}
                 />
               </div>
@@ -826,11 +1133,11 @@ const Register = () => {
               {howDidYouHear === 'Other' && (
                 <div className="md:col-span-2">
                   <Input
-                    label="Please specify how you heard about us"
-                    placeholder="Enter details"
+                    label={t.specifyHowYouHeard}
+                    placeholder={t.enterDetails}
                     error={errors.howDidYouHearOther?.message}
                     {...register('howDidYouHearOther', {
-                      required: howDidYouHear === 'Other' ? 'Please specify how you heard about us' : false,
+                      required: howDidYouHear === 'Other' ? t.specifyHowYouHeard : false,
                     })}
                   />
                 </div>
@@ -843,77 +1150,77 @@ const Register = () => {
                     {...register('isStartup')}
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">I am a startup</span>
+                  <span className="text-sm text-gray-700">{t.iAmStartup}</span>
                 </label>
               </div>
 
               {isStartup && (
                 <>
                   <div className="md:col-span-2 border-t pt-4 mt-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Startup Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.startupInformation}</h3>
                   </div>
 
                   <div className="md:col-span-2">
                     <Input
-                      label="Startup Name"
-                      placeholder="My Awesome Startup"
+                      label={t.startupName}
+                      placeholder={t.startupNamePlaceholder}
                       error={errors.startupName?.message}
                       {...register('startupName', {
-                        required: isStartup ? 'Startup name is required' : false,
+                        required: isStartup ? t.startupNameRequired : false,
                       })}
                     />
                   </div>
 
                   <div className="md:col-span-2">
                     <Input
-                      label="Your Position"
-                      placeholder="CEO, Founder, CTO, etc."
+                      label={t.yourPosition}
+                      placeholder={t.positionPlaceholder}
                       error={errors.startupPosition?.message}
                       {...register('startupPosition', {
-                        required: isStartup ? 'Your position is required' : false,
+                        required: isStartup ? t.positionRequired : false,
                       })}
                     />
                   </div>
 
                   <div className="md:col-span-2">
                     <Select
-                      label="Number of Employees"
-                      placeholder="Select number of employees"
+                      label={t.numberOfEmployees}
+                      placeholder={t.selectNumberOfEmployees}
                       error={errors.startupNumberOfEmployees?.message}
                       {...register('startupNumberOfEmployees', {
-                        required: isStartup ? 'Number of employees is required' : false,
+                        required: isStartup ? t.numberOfEmployeesRequired : false,
                       })}
                       options={[
-                        { value: '1-5', label: '1-5 employees' },
-                        { value: '6-10', label: '6-10 employees' },
-                        { value: '11-20', label: '11-20 employees' },
-                        { value: '21-50', label: '21-50 employees' },
-                        { value: '51-100', label: '51-100 employees' },
-                        { value: '100+', label: '100+ employees' },
+                        { value: '1-5', label: t.employees1_5 },
+                        { value: '6-10', label: t.employees6_10 },
+                        { value: '11-20', label: t.employees11_20 },
+                        { value: '21-50', label: t.employees21_50 },
+                        { value: '51-100', label: t.employees51_100 },
+                        { value: '100+', label: t.employees100Plus },
                       ]}
                     />
                   </div>
 
                   <div className="md:col-span-2">
                     <Select
-                      label="Startup Industry"
-                      placeholder="Select your startup industry"
+                      label={t.startupIndustry}
+                      placeholder={t.selectStartupIndustry}
                       error={errors.startupIndustry?.message}
                       {...register('startupIndustry', {
-                        required: isStartup ? 'Startup industry is required' : false,
+                        required: isStartup ? t.startupIndustryRequired : false,
                       })}
                       options={[
-                        { value: 'Technology', label: 'Technology' },
-                        { value: 'E-commerce', label: 'E-commerce' },
-                        { value: 'Healthcare', label: 'Healthcare' },
-                        { value: 'Finance', label: 'Finance' },
-                        { value: 'Education', label: 'Education' },
-                        { value: 'Marketing', label: 'Marketing' },
-                        { value: 'Real Estate', label: 'Real Estate' },
-                        { value: 'Manufacturing', label: 'Manufacturing' },
-                        { value: 'Consulting', label: 'Consulting' },
-                        { value: 'Non-profit', label: 'Non-profit' },
-                        { value: 'Other', label: 'Other' },
+                        { value: 'Technology', label: t.technology },
+                        { value: 'E-commerce', label: t.ecommerce },
+                        { value: 'Healthcare', label: t.healthcare },
+                        { value: 'Finance', label: t.finance },
+                        { value: 'Education', label: t.education },
+                        { value: 'Marketing', label: t.marketing },
+                        { value: 'Real Estate', label: t.realEstate },
+                        { value: 'Manufacturing', label: t.manufacturing },
+                        { value: 'Consulting', label: t.consulting },
+                        { value: 'Non-profit', label: t.nonProfit },
+                        { value: 'Other', label: t.other },
                       ]}
                     />
                   </div>
@@ -921,11 +1228,11 @@ const Register = () => {
                   {startupIndustry === 'Other' && (
                     <div className="md:col-span-2">
                       <Input
-                        label="Please specify your startup industry"
-                        placeholder="Enter your industry"
+                        label={t.specifyStartupIndustry}
+                        placeholder={t.enterIndustry}
                         error={errors.startupIndustryOther?.message}
                         {...register('startupIndustryOther', {
-                          required: startupIndustry === 'Other' && isStartup ? 'Please specify your startup industry' : false,
+                          required: startupIndustry === 'Other' && isStartup ? t.specifyStartupIndustry : false,
                         })}
                       />
                     </div>
@@ -933,18 +1240,18 @@ const Register = () => {
 
                   <div className="md:col-span-2">
                     <Select
-                      label="Startup Stage"
-                      placeholder="Select your startup stage"
+                      label={t.startupStage}
+                      placeholder={t.selectStartupStage}
                       error={errors.startupStage?.message}
                       {...register('startupStage', {
-                        required: isStartup ? 'Startup stage is required' : false,
+                        required: isStartup ? t.startupStageRequired : false,
                       })}
                       options={[
-                        { value: 'Idea', label: 'Idea' },
-                        { value: 'MVP', label: 'MVP' },
-                        { value: 'Early Stage', label: 'Early Stage' },
-                        { value: 'Growth', label: 'Growth' },
-                        { value: 'Scale', label: 'Scale' },
+                        { value: 'Idea', label: t.idea },
+                        { value: 'MVP', label: t.mvp },
+                        { value: 'Early Stage', label: t.earlyStage },
+                        { value: 'Growth', label: t.growth },
+                        { value: 'Scale', label: t.scale },
                       ]}
                     />
                   </div>
@@ -961,7 +1268,7 @@ const Register = () => {
                 className="w-full"
                 onClick={() => setStep(1)}
               >
-                Back
+                {t.back}
               </Button>
             )}
             <Button
@@ -971,14 +1278,14 @@ const Register = () => {
               loading={loading}
               disabled={loading}
             >
-              {step === 1 ? 'Continue' : 'Create Account'}
+              {step === 1 ? t.continue : t.createAccount}
             </Button>
           </div>
 
           <div className="text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
+            <span className="text-gray-600">{t.alreadyHaveAccount} </span>
             <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-              Sign in
+              {t.signIn}
             </Link>
           </div>
         </form>

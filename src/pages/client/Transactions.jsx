@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { RefreshCw, Package, Coins } from 'lucide-react';
@@ -7,6 +7,77 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Button from '../../components/common/Button';
 import { transactionService } from '../../services/transactionService';
+
+const translations = {
+  en: {
+    loading: 'Loading your transactions...',
+    unableToLoad: 'Unable to load transactions',
+    checkConnection: 'Please check your connection and try again.',
+    paymentOverview: 'Payment Overview',
+    totalSpent: 'Total Spent',
+    acrossPayments: 'Across {count} successful payments',
+    pointsPurchased: 'Points Purchased',
+    totalPointsFromPackages: 'Total points from all packages',
+    transactions: 'Transactions',
+    totalRecords: 'Total records in your history',
+    lastPayment: 'Last Payment',
+    mostRecentTransaction: 'Most recent transaction',
+    transactionHistory: 'Transaction History',
+    refresh: 'Refresh',
+    noTransactionsYet: 'No transactions yet',
+    noTransactionsMessage: 'Once you purchase a points package, the transaction details will appear here.',
+    description: 'Description',
+    amount: 'Amount',
+    paymentMethod: 'Payment Method',
+    status: 'Status',
+    date: 'Date',
+    reference: 'Reference',
+    pointsPackagePurchase: 'Points Package Purchase',
+    packagePurchase: 'Package purchase',
+    unknown: 'Unknown',
+    needHelp: 'Need help with a payment?',
+    helpMessage: 'If you spot an unfamiliar charge or need a refund, reach out to support with the transaction reference shown above.',
+    succeeded: 'Succeeded',
+    pending: 'Pending',
+    failed: 'Failed',
+    refunded: 'Refunded',
+    completed: 'Completed',
+  },
+  it: {
+    loading: 'Caricamento delle tue transazioni...',
+    unableToLoad: 'Impossibile caricare le transazioni',
+    checkConnection: 'Controlla la tua connessione e riprova.',
+    paymentOverview: 'Riepilogo Pagamenti',
+    totalSpent: 'Totale Speso',
+    acrossPayments: 'Su {count} pagamenti riusciti',
+    pointsPurchased: 'Punti Acquistati',
+    totalPointsFromPackages: 'Punti totali da tutti i pacchetti',
+    transactions: 'Transazioni',
+    totalRecords: 'Record totali nella tua cronologia',
+    lastPayment: 'Ultimo Pagamento',
+    mostRecentTransaction: 'Transazione più recente',
+    transactionHistory: 'Cronologia Transazioni',
+    refresh: 'Aggiorna',
+    noTransactionsYet: 'Nessuna transazione ancora',
+    noTransactionsMessage: 'Una volta acquistato un pacchetto di punti, i dettagli della transazione appariranno qui.',
+    description: 'Descrizione',
+    amount: 'Importo',
+    paymentMethod: 'Metodo di Pagamento',
+    status: 'Stato',
+    date: 'Data',
+    reference: 'Riferimento',
+    pointsPackagePurchase: 'Acquisto Pacchetto Punti',
+    packagePurchase: 'Acquisto pacchetto',
+    unknown: 'Sconosciuto',
+    needHelp: 'Hai bisogno di aiuto con un pagamento?',
+    helpMessage: 'Se noti un addebito non familiare o hai bisogno di un rimborso, contatta il supporto con il riferimento della transazione mostrato sopra.',
+    succeeded: 'Riuscito',
+    pending: 'In Attesa',
+    failed: 'Fallito',
+    refunded: 'Rimborsato',
+    completed: 'Completato',
+  },
+};
 
 const statusStyles = {
   completed: 'bg-green-50 text-green-700 border border-green-100',
@@ -39,6 +110,33 @@ const formatDate = (value) => {
 };
 
 const Transactions = () => {
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
+
   const {
     data,
     isLoading,
@@ -83,15 +181,15 @@ const Transactions = () => {
   }, [transactions]);
 
   if (isLoading) {
-    return <Loading text="Loading your transactions..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (isError) {
     return (
       <Alert
         type="error"
-        title="Unable to load transactions"
-        message="Please check your connection and try again."
+        title={t.unableToLoad}
+        message={t.checkConnection}
         className="max-w-3xl mx-auto"
       />
     );
@@ -99,51 +197,51 @@ const Transactions = () => {
 
   return (
     <div className="space-y-6">
-      <Card title="Payment Overview">
+      <Card title={t.paymentOverview}>
         <div className="grid gap-4 md:grid-cols-4">
           <div className="p-4 rounded-xl bg-primary-50 border border-primary-100">
-            <p className="text-sm text-primary-600 font-medium">Total Spent</p>
+            <p className="text-sm text-primary-600 font-medium">{t.totalSpent}</p>
             <p className="text-3xl font-semibold mt-2">
               {formatAmount(stats.totalAmount, stats.currency)}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              Across {stats.successfulTransactions} successful payments
+              {t.acrossPayments.replace('{count}', stats.successfulTransactions)}
             </p>
           </div>
           <div className="p-4 rounded-xl bg-green-50 border border-green-100">
-            <p className="text-sm text-green-600 font-medium">Points Purchased</p>
+            <p className="text-sm text-green-600 font-medium">{t.pointsPurchased}</p>
             <p className="text-3xl font-semibold mt-2">
               {stats.totalPoints.toLocaleString()}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Total points from all packages</p>
+            <p className="text-sm text-gray-500 mt-1">{t.totalPointsFromPackages}</p>
           </div>
           <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
-            <p className="text-sm text-gray-500 font-medium">Transactions</p>
+            <p className="text-sm text-gray-500 font-medium">{t.transactions}</p>
             <p className="text-3xl font-semibold mt-2">{stats.totalTransactions}</p>
-            <p className="text-sm text-gray-500 mt-1">Total records in your history</p>
+            <p className="text-sm text-gray-500 mt-1">{t.totalRecords}</p>
           </div>
           <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
-            <p className="text-sm text-gray-500 font-medium">Last Payment</p>
+            <p className="text-sm text-gray-500 font-medium">{t.lastPayment}</p>
             <p className="text-base font-semibold mt-2">{formatDate(stats.lastPaymentDate)}</p>
-            <p className="text-sm text-gray-500 mt-1">Most recent transaction</p>
+            <p className="text-sm text-gray-500 mt-1">{t.mostRecentTransaction}</p>
           </div>
         </div>
       </Card>
 
       <Card
-        title="Transaction History"
+        title={t.transactionHistory}
         actions={
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            {t.refresh}
           </Button>
         }
       >
         {transactions.length === 0 ? (
           <Alert
             type="info"
-            title="No transactions yet"
-            message="Once you purchase a points package, the transaction details will appear here."
+            title={t.noTransactionsYet}
+            message={t.noTransactionsMessage}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -151,22 +249,22 @@ const Transactions = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
+                    {t.description}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
+                    {t.amount}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment Method
+                    {t.paymentMethod}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t.status}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    {t.date}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reference
+                    {t.reference}
                   </th>
                 </tr>
               </thead>
@@ -184,10 +282,10 @@ const Transactions = () => {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {txn.description || 'Points Package Purchase'}
+                            {txn.description || t.pointsPackagePurchase}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {txn.type?.replace(/_/g, ' ') || 'Package purchase'}
+                            {txn.type?.replace(/_/g, ' ') || t.packagePurchase}
                           </p>
                         </div>
                       </div>
@@ -205,7 +303,12 @@ const Transactions = () => {
                           'bg-gray-100 text-gray-600 border border-gray-200'
                         }`}
                       >
-                        {txn.status?.charAt(0)?.toUpperCase() + txn.status?.slice(1) || 'Unknown'}
+                        {txn.status === 'succeeded' ? t.succeeded :
+                         txn.status === 'pending' ? t.pending :
+                         txn.status === 'failed' ? t.failed :
+                         txn.status === 'refunded' ? t.refunded :
+                         txn.status === 'completed' ? t.completed :
+                         txn.status?.charAt(0)?.toUpperCase() + txn.status?.slice(1) || t.unknown}
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -225,8 +328,8 @@ const Transactions = () => {
       <Alert
         type="info"
         className="border-dashed"
-        title="Need help with a payment?"
-        message="If you spot an unfamiliar charge or need a refund, reach out to support with the transaction reference shown above."
+        title={t.needHelp}
+        message={t.helpMessage}
       />
     </div>
   );

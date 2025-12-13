@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import startupService from '../../services/startupService';
@@ -12,6 +12,111 @@ import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
 import { Rocket, Edit2, Save, X, Plus, Trash2, Upload, Image as ImageIcon, Link as LinkIcon, Globe } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading startups...',
+    myStartups: 'My Startups',
+    manageProfiles: 'Manage your startup profiles',
+    addStartup: 'Add Startup',
+    startupCreated: 'Startup created successfully!',
+    createFailed: 'Failed to create startup',
+    startupUpdated: 'Startup updated successfully!',
+    updateFailed: 'Failed to update startup',
+    startupDeleted: 'Startup deleted successfully!',
+    deleteFailed: 'Failed to delete startup',
+    editStartup: 'Edit Startup',
+    createNewStartup: 'Create New Startup',
+    startupName: 'Startup Name',
+    startupNameRequired: 'Startup name is required',
+    yourPosition: 'Your Position',
+    positionRequired: 'Position is required',
+    numberOfEmployees: 'Number of Employees',
+    employeesRequired: 'Number of employees is required',
+    employees1to5: '1-5 employees',
+    employees6to10: '6-10 employees',
+    employees11to20: '11-20 employees',
+    employees21to50: '21-50 employees',
+    employees51to100: '51-100 employees',
+    employees100plus: '100+ employees',
+    startupIndustry: 'Startup Industry',
+    industryRequired: 'Industry is required',
+    specifyIndustry: 'Please specify your startup industry',
+    specifyIndustryRequired: 'Please specify your industry',
+    startupStage: 'Startup Stage',
+    stageRequired: 'Stage is required',
+    logoOptional: 'Logo (Optional)',
+    changeLogo: 'Change Logo',
+    uploadLogo: 'Upload Logo',
+    websiteOptional: 'Website (Optional)',
+    socialLinksOptional: 'Social Links (Optional)',
+    updateStartup: 'Update Startup',
+    createStartup: 'Create Startup',
+    cancel: 'Cancel',
+    myStartupsCount: 'My Startups ({count})',
+    noStartupsYet: "You haven't created any startups yet.",
+    employees: 'Employees:',
+    industry: 'Industry:',
+    stage: 'Stage:',
+    created: 'Created:',
+    website: 'Website:',
+    visit: 'Visit',
+    deleteStartup: 'Delete Startup',
+    deleteConfirm: 'Are you sure you want to delete this startup? This action cannot be undone.',
+    delete: 'Delete',
+  },
+  it: {
+    loading: 'Caricamento startup...',
+    myStartups: 'Le Mie Startup',
+    manageProfiles: 'Gestisci i profili delle tue startup',
+    addStartup: 'Aggiungi Startup',
+    startupCreated: 'Startup creata con successo!',
+    createFailed: 'Impossibile creare la startup',
+    startupUpdated: 'Startup aggiornata con successo!',
+    updateFailed: 'Impossibile aggiornare la startup',
+    startupDeleted: 'Startup eliminata con successo!',
+    deleteFailed: 'Impossibile eliminare la startup',
+    editStartup: 'Modifica Startup',
+    createNewStartup: 'Crea Nuova Startup',
+    startupName: 'Nome Startup',
+    startupNameRequired: 'Il nome della startup è obbligatorio',
+    yourPosition: 'La Tua Posizione',
+    positionRequired: 'La posizione è obbligatoria',
+    numberOfEmployees: 'Numero di Dipendenti',
+    employeesRequired: 'Il numero di dipendenti è obbligatorio',
+    employees1to5: '1-5 dipendenti',
+    employees6to10: '6-10 dipendenti',
+    employees11to20: '11-20 dipendenti',
+    employees21to50: '21-50 dipendenti',
+    employees51to100: '51-100 dipendenti',
+    employees100plus: '100+ dipendenti',
+    startupIndustry: 'Settore Startup',
+    industryRequired: 'Il settore è obbligatorio',
+    specifyIndustry: 'Specifica il settore della tua startup',
+    specifyIndustryRequired: 'Specifica il tuo settore',
+    startupStage: 'Fase Startup',
+    stageRequired: 'La fase è obbligatoria',
+    logoOptional: 'Logo (Opzionale)',
+    changeLogo: 'Cambia Logo',
+    uploadLogo: 'Carica Logo',
+    websiteOptional: 'Sito Web (Opzionale)',
+    socialLinksOptional: 'Link Social (Opzionale)',
+    updateStartup: 'Aggiorna Startup',
+    createStartup: 'Crea Startup',
+    cancel: 'Annulla',
+    myStartupsCount: 'Le Mie Startup ({count})',
+    noStartupsYet: 'Non hai ancora creato nessuna startup.',
+    employees: 'Dipendenti:',
+    industry: 'Settore:',
+    stage: 'Fase:',
+    created: 'Creato:',
+    website: 'Sito Web:',
+    visit: 'Visita',
+    deleteStartup: 'Elimina Startup',
+    deleteConfirm: 'Sei sicuro di voler eliminare questa startup? Questa azione non può essere annullata.',
+    delete: 'Elimina',
+  },
+};
+
 const StartupProfile = () => {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
@@ -19,6 +124,28 @@ const StartupProfile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(null);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const [formData, setFormData] = useState({
     startupName: '',
@@ -63,12 +190,12 @@ const StartupProfile = () => {
       queryClient.invalidateQueries(['startups']);
       setIsCreating(false);
       resetForm();
-      setSuccess('Startup created successfully!');
+      setSuccess(t.startupCreated);
       setError('');
       setTimeout(() => setSuccess(''), 5000);
     },
     onError: (err) => {
-      setError(err.response?.data?.message || 'Failed to create startup');
+      setError(err.response?.data?.message || t.createFailed);
       setSuccess('');
     },
   });
@@ -87,12 +214,12 @@ const StartupProfile = () => {
       queryClient.invalidateQueries(['startups']);
       setEditingId(null);
       resetForm();
-      setSuccess('Startup updated successfully!');
+      setSuccess(t.startupUpdated);
       setError('');
       setTimeout(() => setSuccess(''), 5000);
     },
     onError: (err) => {
-      setError(err.response?.data?.message || 'Failed to update startup');
+      setError(err.response?.data?.message || t.updateFailed);
       setSuccess('');
     },
   });
@@ -106,12 +233,12 @@ const StartupProfile = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['startups']);
       setShowDeleteModal(null);
-      setSuccess('Startup deleted successfully!');
+      setSuccess(t.startupDeleted);
       setError('');
       setTimeout(() => setSuccess(''), 5000);
     },
     onError: (err) => {
-      setError(err.response?.data?.message || 'Failed to delete startup');
+      setError(err.response?.data?.message || t.deleteFailed);
       setSuccess('');
     },
   });
@@ -227,7 +354,7 @@ const StartupProfile = () => {
   };
 
   if (isLoading) {
-    return <Loading text="Loading startups..." />;
+    return <Loading text={t.loading} />;
   }
 
   return (
@@ -237,14 +364,14 @@ const StartupProfile = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
             <Rocket className="w-8 h-8" />
-            My Startups
+            {t.myStartups}
           </h1>
-          <p className="text-gray-600 mt-1">Manage your startup profiles</p>
+          <p className="text-gray-600 mt-1">{t.manageProfiles}</p>
         </div>
         {!isCreating && !editingId && (
           <Button variant="primary" onClick={() => setIsCreating(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Add Startup
+            {t.addStartup}
           </Button>
         )}
       </div>
@@ -259,53 +386,53 @@ const StartupProfile = () => {
 
       {/* Create/Edit Form */}
       {(isCreating || editingId) && (
-        <Card title={editingId ? 'Edit Startup' : 'Create New Startup'}>
+        <Card title={editingId ? t.editStartup : t.createNewStartup}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Input
-                  label="Startup Name"
+                  label={t.startupName}
                   value={formData.startupName}
                   onChange={(e) => setFormData({ ...formData, startupName: e.target.value })}
-                  error={!formData.startupName ? 'Startup name is required' : ''}
+                  error={!formData.startupName ? t.startupNameRequired : ''}
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
                 <Input
-                  label="Your Position"
+                  label={t.yourPosition}
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  error={!formData.position ? 'Position is required' : ''}
+                  error={!formData.position ? t.positionRequired : ''}
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
                 <Select
-                  label="Number of Employees"
+                  label={t.numberOfEmployees}
                   value={formData.numberOfEmployees}
                   onChange={(e) => setFormData({ ...formData, numberOfEmployees: e.target.value })}
-                  error={!formData.numberOfEmployees ? 'Number of employees is required' : ''}
+                  error={!formData.numberOfEmployees ? t.employeesRequired : ''}
                   required
                   options={[
-                    { value: '1-5', label: '1-5 employees' },
-                    { value: '6-10', label: '6-10 employees' },
-                    { value: '11-20', label: '11-20 employees' },
-                    { value: '21-50', label: '21-50 employees' },
-                    { value: '51-100', label: '51-100 employees' },
-                    { value: '100+', label: '100+ employees' },
+                    { value: '1-5', label: t.employees1to5 },
+                    { value: '6-10', label: t.employees6to10 },
+                    { value: '11-20', label: t.employees11to20 },
+                    { value: '21-50', label: t.employees21to50 },
+                    { value: '51-100', label: t.employees51to100 },
+                    { value: '100+', label: t.employees100plus },
                   ]}
                 />
               </div>
 
               <div className="md:col-span-2">
                 <Select
-                  label="Startup Industry"
+                  label={t.startupIndustry}
                   value={formData.industry}
                   onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  error={!formData.industry ? 'Industry is required' : ''}
+                  error={!formData.industry ? t.industryRequired : ''}
                   required
                   options={[
                     { value: 'Technology', label: 'Technology' },
@@ -326,10 +453,10 @@ const StartupProfile = () => {
               {formData.industry === 'Other' && (
                 <div className="md:col-span-2">
                   <Input
-                    label="Please specify your startup industry"
+                    label={t.specifyIndustry}
                     value={formData.industryOther}
                     onChange={(e) => setFormData({ ...formData, industryOther: e.target.value })}
-                    error={formData.industry === 'Other' && !formData.industryOther ? 'Please specify your industry' : ''}
+                    error={formData.industry === 'Other' && !formData.industryOther ? t.specifyIndustryRequired : ''}
                     required={formData.industry === 'Other'}
                   />
                 </div>
@@ -337,10 +464,10 @@ const StartupProfile = () => {
 
               <div className="md:col-span-2">
                 <Select
-                  label="Startup Stage"
+                  label={t.startupStage}
                   value={formData.stage}
                   onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                  error={!formData.stage ? 'Stage is required' : ''}
+                  error={!formData.stage ? t.stageRequired : ''}
                   required
                   options={[
                     { value: 'Idea', label: 'Idea' },
@@ -355,7 +482,7 @@ const StartupProfile = () => {
               {/* Logo Upload */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Logo (Optional)
+                  {t.logoOptional}
                 </label>
                 <div className="flex items-center gap-4">
                   {logoPreview && (
@@ -378,7 +505,7 @@ const StartupProfile = () => {
                       className="flex items-center gap-2"
                     >
                       <Upload className="w-4 h-4" />
-                      {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                      {logoPreview ? t.changeLogo : t.uploadLogo}
                     </Button>
                     {logoFile && (
                       <p className="text-xs text-gray-500 mt-1">{logoFile.name}</p>
@@ -390,7 +517,7 @@ const StartupProfile = () => {
               {/* Website */}
               <div className="md:col-span-2">
                 <Input
-                  label="Website (Optional)"
+                  label={t.websiteOptional}
                   type="url"
                   placeholder="https://example.com"
                   value={formData.website}
@@ -401,7 +528,7 @@ const StartupProfile = () => {
               {/* Social Links */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Social Links (Optional)
+                  {t.socialLinksOptional}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
@@ -486,7 +613,7 @@ const StartupProfile = () => {
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {editingId ? 'Update Startup' : 'Create Startup'}
+                {editingId ? t.updateStartup : t.createStartup}
               </Button>
               <Button
                 type="button"
@@ -495,7 +622,7 @@ const StartupProfile = () => {
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 <X className="w-4 h-4 mr-2" />
-                Cancel
+                {t.cancel}
               </Button>
             </div>
           </form>
@@ -503,11 +630,11 @@ const StartupProfile = () => {
       )}
 
       {/* Startups List */}
-      <Card title={`My Startups (${startups.length})`}>
+      <Card title={t.myStartupsCount.replace('{count}', startups.length)}>
         {startups.length === 0 ? (
           <div className="text-center py-12">
             <Rocket className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">You haven't created any startups yet.</p>
+            <p className="text-gray-600 mb-4">{t.noStartupsYet}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -553,26 +680,26 @@ const StartupProfile = () => {
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Employees:</span>
+                    <span className="text-gray-500">{t.employees}</span>
                     <span className="font-medium text-gray-900">{startup.numberOfEmployees}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Industry:</span>
+                    <span className="text-gray-500">{t.industry}</span>
                     <span className="font-medium text-gray-900">{startup.industry}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Stage:</span>
+                    <span className="text-gray-500">{t.stage}</span>
                     <span className="font-medium text-gray-900">{startup.stage}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Created:</span>
+                    <span className="text-gray-500">{t.created}</span>
                     <span className="font-medium text-gray-900">
-                      {new Date(startup.createdAt).toLocaleDateString()}
+                      {new Date(startup.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                     </span>
                   </div>
                   {startup.website && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Website:</span>
+                      <span className="text-gray-500">{t.website}</span>
                       <a
                         href={startup.website}
                         target="_blank"
@@ -580,7 +707,7 @@ const StartupProfile = () => {
                         className="font-medium text-primary-600 hover:underline flex items-center gap-1"
                       >
                         <Globe className="w-3 h-3" />
-                        Visit
+                        {t.visit}
                       </a>
                     </div>
                   )}
@@ -676,18 +803,18 @@ const StartupProfile = () => {
       <Modal
         isOpen={!!showDeleteModal}
         onClose={() => setShowDeleteModal(null)}
-        title="Delete Startup"
+        title={t.deleteStartup}
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to delete this startup? This action cannot be undone.
+            {t.deleteConfirm}
           </p>
           <div className="flex gap-2 justify-end">
             <Button
               variant="outline"
               onClick={() => setShowDeleteModal(null)}
             >
-              Cancel
+              {t.cancel}
             </Button>
             <Button
               variant="danger"
@@ -696,7 +823,7 @@ const StartupProfile = () => {
               }}
               loading={deleteMutation.isPending}
             >
-              Delete
+              {t.delete}
             </Button>
           </div>
         </div>

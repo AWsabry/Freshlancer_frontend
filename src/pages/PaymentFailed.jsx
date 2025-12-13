@@ -1,27 +1,91 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { useAuthStore } from '../stores/authStore';
 
+const translations = {
+  en: {
+    paymentFailed: 'Payment Failed',
+    missingIdError: 'Payment verification failed - missing transaction ID.',
+    transactionNotFound: 'Transaction not found in our system.',
+    paymentNotCompleted: 'Payment was not completed successfully.',
+    processingError: 'An error occurred while processing your payment.',
+    defaultError: 'Payment could not be completed. Please try again.',
+    commonReasons: 'Common reasons for payment failure:',
+    insufficientFunds: 'Insufficient funds in your account',
+    incorrectCardDetails: 'Incorrect card details',
+    cardDeclined: 'Card declined by your bank',
+    networkIssues: 'Network connection issues',
+    paymentCanceled: 'Payment canceled by user',
+    tryAgain: 'Try Again',
+    contactSupport: 'Contact Support',
+    goBack: 'Go Back',
+    errorCode: 'Error Code:',
+    includeCodeSupport: 'Please include this code if contacting support',
+  },
+  it: {
+    paymentFailed: 'Pagamento Fallito',
+    missingIdError: 'Verifica pagamento fallita - ID transazione mancante.',
+    transactionNotFound: 'Transazione non trovata nel nostro sistema.',
+    paymentNotCompleted: 'Il pagamento non è stato completato con successo.',
+    processingError: 'Si è verificato un errore durante l\'elaborazione del pagamento.',
+    defaultError: 'Il pagamento non può essere completato. Riprova.',
+    commonReasons: 'Motivi comuni per il fallimento del pagamento:',
+    insufficientFunds: 'Fondi insufficienti nel tuo account',
+    incorrectCardDetails: 'Dettagli carta non corretti',
+    cardDeclined: 'Carta rifiutata dalla tua banca',
+    networkIssues: 'Problemi di connessione di rete',
+    paymentCanceled: 'Pagamento annullato dall\'utente',
+    tryAgain: 'Riprova',
+    contactSupport: 'Contatta il Supporto',
+    goBack: 'Torna Indietro',
+    errorCode: 'Codice Errore:',
+    includeCodeSupport: 'Includi questo codice se contatti il supporto',
+  },
+};
+
 const PaymentFailed = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
   const error = searchParams.get('error');
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const getErrorMessage = () => {
     switch (error) {
       case 'missing_id':
-        return 'Payment verification failed - missing transaction ID.';
+        return t.missingIdError;
       case 'transaction_not_found':
-        return 'Transaction not found in our system.';
+        return t.transactionNotFound;
       case 'payment_not_completed':
-        return 'Payment was not completed successfully.';
+        return t.paymentNotCompleted;
       case 'processing_error':
-        return 'An error occurred while processing your payment.';
+        return t.processingError;
       default:
-        return 'Payment could not be completed. Please try again.';
+        return t.defaultError;
     }
   };
 
@@ -54,7 +118,7 @@ const PaymentFailed = () => {
           {/* Error Message */}
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-gray-900">
-              Payment Failed
+              {t.paymentFailed}
             </h1>
             <p className="text-gray-600">
               {getErrorMessage()}
@@ -65,14 +129,14 @@ const PaymentFailed = () => {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="text-sm text-left space-y-2">
               <p className="font-medium text-gray-900">
-                Common reasons for payment failure:
+                {t.commonReasons}
               </p>
               <ul className="space-y-1 text-gray-600">
-                <li>• Insufficient funds in your account</li>
-                <li>• Incorrect card details</li>
-                <li>• Card declined by your bank</li>
-                <li>• Network connection issues</li>
-                <li>• Payment canceled by user</li>
+                <li>• {t.insufficientFunds}</li>
+                <li>• {t.incorrectCardDetails}</li>
+                <li>• {t.cardDeclined}</li>
+                <li>• {t.networkIssues}</li>
+                <li>• {t.paymentCanceled}</li>
               </ul>
             </div>
           </div>
@@ -85,7 +149,7 @@ const PaymentFailed = () => {
               onClick={handleTryAgain}
             >
               <RefreshCw className="w-5 h-5 mr-2" />
-              Try Again
+              {t.tryAgain}
             </Button>
 
             <Button
@@ -93,7 +157,7 @@ const PaymentFailed = () => {
               className="w-full"
               onClick={handleContactSupport}
             >
-              Contact Support
+              {t.contactSupport}
             </Button>
 
             <Button
@@ -102,7 +166,7 @@ const PaymentFailed = () => {
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
-              Go Back
+              {t.goBack}
             </Button>
           </div>
 
@@ -110,10 +174,10 @@ const PaymentFailed = () => {
           {error && (
             <div className="pt-4 border-t border-gray-200">
               <p className="text-xs text-gray-500">
-                Error Code: {error}
+                {t.errorCode} {error}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Please include this code if contacting support
+                {t.includeCodeSupport}
               </p>
             </div>
           )}

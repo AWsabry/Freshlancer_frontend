@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
@@ -29,10 +29,225 @@ import {
   Download,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading applications...',
+    failedToLoad: 'Failed to load applications:',
+    backToAllApplications: 'Back to All Applications',
+    jobCancelled: 'Job Cancelled',
+    jobCancelledMessage: 'This job has been cancelled. You can still view and unlock applicant profiles, but you cannot accept or reject applications.',
+    budget: 'Budget',
+    deadline: 'Deadline',
+    duration: 'Duration',
+    applicants: 'Applicants',
+    filtersSorting: 'Filters & Sorting',
+    nationality: 'Nationality',
+    allNationalities: 'All Nationalities',
+    experienceLevel: 'Experience Level',
+    allLevels: 'All Levels',
+    accountType: 'Account Type',
+    allStudents: 'All Students',
+    premiumOnly: 'Premium Only',
+    freeOnly: 'Free Only',
+    status: 'Status',
+    allStatuses: 'All Statuses',
+    pending: 'Pending',
+    accepted: 'Accepted',
+    rejected: 'Rejected',
+    sortBy: 'Sort By',
+    applicationDate: 'Application Date',
+    proposedBudget: 'Proposed Budget',
+    order: 'Order',
+    ascending: 'Ascending',
+    descending: 'Descending',
+    allApplicants: 'All Applicants',
+    noApplicationsMatch: 'No applications match your filters.',
+    contactLocked: 'Contact Locked',
+    premiumAccount: 'Premium Account',
+    proposedBudgetLabel: 'Proposed Budget',
+    nationalityLabel: 'Nationality',
+    applied: 'Applied',
+    viewFullApplication: 'View Full Application',
+    viewProfile: 'View Profile',
+    accept: 'Accept',
+    reject: 'Reject',
+    unlock: 'Unlock (10 pts)',
+    showing: 'Showing',
+    to: 'to',
+    of: 'of',
+    results: 'results',
+    page: 'Page',
+    ofPages: 'of',
+    previous: 'Previous',
+    next: 'Next',
+    fullApplicationDetails: 'Full Application Details',
+    loadingApplicationDetails: 'Loading application details...',
+    contactLockedTitle: 'Contact Locked',
+    unlockContactToView: 'Unlock contact to view student details',
+    applicationInformation: 'Application Information',
+    applicationStatus: 'Application Status',
+    appliedDate: 'Applied Date',
+    estimatedDuration: 'Estimated Duration',
+    notSpecified: 'Not specified',
+    proposalType: 'Proposal Type',
+    availabilityCommitment: 'Availability Commitment',
+    applicationNumber: 'Application Number',
+    approachMethodology: 'Approach & Methodology',
+    methodology: 'Methodology',
+    deliveryFrequency: 'Delivery Frequency',
+    numberOfRevisions: 'Number of Revisions',
+    communicationPreference: 'Communication Preference',
+    proposalMessage: 'Proposal Message',
+    coverLetter: 'Cover Letter',
+    whyChooseMe: 'Why Choose Me',
+    relevantExperience: 'Relevant Experience',
+    portfolio: 'Portfolio',
+    viewPortfolioItem: 'View Portfolio Item',
+    attachments: 'Attachments',
+    unlockContact: 'Unlock Contact (10 pts)',
+    viewStudentProfile: 'View Student Profile',
+    acceptApplication: 'Accept Application',
+    rejectApplication: 'Reject Application',
+    insufficientPoints: 'Insufficient Points',
+    notEnoughPoints: 'Not Enough Points',
+    needPointsMessage: 'You need 10 points to unlock a student\'s contact information.',
+    unlockStudentProfiles: 'Unlock Student Profiles',
+    purchasePointsMessage: 'Purchase points to unlock student contact information and access their full profiles.',
+    buyPoints: 'Buy Points',
+    cancel: 'Cancel',
+    unlockSuccess: 'Student contact unlocked successfully!',
+    unlockFailed: 'Failed to unlock contact',
+    unlockConfirm: 'Unlock this student\'s contact for 10 points?',
+    acceptSuccess: 'Application accepted! The student has been notified that they can be contacted to discuss the project.',
+    acceptConfirm: 'Accept this application? The student will be notified that they can be contacted to discuss the project.',
+    acceptFailed: 'Failed to accept application',
+    rejectSuccess: 'Application rejected. The student has been notified.',
+    rejectConfirm: 'Reject this application? The student will be notified.',
+    rejectFailed: 'Failed to reject application',
+  },
+  it: {
+    loading: 'Caricamento candidature...',
+    failedToLoad: 'Impossibile caricare le candidature:',
+    backToAllApplications: 'Torna a Tutte le Candidature',
+    jobCancelled: 'Lavoro Annullato',
+    jobCancelledMessage: 'Questo lavoro è stato annullato. Puoi ancora visualizzare e sbloccare i profili dei candidati, ma non puoi accettare o rifiutare le candidature.',
+    budget: 'Budget',
+    deadline: 'Scadenza',
+    duration: 'Durata',
+    applicants: 'Candidati',
+    filtersSorting: 'Filtri e Ordinamento',
+    nationality: 'Nazionalità',
+    allNationalities: 'Tutte le Nazionalità',
+    experienceLevel: 'Livello di Esperienza',
+    allLevels: 'Tutti i Livelli',
+    accountType: 'Tipo di Account',
+    allStudents: 'Tutti gli Studenti',
+    premiumOnly: 'Solo Premium',
+    freeOnly: 'Solo Gratuito',
+    status: 'Stato',
+    allStatuses: 'Tutti gli Stati',
+    pending: 'In Attesa',
+    accepted: 'Accettata',
+    rejected: 'Rifiutata',
+    sortBy: 'Ordina Per',
+    applicationDate: 'Data Candidatura',
+    proposedBudget: 'Budget Proposto',
+    order: 'Ordine',
+    ascending: 'Crescente',
+    descending: 'Decrescente',
+    allApplicants: 'Tutti i Candidati',
+    noApplicationsMatch: 'Nessuna candidatura corrisponde ai tuoi filtri.',
+    contactLocked: 'Contatto Bloccato',
+    premiumAccount: 'Account Premium',
+    proposedBudgetLabel: 'Budget Proposto',
+    nationalityLabel: 'Nazionalità',
+    applied: 'Candidato',
+    viewFullApplication: 'Visualizza Candidatura Completa',
+    viewProfile: 'Visualizza Profilo',
+    accept: 'Accetta',
+    reject: 'Rifiuta',
+    unlock: 'Sblocca (10 punti)',
+    showing: 'Mostra',
+    to: 'a',
+    of: 'di',
+    results: 'risultati',
+    page: 'Pagina',
+    ofPages: 'di',
+    previous: 'Precedente',
+    next: 'Successivo',
+    fullApplicationDetails: 'Dettagli Completi Candidatura',
+    loadingApplicationDetails: 'Caricamento dettagli candidatura...',
+    contactLockedTitle: 'Contatto Bloccato',
+    unlockContactToView: 'Sblocca il contatto per visualizzare i dettagli dello studente',
+    applicationInformation: 'Informazioni Candidatura',
+    applicationStatus: 'Stato Candidatura',
+    appliedDate: 'Data Candidatura',
+    estimatedDuration: 'Durata Stimata',
+    notSpecified: 'Non specificato',
+    proposalType: 'Tipo di Proposta',
+    availabilityCommitment: 'Impegno Disponibilità',
+    applicationNumber: 'Numero Candidatura',
+    approachMethodology: 'Approccio e Metodologia',
+    methodology: 'Metodologia',
+    deliveryFrequency: 'Frequenza di Consegna',
+    numberOfRevisions: 'Numero di Revisioni',
+    communicationPreference: 'Preferenza di Comunicazione',
+    proposalMessage: 'Messaggio di Proposta',
+    coverLetter: 'Lettera di Presentazione',
+    whyChooseMe: 'Perché Scegliere Me',
+    relevantExperience: 'Esperienza Rilevante',
+    portfolio: 'Portfolio',
+    viewPortfolioItem: 'Visualizza Elemento Portfolio',
+    attachments: 'Allegati',
+    unlockContact: 'Sblocca Contatto (10 punti)',
+    viewStudentProfile: 'Visualizza Profilo Studente',
+    acceptApplication: 'Accetta Candidatura',
+    rejectApplication: 'Rifiuta Candidatura',
+    insufficientPoints: 'Punti Insufficienti',
+    notEnoughPoints: 'Punti Non Sufficienti',
+    needPointsMessage: 'Hai bisogno di 10 punti per sbloccare le informazioni di contatto di uno studente.',
+    unlockStudentProfiles: 'Sblocca Profili Studenti',
+    purchasePointsMessage: 'Acquista punti per sbloccare le informazioni di contatto degli studenti e accedere ai loro profili completi.',
+    buyPoints: 'Acquista Punti',
+    cancel: 'Annulla',
+    unlockSuccess: 'Contatto studente sbloccato con successo!',
+    unlockFailed: 'Impossibile sbloccare il contatto',
+    unlockConfirm: 'Sbloccare il contatto di questo studente per 10 punti?',
+    acceptSuccess: 'Candidatura accettata! Lo studente è stato informato che può essere contattato per discutere il progetto.',
+    acceptConfirm: 'Accettare questa candidatura? Lo studente sarà informato che può essere contattato per discutere il progetto.',
+    acceptFailed: 'Impossibile accettare la candidatura',
+    rejectSuccess: 'Candidatura rifiutata. Lo studente è stato informato.',
+    rejectConfirm: 'Rifiutare questa candidatura? Lo studente sarà informato.',
+    rejectFailed: 'Impossibile rifiutare la candidatura',
+  },
+};
+
 const JobApplicationsDetail = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // State for filters and sorting
   const [sortBy, setSortBy] = useState('createdAt');
@@ -92,10 +307,10 @@ const JobApplicationsDetail = () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
       queryClient.invalidateQueries(['currentUser']);
       queryClient.invalidateQueries(['fullApplication', selectedApplication]);
-      alert('Student contact unlocked successfully!');
+      alert(t.unlockSuccess);
     },
     onError: (error) => {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to unlock contact';
+      const errorMessage = error.response?.data?.message || error.message || t.unlockFailed;
       
       // Check if it's an insufficient points error
       if (errorMessage.toLowerCase().includes('insufficient points') || 
@@ -113,7 +328,7 @@ const JobApplicationsDetail = () => {
     mutationFn: (applicationId) => applicationService.acceptApplication(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
-      alert('Application accepted! The student has been notified that they can be contacted to discuss the project.');
+      alert(t.acceptSuccess);
     },
   });
 
@@ -122,12 +337,12 @@ const JobApplicationsDetail = () => {
     mutationFn: (applicationId) => applicationService.rejectApplication(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
-      alert('Application rejected. The student has been notified.');
+      alert(t.rejectSuccess);
     },
   });
 
   const handleUnlock = async (applicationId) => {
-    if (confirm('Unlock this student\'s contact for 10 points?')) {
+    if (confirm(t.unlockConfirm)) {
       unlockMutation.mutate(applicationId);
     }
   };
@@ -138,21 +353,21 @@ const JobApplicationsDetail = () => {
   };
 
   const handleAccept = async (applicationId) => {
-    if (confirm('Accept this application? The student will be notified that they can be contacted to discuss the project.')) {
+    if (confirm(t.acceptConfirm)) {
       try {
         await acceptMutation.mutateAsync(applicationId);
       } catch (error) {
-        alert(error.response?.data?.message || 'Failed to accept application');
+        alert(error.response?.data?.message || t.acceptFailed);
       }
     }
   };
 
   const handleReject = async (applicationId) => {
-    if (confirm('Reject this application? The student will be notified.')) {
+    if (confirm(t.rejectConfirm)) {
       try {
         await rejectMutation.mutateAsync(applicationId);
       } catch (error) {
-        alert(error.response?.data?.message || 'Failed to reject application');
+        alert(error.response?.data?.message || t.rejectFailed);
       }
     }
   };
@@ -178,14 +393,14 @@ const JobApplicationsDetail = () => {
   };
 
   if (loadingJob || loadingApplications) {
-    return <Loading text="Loading applications..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (applicationsError) {
     return (
       <Alert
         type="error"
-        message={`Failed to load applications: ${applicationsError.response?.data?.message || applicationsError.message}`}
+        message={`${t.failedToLoad} ${applicationsError.response?.data?.message || applicationsError.message}`}
       />
     );
   }
@@ -207,7 +422,7 @@ const JobApplicationsDetail = () => {
       <div className="flex items-center justify-between">
         <Button variant="secondary" onClick={() => navigate('/client/applications')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to All Applications
+          {t.backToAllApplications}
         </Button>
       </div>
 
@@ -215,8 +430,8 @@ const JobApplicationsDetail = () => {
       {job?.status === 'cancelled' && (
         <Alert
           type="info"
-          title="Job Cancelled"
-          message="This job has been cancelled. You can still view and unlock applicant profiles, but you cannot accept or reject applications."
+          title={t.jobCancelled}
+          message={t.jobCancelledMessage}
         />
       )}
 
@@ -229,35 +444,35 @@ const JobApplicationsDetail = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="flex items-center gap-2 text-gray-700">
                 <div>
-                  <p className="text-xs text-gray-500">Budget</p>
+                  <p className="text-xs text-gray-500">{t.budget}</p>
                   <p className="font-semibold">{job?.budget?.currency} {job?.budget?.min} - {job?.budget?.max}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
                 <Calendar className="w-5 h-5 text-primary-600" />
                 <div>
-                  <p className="text-xs text-gray-500">Deadline</p>
-                  <p className="font-semibold">{new Date(job?.deadline).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-500">{t.deadline}</p>
+                  <p className="font-semibold">{new Date(job?.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
                 <Clock className="w-5 h-5 text-primary-600" />
                 <div>
-                  <p className="text-xs text-gray-500">Duration</p>
+                  <p className="text-xs text-gray-500">{t.duration}</p>
                   <p className="font-semibold">{job?.projectDuration}</p>
                 </div>
               </div>
         
             </div>
             <div className="flex items-center gap-2">
-              {job?.status === 'cancelled' && <Badge variant="error">Cancelled</Badge>}
-              {job?.status === 'completed' && <Badge variant="success">Completed</Badge>}
-              {job?.status === 'open' && <Badge variant="info">Open</Badge>}
+              {job?.status === 'cancelled' && <Badge variant="error">{t.rejected}</Badge>}
+              {job?.status === 'completed' && <Badge variant="success">{t.accepted}</Badge>}
+              {job?.status === 'open' && <Badge variant="info">{t.pending}</Badge>}
               {job?.status && !['cancelled', 'completed', 'open'].includes(job.status) && (
                 <Badge variant="default">{job.status}</Badge>
               )}
               <Badge variant="info">{job?.category}</Badge>
-              <Badge variant="success">{applications.length} Applicants</Badge>
+              <Badge variant="success">{applications.length} {t.applicants}</Badge>
             </div>
           </div>
         </div>
@@ -267,13 +482,13 @@ const JobApplicationsDetail = () => {
       <Card>
         <div className="flex items-center gap-4 mb-4">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="font-bold text-gray-900">Filters & Sorting</h3>
+          <h3 className="font-bold text-gray-900">{t.filtersSorting}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Nationality Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nationality
+              {t.nationality}
             </label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -283,7 +498,7 @@ const JobApplicationsDetail = () => {
                 setPage(1);
               }}
             >
-              <option value="">All Nationalities</option>
+              <option value="">{t.allNationalities}</option>
               {uniqueNationalities.map((nat) => (
                 <option key={nat} value={nat}>
                   {nat}
@@ -295,7 +510,7 @@ const JobApplicationsDetail = () => {
           {/* Experience Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Experience Level
+              {t.experienceLevel}
             </label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -305,7 +520,7 @@ const JobApplicationsDetail = () => {
                 setPage(1);
               }}
             >
-              <option value="">All Levels</option>
+              <option value="">{t.allLevels}</option>
               <option value="Beginner">Beginner</option>
               <option value="Intermediate">Intermediate</option>
               <option value="Advanced">Advanced</option>
@@ -316,7 +531,7 @@ const JobApplicationsDetail = () => {
           {/* Subscription Tier Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Account Type
+              {t.accountType}
             </label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -326,16 +541,16 @@ const JobApplicationsDetail = () => {
                 setPage(1);
               }}
             >
-              <option value="">All Students</option>
-              <option value="premium">Premium Only</option>
-              <option value="free">Free Only</option>
+              <option value="">{t.allStudents}</option>
+              <option value="premium">{t.premiumOnly}</option>
+              <option value="free">{t.freeOnly}</option>
             </select>
           </div>
 
           {/* Status Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+              {t.status}
             </label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -345,17 +560,17 @@ const JobApplicationsDetail = () => {
                 setPage(1);
               }}
             >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
+              <option value="">{t.allStatuses}</option>
+              <option value="pending">{t.pending}</option>
+              <option value="accepted">{t.accepted}</option>
+              <option value="rejected">{t.rejected}</option>
             </select>
           </div>
 
           {/* Sort By */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sort By
+              {t.sortBy}
             </label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -365,16 +580,16 @@ const JobApplicationsDetail = () => {
                 setPage(1);
               }}
             >
-              <option value="createdAt">Application Date</option>
-              <option value="proposedBudget">Proposed Budget</option>
-              <option value="relevantExperienceLevel">Experience Level</option>
+              <option value="createdAt">{t.applicationDate}</option>
+              <option value="proposedBudget">{t.proposedBudget}</option>
+              <option value="relevantExperienceLevel">{t.experienceLevel}</option>
             </select>
           </div>
 
           {/* Sort Order */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Order
+              {t.order}
             </label>
             <button
               onClick={() => {
@@ -384,17 +599,17 @@ const JobApplicationsDetail = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <SortIcon className="w-4 h-4" />
-              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+              {sortOrder === 'asc' ? t.ascending : t.descending}
             </button>
           </div>
         </div>
       </Card>
 
       {/* Applications List */}
-      <Card title={`All Applicants (${totalCount})`}>
+      <Card title={`${t.allApplicants} (${totalCount})`}>
         {applications.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">No applications match your filters.</p>
+            <p className="text-gray-600">{t.noApplicationsMatch}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -442,11 +657,11 @@ const JobApplicationsDetail = () => {
                           <>
                             <Lock className="w-5 h-5 text-gray-400" />
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-gray-500">Contact Locked</p>
+                              <p className="text-gray-500">{t.contactLocked}</p>
                               {isPremium && (
                                 <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
                                   <Crown className="w-3 h-3" />
-                                  Premium Account
+                                  {t.premiumAccount}
                                 </Badge>
                               )}
                             </div>
@@ -456,23 +671,23 @@ const JobApplicationsDetail = () => {
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                         <div>
-                          <p className="text-xs text-gray-500">Proposed Budget</p>
+                          <p className="text-xs text-gray-500">{t.proposedBudgetLabel}</p>
                           <p className="font-bold text-green-600 text-lg">
                             {application.proposedBudget?.currency} {application.proposedBudget?.amount}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Duration</p>
+                          <p className="text-xs text-gray-500">{t.duration}</p>
                           <p className="font-semibold">{application.estimatedDuration}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Experience</p>
+                          <p className="text-xs text-gray-500">{t.experienceLevel}</p>
                           <Badge variant="info">
-                            {application.relevantExperienceLevel || 'Not specified'}
+                            {application.relevantExperienceLevel || t.notSpecified}
                           </Badge>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Nationality</p>
+                          <p className="text-xs text-gray-500">{t.nationalityLabel}</p>
                           <p className="font-semibold">{student?.nationality || 'N/A'}</p>
                         </div>
                       </div>
@@ -483,10 +698,13 @@ const JobApplicationsDetail = () => {
                           application.status === 'accepted' ? 'success' :
                           application.status === 'rejected' ? 'error' : 'default'
                         }>
-                          {application.status}
+                          {application.status === 'pending' ? t.pending :
+                           application.status === 'accepted' ? t.accepted :
+                           application.status === 'rejected' ? t.rejected :
+                           application.status}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          Applied {new Date(application.createdAt).toLocaleDateString()}
+                          {t.applied} {new Date(application.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                         </span>
                       </div>
                     </div>
@@ -500,7 +718,7 @@ const JobApplicationsDetail = () => {
                         className="flex items-center gap-2"
                       >
                         <FileText className="w-4 h-4" />
-                        View Full Application
+                        {t.viewFullApplication}
                       </Button>
                       
                       {isUnlocked ? (
@@ -511,7 +729,7 @@ const JobApplicationsDetail = () => {
                             onClick={() => navigate(`/client/students/${student?._id}`)}
                           >
                             <User className="w-4 h-4 mr-2" />
-                            View Profile
+                            {t.viewProfile}
                           </Button>
 
                           {/* Only show Accept/Reject buttons if application is pending and job is not cancelled */}
@@ -523,7 +741,7 @@ const JobApplicationsDetail = () => {
                                 onClick={() => handleAccept(application._id)}
                                 loading={acceptMutation.isPending}
                               >
-                                Accept
+                                {t.accept}
                               </Button>
                               <Button
                                 variant="error"
@@ -531,7 +749,7 @@ const JobApplicationsDetail = () => {
                                 onClick={() => handleReject(application._id)}
                                 loading={rejectMutation.isPending}
                               >
-                                Reject
+                                {t.reject}
                               </Button>
                             </>
                           )}
@@ -544,7 +762,7 @@ const JobApplicationsDetail = () => {
                           loading={unlockMutation.isPending}
                         >
                           <Lock className="w-4 h-4 mr-2" />
-                          Unlock (10 pts)
+                          {t.unlock}
                         </Button>
                       )}
                     </div>
@@ -559,8 +777,8 @@ const JobApplicationsDetail = () => {
         {pagination.pages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-6 border-t">
             <p className="text-sm text-gray-600">
-              Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalCount)} of{' '}
-              {totalCount} results
+              {t.showing} {(page - 1) * limit + 1} {t.to} {Math.min(page * limit, totalCount)} {t.of}{' '}
+              {totalCount} {t.results}
             </p>
             <div className="flex gap-2">
               <Button
@@ -569,10 +787,10 @@ const JobApplicationsDetail = () => {
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
               >
-                Previous
+                {t.previous}
               </Button>
               <span className="px-4 py-2 text-sm font-medium">
-                Page {page} of {pagination.pages}
+                {t.page} {page} {t.ofPages} {pagination.pages}
               </span>
               <Button
                 variant="outline"
@@ -580,7 +798,7 @@ const JobApplicationsDetail = () => {
                 onClick={() => setPage(page + 1)}
                 disabled={page === pagination.pages}
               >
-                Next
+                {t.next}
               </Button>
             </div>
           </div>
@@ -591,7 +809,7 @@ const JobApplicationsDetail = () => {
       <Modal
         isOpen={showFullViewModal}
         onClose={handleCloseFullViewModal}
-        title="Full Application Details"
+        title={t.fullApplicationDetails}
         size="xl"
       >
         {fullApplicationData?.data?.application ? (
@@ -621,12 +839,12 @@ const JobApplicationsDetail = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-xl font-bold text-gray-900">
-                            {isUnlocked ? (fullStudent?.name || 'Student') : 'Contact Locked'}
+                            {isUnlocked ? (fullStudent?.name || 'Student') : t.contactLockedTitle}
                           </h3>
                           {isPremium && (
                             <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
                               <Crown className="w-3 h-3" />
-                              Premium Account
+                              {t.premiumAccount}
                             </Badge>
                           )}
                         </div>
@@ -634,12 +852,12 @@ const JobApplicationsDetail = () => {
                           <>
                             <p className="text-gray-600 mb-1">{fullStudent?.email}</p>
                             <p className="text-sm text-gray-500">
-                              {fullStudent?.nationality && `Nationality: ${fullStudent.nationality}`}
-                              {fullStudent?.age && ` • Age: ${fullStudent.age}`}
+                              {fullStudent?.nationality && `${t.nationalityLabel}: ${fullStudent.nationality}`}
+                              {fullStudent?.age && ` • ${t.applied}: ${fullStudent.age}`}
                             </p>
                           </>
                         ) : (
-                          <p className="text-gray-500">Unlock contact to view student details</p>
+                          <p className="text-gray-500">{t.unlockContactToView}</p>
                         )}
                       </div>
                     </div>
@@ -649,11 +867,11 @@ const JobApplicationsDetail = () => {
                   <Card>
                     <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <FileText className="w-5 h-5" />
-                      Application Information
+                      {t.applicationInformation}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500">Application Status</p>
+                        <p className="text-sm text-gray-500">{t.applicationStatus}</p>
                         <Badge
                           variant={
                             fullApp.status === 'pending' ? 'info' :
@@ -661,13 +879,16 @@ const JobApplicationsDetail = () => {
                             fullApp.status === 'rejected' ? 'error' : 'default'
                           }
                         >
-                          {fullApp.status}
+                          {fullApp.status === 'pending' ? t.pending :
+                           fullApp.status === 'accepted' ? t.accepted :
+                           fullApp.status === 'rejected' ? t.rejected :
+                           fullApp.status}
                         </Badge>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Applied Date</p>
+                        <p className="text-sm text-gray-500">{t.appliedDate}</p>
                         <p className="font-semibold">
-                          {new Date(fullApp.createdAt).toLocaleDateString('en-US', {
+                          {new Date(fullApp.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
@@ -677,24 +898,24 @@ const JobApplicationsDetail = () => {
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Proposed Budget</p>
+                        <p className="text-sm text-gray-500">{t.proposedBudgetLabel}</p>
                         <p className="font-semibold text-green-600 text-lg">
                           {fullApp.proposedBudget?.currency} {fullApp.proposedBudget?.amount}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Estimated Duration</p>
-                        <p className="font-semibold">{fullApp.estimatedDuration || 'Not specified'}</p>
+                        <p className="text-sm text-gray-500">{t.estimatedDuration}</p>
+                        <p className="font-semibold">{fullApp.estimatedDuration || t.notSpecified}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Relevant Experience Level</p>
+                        <p className="text-sm text-gray-500">{t.experienceLevel}</p>
                         <p className="font-semibold">
-                          {fullApp.relevantExperienceLevel || 'Not specified'}
+                          {fullApp.relevantExperienceLevel || t.notSpecified}
                         </p>
                       </div>
                       {fullApp.proposalType && (
                         <div>
-                          <p className="text-sm text-gray-500">Proposal Type</p>
+                          <p className="text-sm text-gray-500">{t.proposalType}</p>
                           <Badge variant="info">
                             {fullApp.proposalType.charAt(0).toUpperCase() + fullApp.proposalType.slice(1)}
                           </Badge>
@@ -702,13 +923,13 @@ const JobApplicationsDetail = () => {
                       )}
                       {fullApp.availabilityCommitment && (
                         <div>
-                          <p className="text-sm text-gray-500">Availability Commitment</p>
+                          <p className="text-sm text-gray-500">{t.availabilityCommitment}</p>
                           <p className="font-semibold">{fullApp.availabilityCommitment}</p>
                         </div>
                       )}
                       {fullApp.applicationNumber && (
                         <div>
-                          <p className="text-sm text-gray-500">Application Number</p>
+                          <p className="text-sm text-gray-500">{t.applicationNumber}</p>
                           <p className="font-semibold">{fullApp.applicationNumber}</p>
                         </div>
                       )}
@@ -718,29 +939,29 @@ const JobApplicationsDetail = () => {
                   {/* Approach & Methodology */}
                   {fullApp.approachSelections && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-4">Approach & Methodology</h4>
+                      <h4 className="font-bold text-gray-900 mb-4">{t.approachMethodology}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {fullApp.approachSelections.methodology && (
                           <div>
-                            <p className="text-sm text-gray-500">Methodology</p>
+                            <p className="text-sm text-gray-500">{t.methodology}</p>
                             <p className="font-semibold">{fullApp.approachSelections.methodology}</p>
                           </div>
                         )}
                         {fullApp.approachSelections.deliveryFrequency && (
                           <div>
-                            <p className="text-sm text-gray-500">Delivery Frequency</p>
+                            <p className="text-sm text-gray-500">{t.deliveryFrequency}</p>
                             <p className="font-semibold">{fullApp.approachSelections.deliveryFrequency}</p>
                           </div>
                         )}
                         {fullApp.approachSelections.revisions !== undefined && (
                           <div>
-                            <p className="text-sm text-gray-500">Number of Revisions</p>
+                            <p className="text-sm text-gray-500">{t.numberOfRevisions}</p>
                             <p className="font-semibold">{fullApp.approachSelections.revisions}</p>
                           </div>
                         )}
                         {fullApp.approachSelections.communicationPreference && (
                           <div>
-                            <p className="text-sm text-gray-500">Communication Preference</p>
+                            <p className="text-sm text-gray-500">{t.communicationPreference}</p>
                             <p className="font-semibold">{fullApp.approachSelections.communicationPreference}</p>
                           </div>
                         )}
@@ -751,7 +972,7 @@ const JobApplicationsDetail = () => {
                   {/* Proposal Message */}
                   {fullApp.proposalText && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-3">Proposal Message</h4>
+                      <h4 className="font-bold text-gray-900 mb-3">{t.proposalMessage}</h4>
                       <p className="text-gray-700 whitespace-pre-wrap">{fullApp.proposalText}</p>
                     </Card>
                   )}
@@ -759,7 +980,7 @@ const JobApplicationsDetail = () => {
                   {/* Cover Letter */}
                   {fullApp.coverLetter && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-3">Cover Letter</h4>
+                      <h4 className="font-bold text-gray-900 mb-3">{t.coverLetter}</h4>
                       <p className="text-gray-700 whitespace-pre-wrap">{fullApp.coverLetter}</p>
                     </Card>
                   )}
@@ -767,7 +988,7 @@ const JobApplicationsDetail = () => {
                   {/* Why Choose Me */}
                   {fullApp.whyChooseMe && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-3">Why Choose Me</h4>
+                      <h4 className="font-bold text-gray-900 mb-3">{t.whyChooseMe}</h4>
                       <p className="text-gray-700 whitespace-pre-wrap">{fullApp.whyChooseMe}</p>
                     </Card>
                   )}
@@ -775,7 +996,7 @@ const JobApplicationsDetail = () => {
                   {/* Relevant Experience */}
                   {fullApp.relevantExperience && fullApp.relevantExperience.length > 0 && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-3">Relevant Experience</h4>
+                      <h4 className="font-bold text-gray-900 mb-3">{t.relevantExperience}</h4>
                       <div className="space-y-4">
                         {fullApp.relevantExperience.map((exp, index) => (
                           <div key={index} className="border-l-4 border-primary-500 pl-4">
@@ -794,7 +1015,7 @@ const JobApplicationsDetail = () => {
                   {/* Portfolio */}
                   {fullApp.portfolio && fullApp.portfolio.length > 0 && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-3">Portfolio</h4>
+                      <h4 className="font-bold text-gray-900 mb-3">{t.portfolio}</h4>
                       <div className="space-y-4">
                         {fullApp.portfolio.map((item, index) => (
                           <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -810,7 +1031,7 @@ const JobApplicationsDetail = () => {
                                 className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
                               >
                                 <ExternalLink className="w-4 h-4" />
-                                View Portfolio Item
+                                {t.viewPortfolioItem}
                               </a>
                             )}
                             {item.technologies && item.technologies.length > 0 && (
@@ -831,7 +1052,7 @@ const JobApplicationsDetail = () => {
                   {/* Attachments */}
                   {fullApp.attachments && fullApp.attachments.length > 0 && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-3">Attachments</h4>
+                      <h4 className="font-bold text-gray-900 mb-3">{t.attachments}</h4>
                       <div className="space-y-2">
                         {fullApp.attachments.map((attachment, index) => (
                           <a
@@ -866,7 +1087,7 @@ const JobApplicationsDetail = () => {
                         loading={unlockMutation.isPending}
                       >
                         <Unlock className="w-4 h-4 mr-2" />
-                        Unlock Contact (10 pts)
+                        {t.unlockContact}
                       </Button>
                     )}
                     {isUnlocked && fullStudent?._id && (
@@ -878,7 +1099,7 @@ const JobApplicationsDetail = () => {
                         }}
                       >
                         <User className="w-4 h-4 mr-2" />
-                        View Student Profile
+                        {t.viewStudentProfile}
                       </Button>
                     )}
                     {fullApp.status === 'pending' && job?.status !== 'cancelled' && (
@@ -891,7 +1112,7 @@ const JobApplicationsDetail = () => {
                           }}
                           loading={acceptMutation.isPending}
                         >
-                          Accept Application
+                          {t.acceptApplication}
                         </Button>
                         <Button
                           variant="error"
@@ -901,7 +1122,7 @@ const JobApplicationsDetail = () => {
                           }}
                           loading={rejectMutation.isPending}
                         >
-                          Reject Application
+                          {t.rejectApplication}
                         </Button>
                       </>
                     )}
@@ -911,7 +1132,7 @@ const JobApplicationsDetail = () => {
             })()}
           </div>
         ) : (
-          <Loading text="Loading application details..." />
+          <Loading text={t.loadingApplicationDetails} />
         )}
       </Modal>
 
@@ -919,7 +1140,7 @@ const JobApplicationsDetail = () => {
       <Modal
         isOpen={showInsufficientPointsModal}
         onClose={() => setShowInsufficientPointsModal(false)}
-        title="Insufficient Points"
+        title={t.insufficientPoints}
         size="md"
       >
         <div className="text-center py-4">
@@ -928,11 +1149,11 @@ const JobApplicationsDetail = () => {
           </div>
           
           <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Not Enough Points
+            {t.notEnoughPoints}
           </h3>
           
           <p className="text-gray-600 mb-6">
-            {insufficientPointsMessage || 'You need 10 points to unlock a student\'s contact information.'}
+            {insufficientPointsMessage || t.needPointsMessage}
           </p>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -944,10 +1165,10 @@ const JobApplicationsDetail = () => {
               </div>
               <div className="text-left">
                 <p className="text-sm font-semibold text-blue-900 mb-1">
-                  Unlock Student Profiles
+                  {t.unlockStudentProfiles}
                 </p>
                 <p className="text-sm text-blue-700">
-                  Purchase points to unlock student contact information and access their full profiles.
+                  {t.purchasePointsMessage}
                 </p>
               </div>
             </div>
@@ -959,7 +1180,7 @@ const JobApplicationsDetail = () => {
               onClick={() => setShowInsufficientPointsModal(false)}
               className="flex-1"
             >
-              Cancel
+              {t.cancel}
             </Button>
             <Button
               variant="primary"
@@ -967,7 +1188,7 @@ const JobApplicationsDetail = () => {
               className="flex-1 flex items-center justify-center gap-2"
             >
               <DollarSign className="w-5 h-5" />
-              Buy Points
+              {t.buyPoints}
             </Button>
           </div>
         </div>

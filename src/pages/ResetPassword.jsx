@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -9,6 +10,45 @@ import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
 import { Lock, CheckCircle, ArrowLeft, XCircle } from 'lucide-react';
 
+const translations = {
+  en: {
+    invalidOrExpiredLink: 'Invalid or Expired Link',
+    linkInvalidExpired: 'This password reset link is invalid or has expired. Please request a new password reset link.',
+    requestNewResetLink: 'Request New Reset Link',
+    backToLogin: 'Back to Login',
+    passwordResetSuccessful: 'Password Reset Successful!',
+    passwordResetSuccessMessage: 'Your password has been successfully reset. You will be redirected to your dashboard shortly.',
+    resetYourPassword: 'Reset Your Password',
+    enterNewPassword: 'Enter your new password below.',
+    newPassword: 'New Password',
+    confirmNewPassword: 'Confirm New Password',
+    passwordRequired: 'Password is required',
+    passwordMinLength: 'Password must be at least 8 characters',
+    confirmPasswordRequired: 'Please confirm your password',
+    passwordsDoNotMatch: 'Passwords do not match',
+    resetPassword: 'Reset Password',
+    unableToReset: 'Unable to reset password. Please try again.',
+  },
+  it: {
+    invalidOrExpiredLink: 'Link Non Valido o Scaduto',
+    linkInvalidExpired: 'Questo link di reset password non è valido o è scaduto. Richiedi un nuovo link di reset password.',
+    requestNewResetLink: 'Richiedi Nuovo Link di Reset',
+    backToLogin: 'Torna al Login',
+    passwordResetSuccessful: 'Password Reimpostata con Successo!',
+    passwordResetSuccessMessage: 'La tua password è stata reimpostata con successo. Sarai reindirizzato alla tua dashboard a breve.',
+    resetYourPassword: 'Reimposta la Tua Password',
+    enterNewPassword: 'Inserisci la tua nuova password qui sotto.',
+    newPassword: 'Nuova Password',
+    confirmNewPassword: 'Conferma Nuova Password',
+    passwordRequired: 'La password è obbligatoria',
+    passwordMinLength: 'La password deve essere di almeno 8 caratteri',
+    confirmPasswordRequired: 'Conferma la tua password',
+    passwordsDoNotMatch: 'Le password non corrispondono',
+    resetPassword: 'Reimposta Password',
+    unableToReset: 'Impossibile reimpostare la password. Riprova.',
+  },
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const { token } = useParams();
@@ -16,6 +56,28 @@ const ResetPassword = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [tokenValid, setTokenValid] = useState(true);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
 
@@ -46,7 +108,7 @@ const ResetPassword = () => {
       }
     },
     onError: (err) => {
-      let errorMessage = 'Unable to reset password. Please try again.';
+      let errorMessage = t.unableToReset;
       
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
@@ -75,21 +137,21 @@ const ResetPassword = () => {
               <XCircle className="h-10 w-10 text-red-600" />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-              Invalid or Expired Link
+              {t.invalidOrExpiredLink}
             </h2>
             <p className="text-gray-600 mb-6">
-              This password reset link is invalid or has expired. Please request a new password reset link.
+              {t.linkInvalidExpired}
             </p>
             <div className="space-y-3">
               <Link to="/forgot-password">
                 <Button variant="primary" className="w-full">
-                  Request New Reset Link
+                  {t.requestNewResetLink}
                 </Button>
               </Link>
               <Link to="/login">
                 <Button variant="secondary" className="w-full">
                   <ArrowLeft className="w-4 h-4 mr-2 inline" />
-                  Back to Login
+                  {t.backToLogin}
                 </Button>
               </Link>
             </div>
@@ -108,10 +170,10 @@ const ResetPassword = () => {
               <CheckCircle className="h-10 w-10 text-green-600" />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-              Password Reset Successful!
+              {t.passwordResetSuccessful}
             </h2>
             <p className="text-gray-600 mb-6">
-              Your password has been successfully reset. You will be redirected to your dashboard shortly.
+              {t.passwordResetSuccessMessage}
             </p>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
           </div>
@@ -128,10 +190,10 @@ const ResetPassword = () => {
             <Lock className="h-6 w-6 text-primary-600" />
           </div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Reset Your Password
+            {t.resetYourPassword}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your new password below.
+            {t.enterNewPassword}
           </p>
         </div>
 
@@ -142,28 +204,28 @@ const ResetPassword = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <Input
-              label="New Password"
+              label={t.newPassword}
               type="password"
               placeholder="••••••••"
               error={errors.password?.message}
               {...register('password', {
-                required: 'Password is required',
+                required: t.passwordRequired,
                 minLength: {
                   value: 8,
-                  message: 'Password must be at least 8 characters',
+                  message: t.passwordMinLength,
                 },
               })}
             />
 
             <Input
-              label="Confirm New Password"
+              label={t.confirmNewPassword}
               type="password"
               placeholder="••••••••"
               error={errors.passwordConfirm?.message}
               {...register('passwordConfirm', {
-                required: 'Please confirm your password',
+                required: t.confirmPasswordRequired,
                 validate: (value) =>
-                  value === password || 'Passwords do not match',
+                  value === password || t.passwordsDoNotMatch,
               })}
             />
           </div>
@@ -175,13 +237,13 @@ const ResetPassword = () => {
             loading={resetPasswordMutation.isPending}
             disabled={resetPasswordMutation.isPending}
           >
-            Reset Password
+            {t.resetPassword}
           </Button>
 
           <div className="text-center">
             <Link to="/login" className="text-sm font-medium text-primary-600 hover:text-primary-500 flex items-center justify-center gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Login
+              {t.backToLogin}
             </Link>
           </div>
         </form>

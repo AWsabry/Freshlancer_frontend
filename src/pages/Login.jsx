@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../stores/authStore';
@@ -6,11 +6,72 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
 
+const translations = {
+  en: {
+    welcomeToFreshlancer: 'Welcome to Freshlancer',
+    signInToAccount: 'Sign in to your account',
+    emailAddress: 'Email Address',
+    emailPlaceholder: 'your@email.com',
+    emailRequired: 'Email is required',
+    invalidEmail: 'Invalid email address',
+    password: 'Password',
+    passwordRequired: 'Password is required',
+    passwordMinLength: 'Password must be at least 8 characters',
+    forgotPassword: 'Forgot your password?',
+    signIn: 'Sign in',
+    dontHaveAccount: "Don't have an account?",
+    signUp: 'Sign up',
+    unableToSignIn: 'Unable to sign in. Please try again.',
+    unableToConnect: 'Unable to connect to the server. Please check your internet connection and try again.',
+    invalidCredentials: 'Invalid email or password. Please check your credentials and try again.',
+  },
+  it: {
+    welcomeToFreshlancer: 'Benvenuto su Freshlancer',
+    signInToAccount: 'Accedi al tuo account',
+    emailAddress: 'Indirizzo Email',
+    emailPlaceholder: 'tua@email.com',
+    emailRequired: 'L\'email è obbligatoria',
+    invalidEmail: 'Indirizzo email non valido',
+    password: 'Password',
+    passwordRequired: 'La password è obbligatoria',
+    passwordMinLength: 'La password deve essere di almeno 8 caratteri',
+    forgotPassword: 'Hai dimenticato la password?',
+    signIn: 'Accedi',
+    dontHaveAccount: 'Non hai un account?',
+    signUp: 'Registrati',
+    unableToSignIn: 'Impossibile accedere. Riprova.',
+    unableToConnect: 'Impossibile connettersi al server. Controlla la tua connessione internet e riprova.',
+    invalidCredentials: 'Email o password non valide. Controlla le tue credenziali e riprova.',
+  },
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
@@ -31,7 +92,7 @@ const Login = () => {
       }
     } catch (err) {
       // Extract user-friendly error message
-      let errorMessage = 'Unable to sign in. Please try again.';
+      let errorMessage = t.unableToSignIn;
 
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
@@ -41,13 +102,13 @@ const Login = () => {
 
       // Handle network errors
       if (!err.response && err.message === 'Network Error') {
-        errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        errorMessage = t.unableToConnect;
       }
 
       // Handle 401/403 errors with generic message
       if (err.response?.status === 401 || err.response?.status === 403) {
         if (!err.response.data?.message || err.response.data.message.includes('invalid') || err.response.data.message.includes('Invalid')) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          errorMessage = t.invalidCredentials;
         }
       }
 
@@ -62,10 +123,10 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Welcome to Freshlancer
+            {t.welcomeToFreshlancer}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
+            {t.signInToAccount}
           </p>
         </div>
 
@@ -76,29 +137,29 @@ const Login = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <Input
-              label="Email Address"
+              label={t.emailAddress}
               type="email"
-              placeholder="your@email.com"
+              placeholder={t.emailPlaceholder}
               error={errors.email?.message}
               {...register('email', {
-                required: 'Email is required',
+                required: t.emailRequired,
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address',
+                  message: t.invalidEmail,
                 },
               })}
             />
 
             <Input
-              label="Password"
+              label={t.password}
               type="password"
               placeholder="••••••••"
               error={errors.password?.message}
               {...register('password', {
-                required: 'Password is required',
+                required: t.passwordRequired,
                 minLength: {
                   value: 8,
-                  message: 'Password must be at least 8 characters',
+                  message: t.passwordMinLength,
                 },
               })}
             />
@@ -107,7 +168,7 @@ const Login = () => {
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
-                Forgot your password?
+                {t.forgotPassword}
               </Link>
             </div>
           </div>
@@ -119,13 +180,13 @@ const Login = () => {
             loading={loading}
             disabled={loading}
           >
-            Sign in
+            {t.signIn}
           </Button>
 
           <div className="text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
+            <span className="text-gray-600">{t.dontHaveAccount} </span>
             <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-              Sign up
+              {t.signUp}
             </Link>
           </div>
         </form>

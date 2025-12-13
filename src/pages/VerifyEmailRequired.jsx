@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { authService } from '../services/authService';
@@ -9,11 +9,84 @@ import Alert from '../components/common/Alert';
 import Loading from '../components/common/Loading';
 import { Mail, CheckCircle, XCircle, RefreshCw, Rocket } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading...',
+    emailVerificationRequired: 'Email Verification Required',
+    pleaseVerifyEmail: 'Please verify your email address to access your dashboard',
+    emailNotVerified: 'Your email address has not been verified yet. Please check your inbox and click the verification link to continue.',
+    verificationEmailSent: 'Verification email sent to:',
+    verificationEmailResent: 'Verification email has been resent! Please check your inbox.',
+    myStartups: 'My Startups',
+    manageStartupsWhileWaiting: 'You can manage your startups while waiting for email verification',
+    manageStartups: 'Manage Startups',
+    importantInformation: 'Important Information:',
+    checkInboxSpam: 'Check your inbox (and spam folder) for the verification email',
+    linkExpires10Minutes: 'The verification link expires in 10 minutes',
+    clickLinkToVerify: 'Click the link in the email to verify your account',
+    pageAutoRefresh: 'This page will automatically refresh when you verify your email',
+    resendVerificationEmail: 'Resend Verification Email',
+    checkVerificationStatus: 'Check Verification Status',
+    signOut: 'Sign Out',
+    note: 'Note:',
+    emailServiceNote: 'The email service is currently using Ethereal Email (testing service).',
+    checkServerConsole: 'Check the server console for the email preview URL, or configure a real SMTP service for production.',
+    emailNotFound: 'Email address not found',
+    failedToResend: 'Failed to resend verification email',
+  },
+  it: {
+    loading: 'Caricamento...',
+    emailVerificationRequired: 'Verifica Email Richiesta',
+    pleaseVerifyEmail: 'Verifica il tuo indirizzo email per accedere alla tua dashboard',
+    emailNotVerified: 'Il tuo indirizzo email non è stato ancora verificato. Controlla la tua casella di posta e clicca sul link di verifica per continuare.',
+    verificationEmailSent: 'Email di verifica inviata a:',
+    verificationEmailResent: 'Email di verifica reinviata! Controlla la tua casella di posta.',
+    myStartups: 'Le Mie Startup',
+    manageStartupsWhileWaiting: 'Puoi gestire le tue startup mentre aspetti la verifica email',
+    manageStartups: 'Gestisci Startup',
+    importantInformation: 'Informazioni Importanti:',
+    checkInboxSpam: 'Controlla la tua casella di posta (e la cartella spam) per l\'email di verifica',
+    linkExpires10Minutes: 'Il link di verifica scade tra 10 minuti',
+    clickLinkToVerify: 'Clicca sul link nell\'email per verificare il tuo account',
+    pageAutoRefresh: 'Questa pagina si aggiornerà automaticamente quando verifichi la tua email',
+    resendVerificationEmail: 'Reinvia Email di Verifica',
+    checkVerificationStatus: 'Controlla Stato Verifica',
+    signOut: 'Esci',
+    note: 'Nota:',
+    emailServiceNote: 'Il servizio email sta attualmente utilizzando Ethereal Email (servizio di test).',
+    checkServerConsole: 'Controlla la console del server per l\'URL di anteprima email, oppure configura un servizio SMTP reale per la produzione.',
+    emailNotFound: 'Indirizzo email non trovato',
+    failedToResend: 'Impossibile reinviare l\'email di verifica',
+  },
+};
+
 const VerifyEmailRequired = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState(null);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch current user to check verification status
   const { data: userData, isLoading, refetch } = useQuery({
@@ -41,14 +114,14 @@ const VerifyEmailRequired = () => {
       setTimeout(() => setResendSuccess(false), 5000);
     },
     onError: (error) => {
-      setResendError(error.response?.data?.message || 'Failed to resend verification email');
+      setResendError(error.response?.data?.message || t.failedToResend);
       setResendSuccess(false);
     },
   });
 
   const handleResend = () => {
     if (!currentUser?.email && !user?.email) {
-      setResendError('Email address not found');
+      setResendError(t.emailNotFound);
       return;
     }
     resendMutation.mutate();
@@ -74,7 +147,7 @@ const VerifyEmailRequired = () => {
   }
 
   if (isLoading) {
-    return <Loading text="Loading..." />;
+    return <Loading text={t.loading} />;
   }
 
   return (
@@ -86,28 +159,28 @@ const VerifyEmailRequired = () => {
               <Mail className="w-10 h-10 text-yellow-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Email Verification Required
+              {t.emailVerificationRequired}
             </h1>
             <p className="text-gray-600">
-              Please verify your email address to access your dashboard
+              {t.pleaseVerifyEmail}
             </p>
           </div>
 
           <div className="space-y-4 mb-6">
             <Alert
               type="warning"
-              message="Your email address has not been verified yet. Please check your inbox and click the verification link to continue."
+              message={t.emailNotVerified}
             />
 
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Verification email sent to:</p>
+              <p className="text-sm text-gray-600 mb-2">{t.verificationEmailSent}</p>
               <p className="font-semibold text-gray-900">{currentUser?.email}</p>
             </div>
 
             {resendSuccess && (
               <Alert
                 type="success"
-                message="Verification email has been resent! Please check your inbox."
+                message={t.verificationEmailResent}
               />
             )}
 
@@ -125,10 +198,10 @@ const VerifyEmailRequired = () => {
                   <div>
                     <h3 className="font-semibold text-purple-900 mb-1 flex items-center gap-2">
                       <Rocket className="w-4 h-4" />
-                      My Startups
+                      {t.myStartups}
                     </h3>
                     <p className="text-sm text-purple-700">
-                      You can manage your startups while waiting for email verification
+                      {t.manageStartupsWhileWaiting}
                     </p>
                   </div>
                   <Button
@@ -136,7 +209,7 @@ const VerifyEmailRequired = () => {
                     onClick={() => navigate('/client/startup-profile')}
                     size="sm"
                   >
-                    Manage Startups
+                    {t.manageStartups}
                   </Button>
                 </div>
               </div>
@@ -145,13 +218,13 @@ const VerifyEmailRequired = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Important Information:
+                {t.importantInformation}
               </h3>
               <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                <li>Check your inbox (and spam folder) for the verification email</li>
-                <li>The verification link expires in 10 minutes</li>
-                <li>Click the link in the email to verify your account</li>
-                <li>This page will automatically refresh when you verify your email</li>
+                <li>{t.checkInboxSpam}</li>
+                <li>{t.linkExpires10Minutes}</li>
+                <li>{t.clickLinkToVerify}</li>
+                <li>{t.pageAutoRefresh}</li>
               </ul>
             </div>
           </div>
@@ -164,7 +237,7 @@ const VerifyEmailRequired = () => {
               className="w-full"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Resend Verification Email
+              {t.resendVerificationEmail}
             </Button>
 
             <Button
@@ -173,7 +246,7 @@ const VerifyEmailRequired = () => {
               className="w-full"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
-              Check Verification Status
+              {t.checkVerificationStatus}
             </Button>
 
             <Button
@@ -186,15 +259,15 @@ const VerifyEmailRequired = () => {
               className="w-full"
             >
               <XCircle className="w-4 h-4 mr-2" />
-              Sign Out
+              {t.signOut}
             </Button>
           </div>
 
           <div className="mt-6 pt-6 border-t text-center">
             <p className="text-xs text-gray-500">
-              <strong>Note:</strong> The email service is currently using Ethereal Email (testing service).
+              <strong>{t.note}</strong> {t.emailServiceNote}
               <br />
-              Check the server console for the email preview URL, or configure a real SMTP service for production.
+              {t.checkServerConsole}
             </p>
           </div>
         </Card>

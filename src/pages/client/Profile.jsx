@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
@@ -25,10 +25,113 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loadingProfile: 'Loading profile...',
+    failedToLoad: 'Failed to load profile data. Please refresh the page.',
+    profileUpdated: 'Profile updated successfully!',
+    updateFailed: 'Failed to update profile',
+    myProfile: 'My Profile',
+    editProfile: 'Edit Profile',
+    personalInformation: 'Personal Information',
+    fullName: 'Full Name',
+    email: 'Email',
+    emailCannotChange: 'Email cannot be changed',
+    phoneNumber: 'Phone Number',
+    companyName: 'Company Name',
+    industry: 'Industry',
+    socialLinks: 'Social Links (Optional)',
+    linkedin: 'LinkedIn',
+    website: 'Website',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
+    saveChanges: 'Save Changes',
+    cancel: 'Cancel',
+    notProvided: 'Not provided',
+    memberSince: 'Member Since',
+    notAvailable: 'Not available',
+    pointsBalance: 'Points Balance',
+    loadingPoints: 'Loading points balance...',
+    availablePoints: 'Available Points',
+    buyMorePoints: 'Buy More Points',
+    pointsUsed: 'Points Used',
+    usedToUnlock: 'Used to unlock {count} profiles',
+    unlockedProfiles: 'Unlocked Profiles',
+    pointsPerProfile: '10 points per profile',
+    recentPackages: 'Recent Package Purchases',
+    viewAll: 'View All',
+    loadingHistory: 'Loading package history...',
+    noPackagesYet: "You haven't purchased any points packages yet. Purchase a package to start unlocking student profiles.",
+  },
+  it: {
+    loadingProfile: 'Caricamento profilo...',
+    failedToLoad: 'Impossibile caricare i dati del profilo. Si prega di aggiornare la pagina.',
+    profileUpdated: 'Profilo aggiornato con successo!',
+    updateFailed: 'Impossibile aggiornare il profilo',
+    myProfile: 'Il Mio Profilo',
+    editProfile: 'Modifica Profilo',
+    personalInformation: 'Informazioni Personali',
+    fullName: 'Nome Completo',
+    email: 'Email',
+    emailCannotChange: 'L\'email non può essere modificata',
+    phoneNumber: 'Numero di Telefono',
+    companyName: 'Nome Azienda',
+    industry: 'Settore',
+    socialLinks: 'Link Social (Opzionale)',
+    linkedin: 'LinkedIn',
+    website: 'Sito Web',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
+    saveChanges: 'Salva Modifiche',
+    cancel: 'Annulla',
+    notProvided: 'Non fornito',
+    memberSince: 'Membro dal',
+    notAvailable: 'Non disponibile',
+    pointsBalance: 'Saldo Punti',
+    loadingPoints: 'Caricamento saldo punti...',
+    availablePoints: 'Punti Disponibili',
+    buyMorePoints: 'Acquista Altri Punti',
+    pointsUsed: 'Punti Utilizzati',
+    usedToUnlock: 'Utilizzati per sbloccare {count} profili',
+    unlockedProfiles: 'Profili Sbloccati',
+    pointsPerProfile: '10 punti per profilo',
+    recentPackages: 'Acquisti Pacchetti Recenti',
+    viewAll: 'Visualizza Tutti',
+    loadingHistory: 'Caricamento cronologia pacchetti...',
+    noPackagesYet: 'Non hai ancora acquistato nessun pacchetto di punti. Acquista un pacchetto per iniziare a sbloccare i profili degli studenti.',
+  },
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  // Listen for language changes from DashboardLayout
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    // Listen for custom language change event
+    window.addEventListener('languageChanged', handleLanguageChange);
+    
+    // Also listen for storage events (for cross-tab updates)
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -85,7 +188,7 @@ const Profile = () => {
       }
       queryClient.invalidateQueries(['currentUser']);
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      alert(t.profileUpdated);
     },
     onError: (error) => {
       // Log full error for debugging
@@ -120,7 +223,7 @@ const Profile = () => {
       // If we still don't have a good message, show the error object
       if (errorMessage === 'Failed to update profile' && error) {
         console.error('Full error object:', JSON.stringify(error, null, 2));
-        errorMessage = `Failed to update profile. ${JSON.stringify(error)}`;
+        errorMessage = `${t.updateFailed}. ${JSON.stringify(error)}`;
       }
       
       alert(errorMessage);
@@ -183,7 +286,7 @@ const Profile = () => {
   };
 
   if (loadingUser) {
-    return <Loading text="Loading profile..." />;
+    return <Loading text={t.loadingProfile} />;
   }
 
   // Check if user data is available
@@ -191,7 +294,7 @@ const Profile = () => {
     return (
       <Alert
         type="error"
-        message="Failed to load profile data. Please refresh the page."
+        message={t.failedToLoad}
       />
     );
   }
@@ -204,23 +307,23 @@ const Profile = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t.myProfile}</h1>
         {!isEditing && (
           <Button variant="primary" onClick={() => setIsEditing(true)}>
             <Edit2 className="w-4 h-4 mr-2" />
-            Edit Profile
+            {t.editProfile}
           </Button>
         )}
       </div>
 
       {/* Profile Information */}
-      <Card title="Personal Information">
+      <Card title={t.personalInformation}>
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
+                  {t.fullName} *
                 </label>
                 <input
                   type="text"
@@ -233,7 +336,7 @@ const Profile = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
+                  {t.email} *
                 </label>
                 <input
                   type="email"
@@ -243,12 +346,12 @@ const Profile = () => {
                   required
                   disabled
                 />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                <p className="text-xs text-gray-500 mt-1">{t.emailCannotChange}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
+                  {t.phoneNumber}
                 </label>
                 <input
                   type="tel"
@@ -260,7 +363,7 @@ const Profile = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Company Name
+                  {t.companyName}
                 </label>
                 <input
                   type="text"
@@ -272,7 +375,7 @@ const Profile = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Industry
+                  {t.industry}
                 </label>
                 <input
                   type="text"
@@ -285,11 +388,11 @@ const Profile = () => {
 
             {/* Social Links Section */}
             <div className="pt-4 border-t">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Links (Optional)</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.socialLinks}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    LinkedIn
+                    {t.linkedin}
                   </label>
                   <input
                     type="url"
@@ -311,7 +414,7 @@ const Profile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Website
+                    {t.website}
                   </label>
                   <input
                     type="url"
@@ -333,7 +436,7 @@ const Profile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Telegram
+                    {t.telegram}
                   </label>
                   <input
                     type="url"
@@ -355,7 +458,7 @@ const Profile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    WhatsApp
+                    {t.whatsapp}
                   </label>
                   <input
                     type="url"
@@ -379,7 +482,7 @@ const Profile = () => {
 
             <div className="flex items-center gap-3 pt-4">
               <Button type="submit" variant="primary" loading={updateMutation.isPending}>
-                Save Changes
+                {t.saveChanges}
               </Button>
               <Button
                 type="button"
@@ -406,7 +509,7 @@ const Profile = () => {
                   }
                 }}
               >
-                Cancel
+                {t.cancel}
               </Button>
             </div>
           </form>
@@ -416,7 +519,7 @@ const Profile = () => {
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="text-sm text-gray-500">{t.fullName}</p>
                   <p className="font-semibold text-gray-900">{user?.name}</p>
                 </div>
               </div>
@@ -424,7 +527,7 @@ const Profile = () => {
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-sm text-gray-500">{t.email}</p>
                   <p className="font-semibold text-gray-900">{user?.email}</p>
                 </div>
               </div>
@@ -432,17 +535,17 @@ const Profile = () => {
               <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Phone Number</p>
-                  <p className="font-semibold text-gray-900">{user?.phone || 'Not provided'}</p>
+                  <p className="text-sm text-gray-500">{t.phoneNumber}</p>
+                  <p className="font-semibold text-gray-900">{user?.phone || t.notProvided}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <Briefcase className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Company Name</p>
+                  <p className="text-sm text-gray-500">{t.companyName}</p>
                   <p className="font-semibold text-gray-900">
-                    {user?.clientProfile?.companyName || 'Not provided'}
+                    {user?.clientProfile?.companyName || t.notProvided}
                   </p>
                 </div>
               </div>
@@ -450,9 +553,9 @@ const Profile = () => {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Industry</p>
+                  <p className="text-sm text-gray-500">{t.industry}</p>
                   <p className="font-semibold text-gray-900">
-                    {user?.clientProfile?.industry || 'Not provided'}
+                    {user?.clientProfile?.industry || t.notProvided}
                   </p>
                 </div>
               </div>
@@ -460,15 +563,15 @@ const Profile = () => {
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Member Since</p>
+                  <p className="text-sm text-gray-500">{t.memberSince}</p>
                   <p className="font-semibold text-gray-900">
                     {user?.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                      ? new Date(user.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                         })
-                      : 'Not available'}
+                      : t.notAvailable}
                   </p>
                 </div>
               </div>
@@ -477,7 +580,7 @@ const Profile = () => {
             {/* Social Links Display */}
             {user?.clientProfile?.socialLinks && Object.values(user.clientProfile.socialLinks).some(link => link) && (
               <div className="pt-6 border-t mt-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Social Links</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">{t.socialLinks}</h3>
                 <div className="flex flex-wrap gap-4">
                   {user.clientProfile.socialLinks.linkedin && (
                     <a
@@ -535,17 +638,17 @@ const Profile = () => {
       </Card>
 
       {/* Points Balance */}
-      <Card title="Points Balance">
+      <Card title={t.pointsBalance}>
         {loadingPoints ? (
           <div className="flex items-center justify-center py-12">
-            <Loading text="Loading points balance..." />
+            <Loading text={t.loadingPoints} />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl border border-primary-200">
               <div className="flex items-center gap-3 mb-2">
                 <Coins className="w-6 h-6 text-primary-600" />
-                <p className="text-sm font-medium text-primary-900">Available Points</p>
+                <p className="text-sm font-medium text-primary-900">{t.availablePoints}</p>
               </div>
               <p className="text-4xl font-bold text-primary-600">
                 {points?.pointsRemaining || 0}
@@ -557,18 +660,18 @@ const Profile = () => {
                 onClick={() => navigate('/client/packages')}
               >
                 <Package className="w-4 h-4 mr-2" />
-                Buy More Points
+                {t.buyMorePoints}
               </Button>
             </div>
 
             <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
               <div className="flex items-center gap-3 mb-2">
                 <Eye className="w-6 h-6 text-gray-600" />
-                <p className="text-sm font-medium text-gray-700">Points Used</p>
+                <p className="text-sm font-medium text-gray-700">{t.pointsUsed}</p>
               </div>
               <p className="text-4xl font-bold text-gray-900">{points?.pointsUsed || 0}</p>
               <p className="text-sm text-gray-500 mt-2">
-                Used to unlock {points?.unlockedStudentsCount || 0} profiles
+                {t.usedToUnlock.replace('{count}', points?.unlockedStudentsCount || 0)}
               </p>
             </div>
 
@@ -578,12 +681,12 @@ const Profile = () => {
             >
               <div className="flex items-center gap-3 mb-2">
                 <User className="w-6 h-6 text-gray-600" />
-                <p className="text-sm font-medium text-gray-700">Unlocked Profiles</p>
+                <p className="text-sm font-medium text-gray-700">{t.unlockedProfiles}</p>
               </div>
               <p className="text-4xl font-bold text-gray-900">
                 {points?.unlockedStudentsCount || 0}
               </p>
-              <p className="text-sm text-gray-500 mt-2">10 points per profile</p>
+              <p className="text-sm text-gray-500 mt-2">{t.pointsPerProfile}</p>
             </div>
           </div>
         )}
@@ -591,22 +694,22 @@ const Profile = () => {
 
       {/* Recent Packages */}
       <Card
-        title="Recent Package Purchases"
+        title={t.recentPackages}
         actions={
           <Button variant="outline" size="sm" onClick={() => navigate('/client/transactions')}>
             <Receipt className="w-4 h-4 mr-2" />
-            View All
+            {t.viewAll}
           </Button>
         }
       >
         {loadingHistory ? (
           <div className="flex items-center justify-center py-12">
-            <Loading text="Loading package history..." />
+            <Loading text={t.loadingHistory} />
           </div>
         ) : packages.length === 0 ? (
           <Alert
             type="info"
-            message="You haven't purchased any points packages yet. Purchase a package to start unlocking student profiles."
+            message={t.noPackagesYet}
           />
         ) : (
           <div className="space-y-3">

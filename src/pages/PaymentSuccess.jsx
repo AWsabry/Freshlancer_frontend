@@ -9,6 +9,67 @@ import paymobService from '../services/paymobService';
 import { packageService } from '../services/packageService';
 import couponService from '../services/couponService';
 
+const translations = {
+  en: {
+    processingPayment: 'Processing Payment...',
+    paymentError: 'Payment Error',
+    paymentSuccessful: 'Payment Successful!',
+    waitActivateSubscription: 'Please wait while we activate your subscription...',
+    premiumSubscriptionActivated: 'Your premium subscription has been activated successfully.',
+    pointsPackageAdded: 'Your points package has been added to your account.',
+    pointsAddedSuccessfully: 'Points Added Successfully!',
+    packageActivated: 'has been activated',
+    yourPackage: 'Your package',
+    newBalance: 'New Balance',
+    points: 'points',
+    availableForJobPostings: 'Available for job postings and profile views',
+    loadingBalance: 'Loading your balance...',
+    whatYouCanDoNow: 'What you can do now:',
+    postNewJobs: 'Post new jobs and find talented freelancers',
+    viewFreelancerProfiles: 'View freelancer profiles and portfolios',
+    pointsNeverExpire: 'Your points never expire',
+    trackUsage: 'Track your usage in the packages dashboard',
+    whatHappensNext: 'What happens next?',
+    accountUpgradedPremium: 'Your account has been upgraded to Premium',
+    apply100JobsMonth: 'You can now apply to up to 100 jobs per month',
+    profilePriority: 'Your profile will get priority in search results',
+    confirmationNotification: 'You\'ll receive a confirmation notification',
+    goToSubscription: 'Go to Subscription',
+    goToPackages: 'Go to Packages',
+    redirectingAutomatically: 'Redirecting automatically in 5 seconds...',
+    failedToCompletePayment: 'Failed to complete payment',
+  },
+  it: {
+    processingPayment: 'Elaborazione Pagamento...',
+    paymentError: 'Errore Pagamento',
+    paymentSuccessful: 'Pagamento Riuscito!',
+    waitActivateSubscription: 'Attendi mentre attiviamo il tuo abbonamento...',
+    premiumSubscriptionActivated: 'Il tuo abbonamento premium è stato attivato con successo.',
+    pointsPackageAdded: 'Il tuo pacchetto punti è stato aggiunto al tuo account.',
+    pointsAddedSuccessfully: 'Punti Aggiunti con Successo!',
+    packageActivated: 'è stato attivato',
+    yourPackage: 'Il tuo pacchetto',
+    newBalance: 'Nuovo Saldo',
+    points: 'punti',
+    availableForJobPostings: 'Disponibili per annunci di lavoro e visualizzazioni profilo',
+    loadingBalance: 'Caricamento del tuo saldo...',
+    whatYouCanDoNow: 'Cosa puoi fare ora:',
+    postNewJobs: 'Pubblica nuovi lavori e trova freelancer talentuosi',
+    viewFreelancerProfiles: 'Visualizza profili e portfolio di freelancer',
+    pointsNeverExpire: 'I tuoi punti non scadono mai',
+    trackUsage: 'Monitora il tuo utilizzo nella dashboard pacchetti',
+    whatHappensNext: 'Cosa succede dopo?',
+    accountUpgradedPremium: 'Il tuo account è stato aggiornato a Premium',
+    apply100JobsMonth: 'Ora puoi candidarti fino a 100 lavori al mese',
+    profilePriority: 'Il tuo profilo avrà priorità nei risultati di ricerca',
+    confirmationNotification: 'Riceverai una notifica di conferma',
+    goToSubscription: 'Vai all\'Abbonamento',
+    goToPackages: 'Vai ai Pacchetti',
+    redirectingAutomatically: 'Reindirizzamento automatico tra 5 secondi...',
+    failedToCompletePayment: 'Impossibile completare il pagamento',
+  },
+};
+
 // Helper function to get cookie value by name
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -28,6 +89,28 @@ const PaymentSuccess = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Try to get intentionId from multiple sources
   const queryIntentionId = searchParams.get('id');
@@ -134,7 +217,7 @@ const PaymentSuccess = () => {
       return () => clearTimeout(timer);
     } catch (err) {
       console.error('Error completing payment:', err);
-      setError(err.response?.data?.message || 'Failed to complete payment');
+      setError(err.response?.data?.message || t.failedToCompletePayment);
       setIsProcessing(false);
 
       // Redirect to failed page after 3 seconds
@@ -178,17 +261,17 @@ const PaymentSuccess = () => {
           {/* Message */}
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-gray-900">
-              {isProcessing ? 'Processing Payment...' : error ? 'Payment Error' : 'Payment Successful!'}
+              {isProcessing ? t.processingPayment : error ? t.paymentError : t.paymentSuccessful}
             </h1>
             <p className="text-gray-600">
               {isProcessing ? (
-                'Please wait while we activate your subscription...'
+                t.waitActivateSubscription
               ) : error ? (
                 error
               ) : (
                 user?.role === 'student'
-                  ? 'Your premium subscription has been activated successfully.'
-                  : 'Your points package has been added to your account.'
+                  ? t.premiumSubscriptionActivated
+                  : t.pointsPackageAdded
               )}
             </p>
           </div>
@@ -213,10 +296,10 @@ const PaymentSuccess = () => {
                         </div>
                         <div>
                           <h3 className="text-lg font-bold text-gray-900">
-                            Points Added Successfully!
+                            {t.pointsAddedSuccessfully}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {packageName || 'Your package'} has been activated
+                            {packageName || t.yourPackage} {t.packageActivated}
                           </p>
                         </div>
                       </div>
@@ -224,12 +307,12 @@ const PaymentSuccess = () => {
                       {/* Points Display */}
                       <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-green-200/50 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-gray-600">New Balance</span>
+                          <span className="text-sm font-medium text-gray-600">{t.newBalance}</span>
                           {packagePoints && (
                             <div className="flex items-center gap-2">
                               <TrendingUp className="w-4 h-4 text-green-600" />
                               <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                                +{packagePoints} points
+                                +{packagePoints} {t.points}
                               </span>
                             </div>
                           )}
@@ -240,16 +323,16 @@ const PaymentSuccess = () => {
                               <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
                                 {pointsData.data?.pointsRemaining?.toLocaleString() || 0}
                               </span>
-                              <span className="text-lg font-medium text-gray-600">points</span>
+                              <span className="text-lg font-medium text-gray-600">{t.points}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-2">
-                              Available for job postings and profile views
+                              {t.availableForJobPostings}
                             </p>
                           </>
                         ) : (
                           <div className="flex items-baseline gap-2">
                             <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
-                            <span className="text-sm text-gray-600">Loading your balance...</span>
+                            <span className="text-sm text-gray-600">{t.loadingBalance}</span>
                           </div>
                         )}
                       </div>
@@ -262,13 +345,13 @@ const PaymentSuccess = () => {
                       <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="text-sm text-left">
                         <p className="font-medium text-gray-900 mb-1">
-                          What you can do now:
+                          {t.whatYouCanDoNow}
                         </p>
                         <ul className="space-y-1 text-gray-600">
-                          <li>• Post new jobs and find talented freelancers</li>
-                          <li>• View freelancer profiles and portfolios</li>
-                          <li>• Your points never expire</li>
-                          <li>• Track your usage in the packages dashboard</li>
+                          <li>• {t.postNewJobs}</li>
+                          <li>• {t.viewFreelancerProfiles}</li>
+                          <li>• {t.pointsNeverExpire}</li>
+                          <li>• {t.trackUsage}</li>
                         </ul>
                       </div>
                     </div>
@@ -281,13 +364,13 @@ const PaymentSuccess = () => {
                     <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-left">
                       <p className="font-medium text-gray-900 mb-1">
-                        What happens next?
+                        {t.whatHappensNext}
                       </p>
                       <ul className="space-y-1 text-gray-600">
-                        <li>• Your account has been upgraded to Premium</li>
-                        <li>• You can now apply to up to 100 jobs per month</li>
-                        <li>• Your profile will get priority in search results</li>
-                        <li>• You'll receive a confirmation notification</li>
+                        <li>• {t.accountUpgradedPremium}</li>
+                        <li>• {t.apply100JobsMonth}</li>
+                        <li>• {t.profilePriority}</li>
+                        <li>• {t.confirmationNotification}</li>
                       </ul>
                     </div>
                   </div>
@@ -304,13 +387,13 @@ const PaymentSuccess = () => {
                 className="w-full"
                 onClick={handleContinue}
               >
-                {user?.role === 'student' ? 'Go to Subscription' : 'Go to Packages'}
+                {user?.role === 'student' ? t.goToSubscription : t.goToPackages}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
 
               <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Redirecting automatically in 5 seconds...
+                {t.redirectingAutomatically}
               </p>
             </div>
           )}

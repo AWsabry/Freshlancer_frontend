@@ -4,10 +4,61 @@ import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import Card from '../components/common/Card';
 import paymobService from '../services/paymobService';
 
+const translations = {
+  en: {
+    processingPayment: 'Processing Payment',
+    waitVerifyPayment: 'Please wait while we verify your payment...',
+    paymentSuccessful: 'Payment Successful!',
+    paymentConfirmed: 'Your payment has been confirmed. Redirecting...',
+    amount: 'Amount:',
+    status: 'Status:',
+    completed: 'Completed',
+    paymentFailed: 'Payment Failed',
+    paymentNotCompleted: 'Your payment could not be completed.',
+    redirecting: 'Redirecting...',
+    failedToCheckStatus: 'Failed to check payment status',
+  },
+  it: {
+    processingPayment: 'Elaborazione Pagamento',
+    waitVerifyPayment: 'Attendi mentre verifichiamo il tuo pagamento...',
+    paymentSuccessful: 'Pagamento Riuscito!',
+    paymentConfirmed: 'Il tuo pagamento è stato confermato. Reindirizzamento...',
+    amount: 'Importo:',
+    status: 'Stato:',
+    completed: 'Completato',
+    paymentFailed: 'Pagamento Fallito',
+    paymentNotCompleted: 'Il tuo pagamento non può essere completato.',
+    redirecting: 'Reindirizzamento...',
+    failedToCheckStatus: 'Impossibile verificare lo stato del pagamento',
+  },
+};
+
 const PaymentProcessing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const intentionId = searchParams.get('id');
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const [status, setStatus] = useState('checking'); // checking, success, failed
   const [paymentData, setPaymentData] = useState(null);
@@ -57,7 +108,7 @@ const PaymentProcessing = () => {
         }
       } catch (err) {
         console.error('Error checking payment status:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to check payment status');
+        setError(err.response?.data?.message || err.message || t.failedToCheckStatus);
         setStatus('failed');
 
         setTimeout(() => {
@@ -97,28 +148,28 @@ const PaymentProcessing = () => {
             {status === 'checking' && (
               <>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Processing Payment
+                  {t.processingPayment}
                 </h1>
                 <p className="text-gray-600">
-                  Please wait while we verify your payment...
+                  {t.waitVerifyPayment}
                 </p>
               </>
             )}
             {status === 'success' && (
               <>
                 <h1 className="text-2xl font-bold text-green-600">
-                  Payment Successful!
+                  {t.paymentSuccessful}
                 </h1>
                 <p className="text-gray-600">
-                  Your payment has been confirmed. Redirecting...
+                  {t.paymentConfirmed}
                 </p>
                 {paymentData && (
                   <div className="mt-4 p-4 bg-green-50 rounded-lg text-left">
                     <p className="text-sm text-gray-700">
-                      <strong>Amount:</strong> {paymentData.currency} {paymentData.amount}
+                      <strong>{t.amount}</strong> {paymentData.currency} {paymentData.amount}
                     </p>
                     <p className="text-sm text-gray-700">
-                      <strong>Status:</strong> Completed
+                      <strong>{t.status}</strong> {t.completed}
                     </p>
                   </div>
                 )}
@@ -127,13 +178,13 @@ const PaymentProcessing = () => {
             {status === 'failed' && (
               <>
                 <h1 className="text-2xl font-bold text-red-600">
-                  Payment Failed
+                  {t.paymentFailed}
                 </h1>
                 <p className="text-gray-600">
-                  {error || 'Your payment could not be completed.'}
+                  {error || t.paymentNotCompleted}
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
-                  Redirecting...
+                  {t.redirecting}
                 </p>
               </>
             )}

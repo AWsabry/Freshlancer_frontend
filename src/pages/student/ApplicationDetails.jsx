@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationService } from '../../services/applicationService';
@@ -23,10 +23,143 @@ import {
   Unlock,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading application details...',
+    applicationNotFound: 'Application not found',
+    backToApplications: 'Back to Applications',
+    applicationWithdrawnSuccess: 'Application withdrawn successfully',
+    withdrawFailed: 'Failed to withdraw application',
+    withdrawConfirm: 'Are you sure you want to withdraw this application? This action cannot be undone.',
+    applicationDetails: 'Application Details',
+    applicationId: 'Application ID:',
+    contactUnlockedByClient: 'Contact Unlocked by Client',
+    contactUnlockedMessage: 'Great news! The client has unlocked your contact information. They are interested in your application and may reach out to you directly.',
+    premiumMembersOnly: 'Premium members only - Upgrade to premium to see if the client has unlocked your contact information.',
+    pendingMessage: 'Your application is pending review. The client will review it soon.',
+    acceptedMessage: 'Congratulations! Your application has been accepted. The client will contact you soon.',
+    rejectedMessage: 'Unfortunately, your application was not accepted for this job.',
+    withdrawnMessage: 'This application has been withdrawn.',
+    jobWithdrawnMessage: 'This job was withdrawn by the client. Your application has been automatically withdrawn.',
+    applicationWithdrawnReason: 'Application withdrawn:',
+    clientFeedback: 'Client Feedback',
+    received: 'Received:',
+    appliedOn: 'Applied On',
+    lastUpdated: 'Last Updated',
+    reviewedOn: 'Reviewed On',
+    jobDetails: 'Job Details',
+    viewFullJob: 'View Full Job',
+    upgradeToPremiumEmail: 'Upgrade to Premium to see Client Email',
+    urgent: 'Urgent',
+    jobBudget: 'Job Budget',
+    premiumMembersOnlyBudget: 'Premium members only',
+    duration: 'Duration',
+    posted: 'Posted',
+    description: 'Description',
+    skillsRequired: 'Skills Required',
+    yourProposal: 'Your Proposal',
+    proposalType: 'Proposal Type',
+    standard: 'Standard',
+    yourProposedBudget: 'Your Proposed Budget',
+    estimatedDuration: 'Estimated Duration',
+    availabilityCommitment: 'Availability Commitment',
+    approachMethodology: 'Approach & Methodology',
+    methodology: 'Methodology',
+    deliveryFrequency: 'Delivery Frequency',
+    numberOfRevisions: 'Number of Revisions',
+    communicationPreference: 'Communication Preference',
+    relevantExperienceLevel: 'Relevant Experience Level',
+    backToAllApplications: 'Back to All Applications',
+    viewFullJobDetails: 'View Full Job Details',
+    withdrawApplication: 'Withdraw Application',
+    pendingReview: 'Pending Review',
+    reviewed: 'Reviewed',
+    accepted: 'Accepted',
+    rejected: 'Rejected',
+    withdrawn: 'Withdrawn',
+  },
+  it: {
+    loading: 'Caricamento dettagli candidatura...',
+    applicationNotFound: 'Candidatura non trovata',
+    backToApplications: 'Torna alle Candidature',
+    applicationWithdrawnSuccess: 'Candidatura ritirata con successo',
+    withdrawFailed: 'Impossibile ritirare la candidatura',
+    withdrawConfirm: 'Sei sicuro di voler ritirare questa candidatura? Questa azione non può essere annullata.',
+    applicationDetails: 'Dettagli Candidatura',
+    applicationId: 'ID Candidatura:',
+    contactUnlockedByClient: 'Contatto Sbloccato dal Cliente',
+    contactUnlockedMessage: 'Ottime notizie! Il cliente ha sbloccato le tue informazioni di contatto. È interessato alla tua candidatura e potrebbe contattarti direttamente.',
+    premiumMembersOnly: 'Solo membri premium - Passa a premium per vedere se il cliente ha sbloccato le tue informazioni di contatto.',
+    pendingMessage: 'La tua candidatura è in attesa di revisione. Il cliente la esaminerà presto.',
+    acceptedMessage: 'Congratulazioni! La tua candidatura è stata accettata. Il cliente ti contatterà presto.',
+    rejectedMessage: 'Sfortunatamente, la tua candidatura non è stata accettata per questo lavoro.',
+    withdrawnMessage: 'Questa candidatura è stata ritirata.',
+    jobWithdrawnMessage: 'Questo lavoro è stato ritirato dal cliente. La tua candidatura è stata automaticamente ritirata.',
+    applicationWithdrawnReason: 'Candidatura ritirata:',
+    clientFeedback: 'Feedback del Cliente',
+    received: 'Ricevuto:',
+    appliedOn: 'Candidato il',
+    lastUpdated: 'Ultimo Aggiornamento',
+    reviewedOn: 'Revisionato il',
+    jobDetails: 'Dettagli Lavoro',
+    viewFullJob: 'Visualizza Lavoro Completo',
+    upgradeToPremiumEmail: 'Passa a Premium per vedere l\'Email del Cliente',
+    urgent: 'Urgente',
+    jobBudget: 'Budget Lavoro',
+    premiumMembersOnlyBudget: 'Solo membri premium',
+    duration: 'Durata',
+    posted: 'Pubblicato',
+    description: 'Descrizione',
+    skillsRequired: 'Competenze Richieste',
+    yourProposal: 'La Tua Proposta',
+    proposalType: 'Tipo di Proposta',
+    standard: 'Standard',
+    yourProposedBudget: 'Il Tuo Budget Proposto',
+    estimatedDuration: 'Durata Stimata',
+    availabilityCommitment: 'Impegno di Disponibilità',
+    approachMethodology: 'Approccio e Metodologia',
+    methodology: 'Metodologia',
+    deliveryFrequency: 'Frequenza di Consegna',
+    numberOfRevisions: 'Numero di Revisioni',
+    communicationPreference: 'Preferenza di Comunicazione',
+    relevantExperienceLevel: 'Livello di Esperienza Rilevante',
+    backToAllApplications: 'Torna a Tutte le Candidature',
+    viewFullJobDetails: 'Visualizza Dettagli Lavoro Completi',
+    withdrawApplication: 'Ritira Candidatura',
+    pendingReview: 'In Attesa di Revisione',
+    reviewed: 'Revisionato',
+    accepted: 'Accettato',
+    rejected: 'Rifiutato',
+    withdrawn: 'Ritirato',
+  },
+};
+
 const ApplicationDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch application details
   const { data: applicationData, isLoading } = useQuery({
@@ -47,22 +180,22 @@ const ApplicationDetails = () => {
       queryClient.invalidateQueries(['application', id]);
       queryClient.invalidateQueries(['myApplications']);
       queryClient.invalidateQueries(['jobs']);
-      alert('Application withdrawn successfully');
+      alert(t.applicationWithdrawnSuccess);
       navigate('/student/applications');
     },
     onError: (error) => {
-      alert(error.response?.data?.message || 'Failed to withdraw application');
+      alert(error.response?.data?.message || t.withdrawFailed);
     },
   });
 
   const handleWithdraw = () => {
-    if (window.confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
+    if (window.confirm(t.withdrawConfirm)) {
       withdrawMutation.mutate();
     }
   };
 
   if (isLoading) {
-    return <Loading text="Loading application details..." />;
+    return <Loading text={t.loading} />;
   }
 
   const application = applicationData?.data?.application;
@@ -74,9 +207,9 @@ const ApplicationDetails = () => {
   if (!application) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Application not found</p>
+        <p className="text-gray-600">{t.applicationNotFound}</p>
         <Button onClick={() => navigate('/student/applications')} className="mt-4">
-          Back to Applications
+          {t.backToApplications}
         </Button>
       </div>
     );
@@ -87,11 +220,11 @@ const ApplicationDetails = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { variant: 'info', label: 'Pending Review', icon: Clock },
-      reviewed: { variant: 'warning', label: 'Reviewed', icon: Eye },
-      accepted: { variant: 'success', label: 'Accepted', icon: CheckCircle },
-      rejected: { variant: 'error', label: 'Rejected', icon: XCircle },
-      withdrawn: { variant: 'default', label: 'Withdrawn', icon: AlertCircle },
+      pending: { variant: 'info', label: t.pendingReview, icon: Clock },
+      reviewed: { variant: 'warning', label: t.reviewed, icon: Eye },
+      accepted: { variant: 'success', label: t.accepted, icon: CheckCircle },
+      rejected: { variant: 'error', label: t.rejected, icon: XCircle },
+      withdrawn: { variant: 'default', label: t.withdrawn, icon: AlertCircle },
     };
     const config = statusConfig[status] || { variant: 'default', label: status, icon: FileText };
     const Icon = config.icon;
@@ -112,15 +245,15 @@ const ApplicationDetails = () => {
         className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
       >
         <ArrowLeft className="w-5 h-5" />
-        Back to Applications
+        {t.backToApplications}
       </button>
 
       {/* Application Header */}
       <Card className="mb-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">Application Details</h1>
-            <p className="text-gray-600">Application ID: {application._id}</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">{t.applicationDetails}</h1>
+            <p className="text-gray-600">{t.applicationId} {application._id}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             {getStatusBadge(application.status)}
@@ -128,7 +261,7 @@ const ApplicationDetails = () => {
             {application.contactUnlockedByClient === true && (
               <Badge variant="success" className="flex items-center gap-1">
                 <Unlock className="w-4 h-4" />
-                Contact Unlocked by Client
+                {t.contactUnlockedByClient}
               </Badge>
             )}
           </div>
@@ -138,7 +271,7 @@ const ApplicationDetails = () => {
         {application.contactUnlockedByClient === true && (
           <Alert
             type="success"
-            message="Great news! The client has unlocked your contact information. They are interested in your application and may reach out to you directly."
+            message={t.contactUnlockedMessage}
             className="mb-4"
           />
         )}
@@ -147,7 +280,7 @@ const ApplicationDetails = () => {
         {application.contactUnlockedByClient === 'premium members only' && (
           <Alert
             type="info"
-            message="Premium members only - Upgrade to premium to see if the client has unlocked your contact information."
+            message={t.premiumMembersOnly}
             className="mb-4"
           />
         )}
@@ -156,21 +289,21 @@ const ApplicationDetails = () => {
         {application.status === 'pending' && (
           <Alert
             type="info"
-            message="Your application is pending review. The client will review it soon."
+            message={t.pendingMessage}
             className="mb-4"
           />
         )}
         {application.status === 'accepted' && (
           <Alert
             type="success"
-            message="Congratulations! Your application has been accepted. The client will contact you soon."
+            message={t.acceptedMessage}
             className="mb-4"
           />
         )}
         {application.status === 'rejected' && (
           <Alert
             type="error"
-            message="Unfortunately, your application was not accepted for this job."
+            message={t.rejectedMessage}
             className="mb-4"
           />
         )}
@@ -179,10 +312,10 @@ const ApplicationDetails = () => {
             type="warning"
             message={
               application.withdrawalReason === 'Job was withdrawn by client'
-                ? 'This job was withdrawn by the client. Your application has been automatically withdrawn.'
+                ? t.jobWithdrawnMessage
                 : application.withdrawalReason
-                ? `Application withdrawn: ${application.withdrawalReason}`
-                : 'This application has been withdrawn.'
+                ? `${t.applicationWithdrawnReason} ${application.withdrawalReason}`
+                : t.withdrawnMessage
             }
             className="mb-4"
           />
@@ -193,12 +326,12 @@ const ApplicationDetails = () => {
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
             <h3 className="text-lg font-semibold text-blue-900 mb-2 flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Client Feedback
+              {t.clientFeedback}
             </h3>
             <p className="text-blue-800">{application.clientFeedback.message}</p>
             {application.clientFeedback.timestamp && (
               <p className="text-sm text-blue-600 mt-2">
-                Received: {new Date(application.clientFeedback.timestamp).toLocaleString()}
+                {t.received} {new Date(application.clientFeedback.timestamp).toLocaleString(language === 'it' ? 'it-IT' : 'en-US')}
               </p>
             )}
           </div>
@@ -207,30 +340,30 @@ const ApplicationDetails = () => {
         {/* Application Timeline */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
           <div>
-            <p className="text-sm text-gray-600 mb-1">Applied On</p>
+            <p className="text-sm text-gray-600 mb-1">{t.appliedOn}</p>
             <p className="font-semibold text-gray-900">
-              {new Date(application.createdAt).toLocaleDateString()}
+              {new Date(application.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
             </p>
             <p className="text-xs text-gray-500">
-              {new Date(application.createdAt).toLocaleTimeString()}
+              {new Date(application.createdAt).toLocaleTimeString(language === 'it' ? 'it-IT' : 'en-US')}
             </p>
           </div>
           {application.updatedAt && application.updatedAt !== application.createdAt && (
             <div>
-              <p className="text-sm text-gray-600 mb-1">Last Updated</p>
+              <p className="text-sm text-gray-600 mb-1">{t.lastUpdated}</p>
               <p className="font-semibold text-gray-900">
-                {new Date(application.updatedAt).toLocaleDateString()}
+                {new Date(application.updatedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
               </p>
               <p className="text-xs text-gray-500">
-                {new Date(application.updatedAt).toLocaleTimeString()}
+                {new Date(application.updatedAt).toLocaleTimeString(language === 'it' ? 'it-IT' : 'en-US')}
               </p>
             </div>
           )}
           {application.reviewedAt && (
             <div>
-              <p className="text-sm text-gray-600 mb-1">Reviewed On</p>
+              <p className="text-sm text-gray-600 mb-1">{t.reviewedOn}</p>
               <p className="font-semibold text-gray-900">
-                {new Date(application.reviewedAt).toLocaleDateString()}
+                {new Date(application.reviewedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
               </p>
             </div>
           )}
@@ -241,7 +374,7 @@ const ApplicationDetails = () => {
       {job && (
         <Card className="mb-6">
           <div className="flex items-start justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Job Details</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t.jobDetails}</h2>
             <Button
               variant="outline"
               size="sm"
@@ -249,7 +382,7 @@ const ApplicationDetails = () => {
               className="flex items-center gap-2"
             >
               <Eye className="w-4 h-4" />
-              View Full Job
+              {t.viewFullJob}
             </Button>
           </div>
 
@@ -270,7 +403,7 @@ const ApplicationDetails = () => {
                 <span className="flex items-center gap-1">
                   <Briefcase className="w-5 h-5" />
                   <span className="text-sm text-gray-500 italic">
-                    Upgrade to Premium to see Client Email
+                    {t.upgradeToPremiumEmail}
                   </span>
                 </span>
               )}
@@ -282,14 +415,14 @@ const ApplicationDetails = () => {
                 </span>
               )}
               {job.category && <Badge variant="info">{job.category}</Badge>}
-              {job.urgent && <Badge variant="error">Urgent</Badge>}
+              {job.urgent && <Badge variant="error">{t.urgent}</Badge>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
               {/* Job Budget - Only for Premium Users */}
               {isPremium && job.budget && !job.budget.message ? (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Job Budget</p>
+                  <p className="text-sm text-gray-600 mb-1">{t.jobBudget}</p>
                   <div className="flex items-center gap-1 font-semibold text-gray-900">
                     <DollarSign className="w-5 h-5" />
                     {job.budget.currency} {job.budget.min} - {job.budget.max}
@@ -297,35 +430,35 @@ const ApplicationDetails = () => {
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Job Budget</p>
+                  <p className="text-sm text-gray-600 mb-1">{t.jobBudget}</p>
                   <div className="flex items-center gap-1 font-semibold text-gray-400">
-                    <span className="text-sm italic">{job.budget?.message || 'Premium members only'}</span>
+                    <span className="text-sm italic">{job.budget?.message || t.premiumMembersOnlyBudget}</span>
                   </div>
                 </div>
               )}
 
               {job.duration && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Duration</p>
+                  <p className="text-sm text-gray-600 mb-1">{t.duration}</p>
                   <p className="font-semibold text-gray-900">{job.duration}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm text-gray-600 mb-1">Posted</p>
+                <p className="text-sm text-gray-600 mb-1">{t.posted}</p>
                 <p className="font-semibold text-gray-900">
-                  {new Date(job.createdAt).toLocaleDateString()}
+                  {new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                 </p>
               </div>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Description</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">{t.description}</h4>
               <p className="text-gray-700 whitespace-pre-line line-clamp-4">{job.description}</p>
             </div>
 
             {job.skillsRequired && job.skillsRequired.length > 0 && (
               <div className="mt-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Skills Required</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">{t.skillsRequired}</h4>
                 <div className="flex flex-wrap gap-2">
                   {job.skillsRequired.map((skill, index) => (
                     <span
@@ -344,23 +477,23 @@ const ApplicationDetails = () => {
 
       {/* Your Proposal */}
       <Card className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Proposal</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">{t.yourProposal}</h2>
 
         <div className="space-y-6">
           {/* Proposal Type and Budget */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Proposal Type</h3>
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.proposalType}</h3>
               <div className="flex items-center gap-2">
                 <span className="px-4 py-2 bg-primary-50 text-primary-700 rounded-lg font-medium">
-                  {application.proposalType?.charAt(0).toUpperCase() + application.proposalType?.slice(1) || 'Standard'}
+                  {application.proposalType?.charAt(0).toUpperCase() + application.proposalType?.slice(1) || t.standard}
                 </span>
               </div>
             </div>
 
             {application.proposedBudget && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">Your Proposed Budget</h3>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.yourProposedBudget}</h3>
                 <div className="flex items-center gap-1 text-2xl font-bold text-green-600">
                   {application.proposedBudget.amount}
                   {application.proposedBudget.currency && (
@@ -375,14 +508,14 @@ const ApplicationDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {application.estimatedDuration && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">Estimated Duration</h3>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.estimatedDuration}</h3>
                 <p className="text-gray-900 font-medium">{application.estimatedDuration}</p>
               </div>
             )}
 
             {application.availabilityCommitment && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">Availability Commitment</h3>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.availabilityCommitment}</h3>
                 <p className="text-gray-900 font-medium">{application.availabilityCommitment}</p>
               </div>
             )}
@@ -391,32 +524,32 @@ const ApplicationDetails = () => {
           {/* Approach Selections */}
           {application.approachSelections && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Approach & Methodology</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t.approachMethodology}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {application.approachSelections.methodology && (
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Methodology</p>
+                    <p className="text-sm text-gray-600 mb-1">{t.methodology}</p>
                     <p className="font-medium text-gray-900">{application.approachSelections.methodology}</p>
                   </div>
                 )}
 
                 {application.approachSelections.deliveryFrequency && (
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Delivery Frequency</p>
+                    <p className="text-sm text-gray-600 mb-1">{t.deliveryFrequency}</p>
                     <p className="font-medium text-gray-900">{application.approachSelections.deliveryFrequency}</p>
                   </div>
                 )}
 
                 {application.approachSelections.revisions !== undefined && (
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Number of Revisions</p>
+                    <p className="text-sm text-gray-600 mb-1">{t.numberOfRevisions}</p>
                     <p className="font-medium text-gray-900">{application.approachSelections.revisions}</p>
                   </div>
                 )}
 
                 {application.approachSelections.communicationPreference && (
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Communication Preference</p>
+                    <p className="text-sm text-gray-600 mb-1">{t.communicationPreference}</p>
                     <p className="font-medium text-gray-900">{application.approachSelections.communicationPreference}</p>
                   </div>
                 )}
@@ -427,7 +560,7 @@ const ApplicationDetails = () => {
           {/* Experience Level */}
           {application.relevantExperienceLevel && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Relevant Experience Level</h3>
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.relevantExperienceLevel}</h3>
               <p className="text-gray-900 font-medium">{application.relevantExperienceLevel}</p>
             </div>
           )}
@@ -442,7 +575,7 @@ const ApplicationDetails = () => {
             onClick={() => navigate('/student/applications')}
             className="flex-1"
           >
-            Back to All Applications
+            {t.backToAllApplications}
           </Button>
 
           {job && (
@@ -452,7 +585,7 @@ const ApplicationDetails = () => {
               className="flex-1 flex items-center justify-center gap-2"
             >
               <Eye className="w-4 h-4" />
-              View Full Job Details
+              {t.viewFullJobDetails}
             </Button>
           )}
 
@@ -464,7 +597,7 @@ const ApplicationDetails = () => {
               disabled={withdrawMutation.isPending}
               className="flex-1 text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
             >
-              Withdraw Application
+              {t.withdrawApplication}
             </Button>
           )}
         </div>

@@ -328,8 +328,8 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Language Selector for Students */}
-            {user?.role === 'student' && (
+            {/* Language Selector for Students and Clients */}
+            {(user?.role === 'student' || user?.role === 'client') && (
               <div className="flex items-center gap-2">
                 <Globe className="w-5 h-5 text-gray-600" />
                 <select

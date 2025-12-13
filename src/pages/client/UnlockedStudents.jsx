@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
@@ -16,8 +17,71 @@ import {
   Calendar,
 } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading unlocked students...',
+    error: 'Error',
+    failedToLoad: 'Failed to load unlocked students',
+    unlockedStudents: 'Unlocked Students',
+    allUnlocked: 'All students whose profiles you have unlocked',
+    student: 'Student',
+    students: 'Students',
+    noUnlockedYet: 'No Unlocked Students Yet',
+    noUnlockedMessage: "You haven't unlocked any student profiles yet. Browse job applications to unlock student profiles.",
+    viewApplications: 'View Applications',
+    skills: 'Skills',
+    more: 'more',
+    joined: 'Joined',
+    viewFullProfile: 'View Full Profile',
+    available: 'available',
+    busy: 'busy',
+    unavailable: 'unavailable',
+  },
+  it: {
+    loading: 'Caricamento studenti sbloccati...',
+    error: 'Errore',
+    failedToLoad: 'Impossibile caricare gli studenti sbloccati',
+    unlockedStudents: 'Studenti Sbloccati',
+    allUnlocked: 'Tutti gli studenti i cui profili hai sbloccato',
+    student: 'Studente',
+    students: 'Studenti',
+    noUnlockedYet: 'Nessuno Studente Sbloccato Ancora',
+    noUnlockedMessage: 'Non hai ancora sbloccato nessun profilo studente. Sfoglia le candidature di lavoro per sbloccare i profili degli studenti.',
+    viewApplications: 'Visualizza Candidature',
+    skills: 'Competenze',
+    more: 'altri',
+    joined: 'Iscritto',
+    viewFullProfile: 'Visualizza Profilo Completo',
+    available: 'disponibile',
+    busy: 'occupato',
+    unavailable: 'non disponibile',
+  },
+};
+
 const UnlockedStudents = () => {
   const navigate = useNavigate();
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['unlockedStudents'],
@@ -25,7 +89,7 @@ const UnlockedStudents = () => {
   });
 
   if (isLoading) {
-    return <Loading text="Loading unlocked students..." />;
+    return <Loading text={t.loading} />;
   }
 
   if (error) {
@@ -33,8 +97,8 @@ const UnlockedStudents = () => {
       <div className="max-w-6xl mx-auto">
         <Alert
           type="error"
-          title="Error"
-          message={error.response?.data?.message || 'Failed to load unlocked students'}
+          title={t.error}
+          message={error.response?.data?.message || t.failedToLoad}
         />
       </div>
     );
@@ -48,13 +112,13 @@ const UnlockedStudents = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Unlocked Students</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t.unlockedStudents}</h1>
           <p className="text-gray-600 mt-2">
-            All students whose profiles you have unlocked
+            {t.allUnlocked}
           </p>
         </div>
         <Badge variant="primary" className="text-lg px-4 py-2">
-          {students.length} {students.length === 1 ? 'Student' : 'Students'}
+          {students.length} {students.length === 1 ? t.student : t.students}
         </Badge>
       </div>
 
@@ -64,14 +128,13 @@ const UnlockedStudents = () => {
           <div className="text-center py-12">
             <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No Unlocked Students Yet
+              {t.noUnlockedYet}
             </h3>
             <p className="text-gray-600 mb-6">
-              You haven't unlocked any student profiles yet. Browse job applications to unlock
-              student profiles.
+              {t.noUnlockedMessage}
             </p>
             <Button variant="primary" onClick={() => navigate('/client/applications')}>
-              View Applications
+              {t.viewApplications}
             </Button>
           </div>
         </Card>
@@ -135,8 +198,8 @@ const UnlockedStudents = () => {
                       <div className="flex items-center gap-2 text-gray-700">
                         <Calendar className="w-4 h-4 text-primary-600" />
                         <span className="text-sm">
-                          Joined{' '}
-                          {new Date(student.createdAt).toLocaleDateString('en-US', {
+                          {t.joined}{' '}
+                          {new Date(student.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
                             year: 'numeric',
                             month: 'short',
                           })}
@@ -149,7 +212,7 @@ const UnlockedStudents = () => {
                   {student.studentProfile?.skills &&
                     student.studentProfile.skills.length > 0 && (
                       <div className="mb-4">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Skills</h3>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.skills}</h3>
                         <div className="flex flex-wrap gap-2">
                           {student.studentProfile.skills.slice(0, 6).map((skill, index) => (
                             <Badge key={index} variant="secondary">
@@ -158,7 +221,7 @@ const UnlockedStudents = () => {
                           ))}
                           {student.studentProfile.skills.length > 6 && (
                             <Badge variant="secondary">
-                              +{student.studentProfile.skills.length - 6} more
+                              +{student.studentProfile.skills.length - 6} {t.more}
                             </Badge>
                           )}
                         </div>
@@ -185,7 +248,9 @@ const UnlockedStudents = () => {
                             : 'error'
                         }
                       >
-                        {student.studentProfile.availability}
+                        {student.studentProfile.availability === 'available' ? t.available :
+                         student.studentProfile.availability === 'busy' ? t.busy :
+                         t.unavailable}
                       </Badge>
                     )}
                   </div>
@@ -197,7 +262,7 @@ const UnlockedStudents = () => {
                     onClick={() => navigate(`/client/students/${student._id}`)}
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    View Full Profile
+                    {t.viewFullProfile}
                   </Button>
                 </div>
               </div>

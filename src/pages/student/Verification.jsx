@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { verificationService } from '../../services/verificationService';
@@ -11,10 +11,127 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import { Upload, CheckCircle, XCircle, Clock, FileText } from 'lucide-react';
 
+const translations = {
+  en: {
+    loading: 'Loading verification status...',
+    verificationComplete: 'Verification Complete',
+    verificationCompleteMessage: 'Your student status has been verified. You can now apply for jobs!',
+    verificationPending: 'Verification Pending',
+    verificationPendingMessage: 'Your verification is being reviewed by our admin team. This usually takes 24-48 hours.',
+    verificationRequired: 'Verification Required',
+    verificationRequiredMessage: 'Please submit your student verification documents to start applying for jobs.',
+    submitVerificationDocument: 'Submit Verification Document',
+    documentType: 'Document Type',
+    documentTypeRequired: 'Document type is required',
+    studentIdCard: 'Student ID Card',
+    enrollmentCertificate: 'Enrollment Certificate',
+    officialTranscript: 'Official Transcript',
+    other: 'Other',
+    institutionName: 'Institution Name',
+    institutionNamePlaceholder: 'University of...',
+    institutionNameRequired: 'Institution name is required',
+    studentIdNumber: 'Student ID Number',
+    studentIdNumberPlaceholder: '123456789',
+    studentIdRequired: 'Student ID is required',
+    enrollmentYear: 'Enrollment Year',
+    enrollmentYearPlaceholder: '2020',
+    enrollmentYearRequired: 'Enrollment year is required',
+    enrollmentYearInvalid: 'Please enter a valid year',
+    expectedGraduationYear: 'Expected Graduation Year',
+    expectedGraduationYearPlaceholder: '2025',
+    graduationYearRequired: 'Graduation year is required',
+    graduationYearInvalid: 'Please enter a valid future year',
+    uploadDocument: 'Upload Document',
+    uploadFile: 'Upload a file',
+    orDragAndDrop: 'or drag and drop',
+    fileTypes: 'PDF, JPG, PNG up to 10MB',
+    selected: 'Selected:',
+    submitForVerification: 'Submit for Verification',
+    verificationHistory: 'Verification History',
+    submitted: 'Submitted:',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    pendingReview: 'Pending Review',
+    reason: 'Reason:',
+    approvedDate: 'Approved:',
+    documentUploadedSuccess: 'Document uploaded successfully!',
+    documentUploadFailed: 'Failed to upload document',
+    pleaseSelectFile: 'Please select a file to upload',
+  },
+  it: {
+    loading: 'Caricamento stato verifica...',
+    verificationComplete: 'Verifica Completata',
+    verificationCompleteMessage: 'Il tuo status di studente è stato verificato. Ora puoi candidarti per i lavori!',
+    verificationPending: 'Verifica in Sospeso',
+    verificationPendingMessage: 'La tua verifica è in fase di revisione dal nostro team amministrativo. Di solito richiede 24-48 ore.',
+    verificationRequired: 'Verifica Richiesta',
+    verificationRequiredMessage: 'Invia i tuoi documenti di verifica studente per iniziare a candidarti per i lavori.',
+    submitVerificationDocument: 'Invia Documento di Verifica',
+    documentType: 'Tipo di Documento',
+    documentTypeRequired: 'Il tipo di documento è obbligatorio',
+    studentIdCard: 'Carta d\'Identità Studente',
+    enrollmentCertificate: 'Certificato di Iscrizione',
+    officialTranscript: 'Trascrizione Ufficiale',
+    other: 'Altro',
+    institutionName: 'Nome Istituzione',
+    institutionNamePlaceholder: 'Università di...',
+    institutionNameRequired: 'Il nome dell\'istituzione è obbligatorio',
+    studentIdNumber: 'Numero ID Studente',
+    studentIdNumberPlaceholder: '123456789',
+    studentIdRequired: 'L\'ID studente è obbligatorio',
+    enrollmentYear: 'Anno di Iscrizione',
+    enrollmentYearPlaceholder: '2020',
+    enrollmentYearRequired: 'L\'anno di iscrizione è obbligatorio',
+    enrollmentYearInvalid: 'Inserisci un anno valido',
+    expectedGraduationYear: 'Anno di Laurea Previsto',
+    expectedGraduationYearPlaceholder: '2025',
+    graduationYearRequired: 'L\'anno di laurea è obbligatorio',
+    graduationYearInvalid: 'Inserisci un anno futuro valido',
+    uploadDocument: 'Carica Documento',
+    uploadFile: 'Carica un file',
+    orDragAndDrop: 'o trascina e rilascia',
+    fileTypes: 'PDF, JPG, PNG fino a 10MB',
+    selected: 'Selezionato:',
+    submitForVerification: 'Invia per Verifica',
+    verificationHistory: 'Cronologia Verifiche',
+    submitted: 'Inviato:',
+    approved: 'Approvato',
+    rejected: 'Rifiutato',
+    pendingReview: 'In Attesa di Revisione',
+    reason: 'Motivo:',
+    approvedDate: 'Approvato:',
+    documentUploadedSuccess: 'Documento caricato con successo!',
+    documentUploadFailed: 'Impossibile caricare il documento',
+    pleaseSelectFile: 'Seleziona un file da caricare',
+  },
+};
+
 const Verification = () => {
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState(null);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('dashboardLanguage') || 'en';
+  });
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
+
+  useEffect(() => {
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    const handleStorageChange = () => {
+      setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const t = translations[language] || translations.en;
 
   // Fetch verification status and history
   const { data, isLoading } = useQuery({
@@ -30,16 +147,16 @@ const Verification = () => {
       queryClient.invalidateQueries(['verificationStatus']);
       reset();
       setSelectedFile(null);
-      alert('Document uploaded successfully!');
+      alert(t.documentUploadedSuccess);
     },
     onError: (error) => {
-      alert(error.message || 'Failed to upload document');
+      alert(error.message || t.documentUploadFailed);
     },
   });
 
   const onSubmit = (data) => {
     if (!selectedFile) {
-      alert('Please select a file to upload');
+      alert(t.pleaseSelectFile);
       return;
     }
 
@@ -55,7 +172,7 @@ const Verification = () => {
   };
 
   if (isLoading) {
-    return <Loading text="Loading verification status..." />;
+    return <Loading text={t.loading} />;
   }
 
   const verifications = data?.data?.verifications || [];
@@ -63,20 +180,20 @@ const Verification = () => {
   const hasPendingVerification = verifications.some(v => v.status === 'pending');
 
   const documentTypeOptions = [
-    { value: 'student_id', label: 'Student ID Card' },
-    { value: 'enrollment_certificate', label: 'Enrollment Certificate' },
-    { value: 'transcript', label: 'Official Transcript' },
-    { value: 'other', label: 'Other' },
+    { value: 'student_id', label: t.studentIdCard },
+    { value: 'enrollment_certificate', label: t.enrollmentCertificate },
+    { value: 'transcript', label: t.officialTranscript },
+    { value: 'other', label: t.other },
   ];
 
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved':
-        return <Badge variant="success">Approved</Badge>;
+        return <Badge variant="success">{t.approved}</Badge>;
       case 'rejected':
-        return <Badge variant="error">Rejected</Badge>;
+        return <Badge variant="error">{t.rejected}</Badge>;
       case 'pending':
-        return <Badge variant="warning">Pending Review</Badge>;
+        return <Badge variant="warning">{t.pendingReview}</Badge>;
       default:
         return <Badge variant="info">{status}</Badge>;
     }
@@ -101,87 +218,87 @@ const Verification = () => {
       {hasApprovedVerification && (
         <Alert
           type="success"
-          title="Verification Complete"
-          message="Your student status has been verified. You can now apply for jobs!"
+          title={t.verificationComplete}
+          message={t.verificationCompleteMessage}
         />
       )}
 
       {hasPendingVerification && !hasApprovedVerification && (
         <Alert
           type="info"
-          title="Verification Pending"
-          message="Your verification is being reviewed by our admin team. This usually takes 24-48 hours."
+          title={t.verificationPending}
+          message={t.verificationPendingMessage}
         />
       )}
 
       {!hasApprovedVerification && !hasPendingVerification && (
         <Alert
           type="warning"
-          title="Verification Required"
-          message="Please submit your student verification documents to start applying for jobs."
+          title={t.verificationRequired}
+          message={t.verificationRequiredMessage}
         />
       )}
 
       {/* Upload Form */}
       {!hasApprovedVerification && (
-        <Card title="Submit Verification Document">
+        <Card title={t.submitVerificationDocument}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Select
-              label="Document Type"
+              label={t.documentType}
               options={documentTypeOptions}
               error={errors.documentType?.message}
-              {...register('documentType', { required: 'Document type is required' })}
+              {...register('documentType', { required: t.documentTypeRequired })}
             />
 
             <Input
-              label="Institution Name"
-              placeholder="University of..."
+              label={t.institutionName}
+              placeholder={t.institutionNamePlaceholder}
               error={errors.institutionName?.message}
-              {...register('institutionName', { required: 'Institution name is required' })}
+              {...register('institutionName', { required: t.institutionNameRequired })}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Student ID Number"
-                placeholder="123456789"
+                label={t.studentIdNumber}
+                placeholder={t.studentIdNumberPlaceholder}
                 error={errors.studentIdNumber?.message}
-                {...register('studentIdNumber', { required: 'Student ID is required' })}
+                {...register('studentIdNumber', { required: t.studentIdRequired })}
               />
 
               <Input
-                label="Enrollment Year"
+                label={t.enrollmentYear}
                 type="number"
-                placeholder="2020"
+                placeholder={t.enrollmentYearPlaceholder}
                 error={errors.enrollmentYear?.message}
                 {...register('enrollmentYear', {
-                  required: 'Enrollment year is required',
-                  min: { value: 2000, message: 'Please enter a valid year' },
+                  required: t.enrollmentYearRequired,
+                  min: { value: 2000, message: t.enrollmentYearInvalid },
                 })}
               />
             </div>
 
             <Input
-              label="Expected Graduation Year"
+              label={t.expectedGraduationYear}
               type="number"
-              placeholder="2025"
+              placeholder={t.expectedGraduationYearPlaceholder}
               error={errors.expectedGraduationYear?.message}
               {...register('expectedGraduationYear', {
-                required: 'Graduation year is required',
-                min: { value: new Date().getFullYear(), message: 'Please enter a valid future year' },
+                required: t.graduationYearRequired,
+                min: { value: new Date().getFullYear(), message: t.graduationYearInvalid },
               })}
             />
 
             {/* File Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Document <span className="text-red-500">*</span>
+                {t.uploadDocument} <span className="text-red-500">*</span>
               </label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
                 <div className="space-y-1 text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-sm text-gray-600">
                     <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
-                      <span>Upload a file</span>
+                      <span>{t.uploadFile}</span>
                       <input
                         type="file"
                         className="sr-only"
@@ -189,14 +306,14 @@ const Verification = () => {
                         onChange={(e) => setSelectedFile(e.target.files[0])}
                       />
                     </label>
-                    <p className="pl-1">or drag and drop</p>
+                    <p className="pl-1">{t.orDragAndDrop}</p>
                   </div>
                   <p className="text-xs text-gray-500">
-                    PDF, JPG, PNG up to 10MB
+                    {t.fileTypes}
                   </p>
                   {selectedFile && (
                     <p className="text-sm text-primary-600 font-medium">
-                      Selected: {selectedFile.name}
+                      {t.selected} {selectedFile.name}
                     </p>
                   )}
                 </div>
@@ -210,7 +327,7 @@ const Verification = () => {
               loading={uploadMutation.isPending}
               disabled={uploadMutation.isPending}
             >
-              Submit for Verification
+              {t.submitForVerification}
             </Button>
           </form>
         </Card>
@@ -218,7 +335,7 @@ const Verification = () => {
 
       {/* Verification History */}
       {verifications.length > 0 && (
-        <Card title="Verification History">
+        <Card title={t.verificationHistory}>
           <div className="space-y-4">
             {verifications.map((verification) => (
               <div
@@ -238,18 +355,18 @@ const Verification = () => {
                       {verification.institutionName}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Submitted: {new Date(verification.createdAt).toLocaleDateString()}
+                      {t.submitted} {new Date(verification.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                     </p>
                     {verification.status === 'rejected' && verification.rejectionReason && (
                       <Alert
                         type="error"
-                        message={`Reason: ${verification.rejectionReason}`}
+                        message={`${t.reason} ${verification.rejectionReason}`}
                         className="mt-2"
                       />
                     )}
                     {verification.status === 'approved' && verification.approvedAt && (
                       <p className="text-xs text-green-600 mt-1">
-                        Approved: {new Date(verification.approvedAt).toLocaleDateString()}
+                        {t.approvedDate} {new Date(verification.approvedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                       </p>
                     )}
                   </div>
