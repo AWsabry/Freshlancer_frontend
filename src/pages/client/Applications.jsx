@@ -149,20 +149,20 @@ const Applications = () => {
                           userData?.data?.user?.clientProfile?.pointsRemaining ?? 0;
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       {/* Header with Points */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t.jobApplications}</h1>
-          <p className="text-gray-600 mt-1">{t.reviewGrouped}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.jobApplications}</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">{t.reviewGrouped}</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-primary-50 border border-primary-200 rounded-lg px-4 py-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="bg-primary-50 border border-primary-200 rounded-lg px-4 py-2 text-center sm:text-left">
             <p className="text-sm text-primary-600 font-medium">{t.availablePoints}</p>
             <p className="text-2xl font-bold text-primary-700">{pointsRemaining}</p>
             <p className="text-xs text-primary-500">{t.pointsPerContact}</p>
           </div>
-          <Button variant="primary" onClick={() => navigate('/client/packages')}>
+          <Button variant="primary" onClick={() => navigate('/client/packages')} className="w-full sm:w-auto">
             {t.getMorePoints}
           </Button>
         </div>
@@ -187,15 +187,15 @@ const Applications = () => {
           {groupedApplications.map(({ job, applications }) => (
             <Card key={job._id}>
               {/* Job Header */}
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-start gap-3">
-                    <Briefcase className="w-6 h-6 text-primary-600 mt-1" />
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 mt-1 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                         {job.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
                           {job.budget?.currency} {job.budget?.min} - {job.budget?.max}
                         </span>
@@ -205,14 +205,15 @@ const Applications = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="success">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <Badge variant="success" className="text-center sm:text-left">
                     {applications.length} {applications.length !== 1 ? t.applicantsPlural : t.applicants}
                   </Badge>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/client/jobs/${job._id}`)}
+                    className="w-full sm:w-auto"
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     {t.viewJob}
@@ -221,6 +222,7 @@ const Applications = () => {
                     variant="primary"
                     size="sm"
                     onClick={() => navigate(`/client/jobs/${job._id}/applications`)}
+                    className="w-full sm:w-auto"
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     {t.viewAllApplications}

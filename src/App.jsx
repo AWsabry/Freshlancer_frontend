@@ -11,6 +11,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmailRequired from './pages/VerifyEmailRequired';
+import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import StartupRegistration from './pages/StartupRegistration';
@@ -99,6 +100,7 @@ function App() {
       <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to={getDashboardPath()} />} />
       
       {/* Email Verification Routes */}
+      <Route path="/verify-email/:token" element={<VerifyEmail />} />
       <Route path="/verify-email-required" element={<VerifyEmailRequired />} />
       
       {/* Password Reset Routes */}

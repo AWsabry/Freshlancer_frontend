@@ -201,11 +201,11 @@ const JobDetails = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
       {/* Back Button */}
       <button
         onClick={() => navigate('/client/jobs')}
-        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
+        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6 text-sm sm:text-base"
       >
         <ArrowLeft className="w-5 h-5" />
         {t.backToMyJobs}
@@ -213,10 +213,10 @@ const JobDetails = () => {
 
       {/* Job Header */}
       <Card>
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">{job.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-gray-600">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{job.title}</h1>
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm sm:text-base text-gray-600">
               <span className="flex items-center gap-1">
                 <Calendar className="w-5 h-5" />
                 {t.posted} {new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
@@ -246,7 +246,7 @@ const JobDetails = () => {
         </div>
 
         {/* Quick Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
           {job.budget && (
             <div>
               <p className="text-sm text-gray-600 mb-1">{t.budget}</p>
@@ -293,7 +293,7 @@ const JobDetails = () => {
         )}
 
         {/* Additional Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">{t.category}</h3>
             <Badge variant="default">{job.category}</Badge>
@@ -315,7 +315,7 @@ const JobDetails = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-6 border-t flex flex-wrap gap-3">
+        <div className="pt-6 border-t flex flex-col sm:flex-row flex-wrap gap-3">
           <Button
             variant="primary"
             onClick={() => navigate(`/client/jobs/${job._id}/edit`)}

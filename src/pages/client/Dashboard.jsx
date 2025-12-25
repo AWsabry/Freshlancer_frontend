@@ -150,14 +150,14 @@ const Dashboard = () => {
   console.log('Platform Stats:', statsData);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.welcome}</h1>
-        <p className="text-gray-600">{t.subtitle}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t.welcome}</h1>
+        <p className="text-sm sm:text-base text-gray-600">{t.subtitle}</p>
       </div>
 
       {/* Client Dashboard Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card>
           <div className="flex items-center gap-4">
             <div className="p-4 bg-blue-100 rounded-full">
@@ -206,7 +206,7 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <Card title={t.quickActions}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -242,7 +242,7 @@ const Dashboard = () => {
       </Card>
 
       {/* Additional Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card title={t.gettingStarted}>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start gap-2">

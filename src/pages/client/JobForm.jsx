@@ -345,11 +345,11 @@ const JobForm = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
       {/* Back Button */}
       <button
         onClick={() => navigate('/client/jobs')}
-        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
+        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6 text-sm sm:text-base"
       >
         <ArrowLeft className="w-5 h-5" />
         {t.backToMyJobs}
@@ -427,7 +427,7 @@ const JobForm = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Input
               label={t.minimumBudget}
               type="number"
@@ -596,7 +596,7 @@ const JobForm = () => {
             </div>
           )}
 
-          <div className="flex gap-3 pt-6 border-t">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
             <Button
               type="button"
               variant="secondary"

@@ -202,18 +202,18 @@ const Verification = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle className="w-6 h-6 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />;
       case 'rejected':
-        return <XCircle className="w-6 h-6 text-red-500" />;
+        return <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />;
       case 'pending':
-        return <Clock className="w-6 h-6 text-yellow-500" />;
+        return <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />;
       default:
-        return <FileText className="w-6 h-6 text-gray-500" />;
+        return <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6">
       {/* Status Alert */}
       {hasApprovedVerification && (
         <Alert
@@ -242,7 +242,7 @@ const Verification = () => {
       {/* Upload Form */}
       {!hasApprovedVerification && (
         <Card title={t.submitVerificationDocument}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
             <Select
               label={t.documentType}
               options={documentTypeOptions}
@@ -257,7 +257,7 @@ const Verification = () => {
               {...register('institutionName', { required: t.institutionNameRequired })}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <Input
                 label={t.studentIdNumber}
                 placeholder={t.studentIdNumberPlaceholder}
@@ -290,13 +290,13 @@ const Verification = () => {
 
             {/* File Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 {t.uploadDocument} <span className="text-red-500">*</span>
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
+              <div className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
                 <div className="space-y-1 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="flex text-sm text-gray-600">
+                  <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                  <div className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm text-gray-600 gap-1">
                     <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
                       <span>{t.uploadFile}</span>
                       <input
@@ -306,13 +306,13 @@ const Verification = () => {
                         onChange={(e) => setSelectedFile(e.target.files[0])}
                       />
                     </label>
-                    <p className="pl-1">{t.orDragAndDrop}</p>
+                    <p className="sm:pl-1">{t.orDragAndDrop}</p>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {t.fileTypes}
                   </p>
                   {selectedFile && (
-                    <p className="text-sm text-primary-600 font-medium">
+                    <p className="text-xs sm:text-sm text-primary-600 font-medium truncate max-w-full px-2">
                       {t.selected} {selectedFile.name}
                     </p>
                   )}
@@ -323,7 +323,7 @@ const Verification = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
               loading={uploadMutation.isPending}
               disabled={uploadMutation.isPending}
             >
@@ -336,25 +336,27 @@ const Verification = () => {
       {/* Verification History */}
       {verifications.length > 0 && (
         <Card title={t.verificationHistory}>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {verifications.map((verification) => (
               <div
                 key={verification._id}
-                className="flex items-start justify-between p-4 bg-gray-50 rounded-lg"
+                className="flex items-start justify-between p-3 sm:p-4 bg-gray-50 rounded-lg"
               >
-                <div className="flex items-start space-x-3">
-                  {getStatusIcon(verification.status)}
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900 capitalize">
+                <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
+                  <div className="flex-shrink-0">
+                    {getStatusIcon(verification.status)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1">
+                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 capitalize">
                         {verification.documentType?.replace('_', ' ')}
                       </h4>
                       {getStatusBadge(verification.status)}
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       {verification.institutionName}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                       {t.submitted} {new Date(verification.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                     </p>
                     {verification.status === 'rejected' && verification.rejectionReason && (
@@ -365,7 +367,7 @@ const Verification = () => {
                       />
                     )}
                     {verification.status === 'approved' && verification.approvedAt && (
-                      <p className="text-xs text-green-600 mt-1">
+                      <p className="text-[10px] sm:text-xs text-green-600 mt-1">
                         {t.approvedDate} {new Date(verification.approvedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                       </p>
                     )}

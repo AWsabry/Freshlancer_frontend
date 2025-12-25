@@ -112,7 +112,7 @@
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-white rounded-lg shadow-md p-4 sm:p-6;
   }
 
   .badge {
@@ -133,5 +133,27 @@
 
   .badge-info {
     @apply bg-blue-100 text-blue-800;
+  }
+
+  /* React Easy Crop Styles */
+  .reactEasyCrop_Container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .reactEasyCrop_CropArea {
+    border: 2px solid rgb(var(--color-primary-500) / 1);
+    box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.5);
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
 }

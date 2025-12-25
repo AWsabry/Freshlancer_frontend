@@ -178,7 +178,7 @@ const Packages = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6">
       {/* Current Balance */}
       <Card title={t.pointsBalance}>
         <div className="flex items-center justify-between">
@@ -239,7 +239,7 @@ const Packages = () => {
             </div>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {packages.map((pkg) => {
             const Icon = pkg.icon;
             return (
@@ -342,7 +342,7 @@ const Packages = () => {
 
       {/* How it Works */}
       <Card title={t.howPointsWork}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
             <div className="inline-flex p-3 rounded-full bg-primary-100 mb-4">
               <span className="text-2xl font-bold text-primary-600">1</span>

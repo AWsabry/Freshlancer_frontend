@@ -228,31 +228,31 @@ const Jobs = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t.myJobPosts}</h1>
-          <p className="text-gray-600 mt-1">{t.managePostings}</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t.myJobPosts}</h1>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-1">{t.managePostings}</p>
         </div>
         <Button
           variant="primary"
           onClick={() => navigate('/client/jobs/new')}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto"
         >
-          <Plus className="w-5 h-5" />
-          {t.postNewJob}
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base">{t.postNewJob}</span>
         </Button>
       </div>
 
       {/* Status Filter Tabs */}
       <Card>
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
           <button
             onClick={() => setStatusFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
               statusFilter === 'all'
-                ? 'bg-primary-600 text-black'
+                ? 'bg-black text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -260,7 +260,7 @@ const Jobs = () => {
           </button>
           <button
             onClick={() => setStatusFilter('open')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
               statusFilter === 'open'
                 ? 'bg-green-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -270,7 +270,7 @@ const Jobs = () => {
           </button>
           <button
             onClick={() => setStatusFilter('completed')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
               statusFilter === 'completed'
                 ? 'bg-gray-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -280,7 +280,7 @@ const Jobs = () => {
           </button>
           <button
             onClick={() => setStatusFilter('cancelled')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
               statusFilter === 'cancelled'
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -294,35 +294,34 @@ const Jobs = () => {
       {/* Jobs List */}
       {filteredJobs.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">
+          <div className="text-center py-8 sm:py-12 px-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-4">
               {jobs.length === 0
                 ? t.noJobsYet
                 : t.noJobsFound.replace('{status}', statusFilter === 'all' ? '' : statusFilter)}
             </p>
-
           </div>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredJobs.map((job) => (
-            <Card key={job._id}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+            <Card key={job._id} className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0">
                   {/* Title and Status */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <h3 className="text-xl font-bold text-gray-900 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 break-words">
                       {job.title}
                     </h3>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-col sm:items-end gap-2 flex-shrink-0">
                       {/* Startup Name */}
                       {job.startup && job.startup.startupName && (
-                        <p className="text-sm font-medium text-primary-600">
+                        <p className="text-xs sm:text-sm font-medium text-primary-600 text-right sm:text-left">
                           {job.startup.startupName}
                         </p>
                       )}
                       {/* Status Badges */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap sm:justify-end">
                         {getStatusBadge(job.status)}
                         {job.urgent && <Badge variant="error">{t.urgent}</Badge>}
                         {job.featured && <Badge variant="info">{t.featured}</Badge>}
@@ -331,41 +330,50 @@ const Jobs = () => {
                   </div>
 
                   {/* Description */}
-                  <p className="text-gray-700 mb-4 line-clamp-2">
-                    {job.description}
-                  </p>
+                  <div className="mb-4 max-w-full overflow-hidden">
+                    <p className="text-sm sm:text-base text-gray-700 break-words line-clamp-1">
+                      {job.description}
+                    </p>
+                    <button
+                      onClick={() => navigate(`/client/jobs/${job._id}`)}
+                      className="text-primary-600 hover:text-primary-700 text-sm font-medium mt-1 inline-flex items-center gap-1 transition-colors"
+                    >
+                      <span className="text-lg">...</span>
+                      <span className="underline">{t.viewDetails}</span>
+                    </button>
+                  </div>
 
                   {/* Job Details */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                     {/* Budget */}
                     {job.budget && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <div>
-                          <p className="text-xs text-gray-500">{t.budget}</p>
-                          <p className="font-semibold text-green-600">
-                          {job.budget.currency} {job.budget.min} - {job.budget.max}
+                      <div className="flex items-start sm:items-center gap-2 text-gray-600">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-gray-500 mb-0.5">{t.budget}</p>
+                          <p className="font-semibold text-sm sm:text-base text-green-600 truncate">
+                            {job.budget.currency} {job.budget.min} - {job.budget.max}
                           </p>
                         </div>
                       </div>
                     )}
 
                     {/* Applications */}
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Users className="w-5 h-5 text-primary-600" />
-                      <div>
-                        <p className="text-xs text-gray-500">{t.applications}</p>
-                        <p className="font-semibold">
+                    <div className="flex items-start sm:items-center gap-2 text-gray-600">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500 mb-0.5">{t.applications}</p>
+                        <p className="font-semibold text-sm sm:text-base">
                           {job.applicationsCount || 0}
                         </p>
                       </div>
                     </div>
 
                     {/* Posted Date */}
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-5 h-5 text-gray-500" />
-                      <div>
-                        <p className="text-xs text-gray-500">{t.posted}</p>
-                        <p className="font-semibold text-sm">
+                    <div className="flex items-start sm:items-center gap-2 text-gray-600">
+                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0 mt-0.5 sm:mt-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500 mb-0.5">{t.posted}</p>
+                        <p className="font-semibold text-xs sm:text-sm">
                           {new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                         </p>
                       </div>
@@ -373,11 +381,11 @@ const Jobs = () => {
 
                     {/* Deadline */}
                     {job.deadline && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="w-5 h-5 text-orange-600" />
-                        <div>
-                          <p className="text-xs text-gray-500">{t.deadline}</p>
-                          <p className="font-semibold text-sm">
+                      <div className="flex items-start sm:items-center gap-2 text-gray-600">
+                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500 mb-0.5">{t.deadline}</p>
+                          <p className="font-semibold text-xs sm:text-sm">
                             {new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                           </p>
                         </div>
@@ -387,18 +395,18 @@ const Jobs = () => {
 
                   {/* Skills */}
                   {job.skillsRequired && job.skillsRequired.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-2">
+                    <div className="mb-3 sm:mb-4">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {job.skillsRequired.slice(0, 5).map((skill, index) => (
                           <span
                             key={index}
-                            className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm"
+                            className="px-2 sm:px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-xs sm:text-sm"
                           >
                             {skill}
                           </span>
                         ))}
                         {job.skillsRequired.length > 5 && (
-                          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                          <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm">
                             +{job.skillsRequired.length - 5} {t.more}
                           </span>
                         )}
@@ -407,31 +415,32 @@ const Jobs = () => {
                   )}
 
                   {/* Category */}
-                  <div className="mb-4">
-                    <Badge variant="default">{job.category}</Badge>
+                  <div className="mb-3 sm:mb-4">
+                    <Badge variant="default" className="text-xs sm:text-sm">{job.category}</Badge>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex flex-wrap gap-2 pt-3 sm:pt-4 border-t mt-3 sm:mt-0">
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => navigate(`/client/jobs/${job._id}`)}
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
                 >
-                  <Eye className="w-4 h-4" />
-                  {t.viewDetails}
+                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">{t.viewDetails}</span>
+                  <span className="sm:hidden">{t.viewDetails.split(' ')[0]}</span>
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => navigate(`/client/jobs/${job._id}/edit`)}
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
                   disabled={job.status === 'completed' || job.status === 'cancelled'}
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {t.edit}
                 </Button>
 
@@ -441,21 +450,22 @@ const Jobs = () => {
                     variant="warning"
                     size="sm"
                     onClick={() => handleWithdraw(job)}
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
                     disabled={job.status === 'completed' || job.status === 'cancelled'}
                   >
-                    <AlertCircle className="w-4 h-4" />
-                    {t.withdrawJob}
+                    <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{t.withdrawJob}</span>
+                    <span className="sm:hidden">{t.withdrawJob.split(' ')[0]}</span>
                   </Button>
                 ) : (
                   <Button
                     variant="danger"
                     size="sm"
                     onClick={() => handleDelete(job)}
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
                     disabled={job.status === 'completed' || job.status === 'cancelled'}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {t.delete}
                   </Button>
                 )}
@@ -471,19 +481,19 @@ const Jobs = () => {
         onClose={() => setDeleteModalOpen(false)}
         title={t.deleteJobPost}
       >
-        <div className="space-y-4">
-          <p className="text-gray-700">
+        <div className="space-y-3 sm:space-y-4">
+          <p className="text-sm sm:text-base text-gray-700">
             {t.deleteConfirm.replace('{title}', jobToDelete?.title || '')}
           </p>
-          <p className="text-sm text-red-600">
+          <p className="text-xs sm:text-sm text-red-600">
             {t.cannotUndone}
           </p>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
             <Button
               variant="secondary"
               onClick={() => setDeleteModalOpen(false)}
-              className="flex-1"
+              className="flex-1 w-full sm:w-auto"
             >
               {t.cancel}
             </Button>
@@ -492,7 +502,7 @@ const Jobs = () => {
               onClick={confirmDelete}
               loading={deleteMutation.isPending}
               disabled={deleteMutation.isPending}
-              className="flex-1"
+              className="flex-1 w-full sm:w-auto"
             >
               {t.deleteJob}
             </Button>
@@ -506,27 +516,27 @@ const Jobs = () => {
         onClose={() => setWithdrawModalOpen(false)}
         title={t.withdrawJobPost}
       >
-        <div className="space-y-4">
-          <p className="text-gray-700">
+        <div className="space-y-3 sm:space-y-4">
+          <p className="text-sm sm:text-base text-gray-700">
             {t.withdrawConfirm.replace('{title}', jobToWithdraw?.title || '')}
           </p>
-          <p className="text-sm text-orange-600">
+          <p className="text-xs sm:text-sm text-orange-600">
             {t.withdrawWill}
           </p>
-          <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <ul className="list-disc list-inside text-xs sm:text-sm text-gray-600 space-y-1 pl-2">
             <li>{t.withdrawClose}</li>
             <li>{t.withdrawMark}</li>
             <li>{t.withdrawStudents}</li>
           </ul>
-          <p className="text-sm text-red-600 font-medium">
+          <p className="text-xs sm:text-sm text-red-600 font-medium">
             {t.cannotUndone}
           </p>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
             <Button
               variant="secondary"
               onClick={() => setWithdrawModalOpen(false)}
-              className="flex-1"
+              className="flex-1 w-full sm:w-auto"
             >
               {t.cancel}
             </Button>
@@ -535,7 +545,7 @@ const Jobs = () => {
               onClick={confirmWithdraw}
               loading={withdrawMutation.isPending}
               disabled={withdrawMutation.isPending}
-              className="flex-1"
+              className="flex-1 w-full sm:w-auto"
             >
               {t.withdrawJobButton}
             </Button>

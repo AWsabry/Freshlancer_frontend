@@ -304,12 +304,12 @@ const Profile = () => {
   const packages = historyData?.data?.packages || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">{t.myProfile}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.myProfile}</h1>
         {!isEditing && (
-          <Button variant="primary" onClick={() => setIsEditing(true)}>
+          <Button variant="primary" onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
             <Edit2 className="w-4 h-4 mr-2" />
             {t.editProfile}
           </Button>
@@ -320,7 +320,7 @@ const Profile = () => {
       <Card title={t.personalInformation}>
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t.fullName} *
@@ -480,7 +480,7 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4">
               <Button type="submit" variant="primary" loading={updateMutation.isPending}>
                 {t.saveChanges}
               </Button>
@@ -515,7 +515,7 @@ const Profile = () => {
           </form>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-primary-600 mt-1" />
                 <div>
@@ -644,7 +644,7 @@ const Profile = () => {
             <Loading text={t.loadingPoints} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl border border-primary-200">
               <div className="flex items-center gap-3 mb-2">
                 <Coins className="w-6 h-6 text-primary-600" />

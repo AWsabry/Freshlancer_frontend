@@ -241,17 +241,17 @@ const PaymentUSD = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6">
       {/* Header */}
       <button
         onClick={() => navigate('/client/packages')}
-        className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm sm:text-base"
       >
         <ArrowLeft className="w-5 h-5" />
         {t.backToPackages}
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Payment Information */}
         <div className="lg:col-span-2">
           <Card title={t.completePayment}>

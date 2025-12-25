@@ -7,13 +7,14 @@ import Button from '../../components/common/Button';
 import DateRangePicker from '../../components/common/DateRangePicker';
 import { adminService } from '../../services/adminService';
 import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
-import { Download } from 'lucide-react';
+import { Download, List, Grid } from 'lucide-react';
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [viewMode, setViewMode] = useState('detailed'); // 'detailed' or 'compact'
 
   const page = parseInt(searchParams.get('page') || '1');
   const status = searchParams.get('status') || '';
@@ -215,14 +216,43 @@ const Jobs = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Jobs Management</h1>
-        <Button
-          variant="primary"
-          onClick={handleExport}
-          className="flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Export to CSV
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('detailed')}
+              className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                viewMode === 'detailed'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Detailed View"
+            >
+              <Grid className="w-4 h-4" />
+              <span className="hidden sm:inline">Detailed</span>
+            </button>
+            <button
+              onClick={() => setViewMode('compact')}
+              className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                viewMode === 'compact'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Compact View"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Compact</span>
+            </button>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleExport}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export to CSV
+          </Button>
+        </div>
       </div>
       <Card title="Jobs Management">
         {/* Search and Filters */}
@@ -284,99 +314,158 @@ const Jobs = () => {
         </div>
 
         {/* Jobs Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Job Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Budget
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Deadline
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Applications
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {jobs.map((job) => (
-                <tr key={job._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{job.title}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <img
-                          className="h-10 w-10 rounded-full object-cover"
-                          src={job.client?.photo || '/default-avatar.png'}
-                          alt={job.client?.name}
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {job.client?.name}
-                        </div>
-                        <div className="text-sm text-gray-500">{job.client?.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {job.category || 'N/A'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {formatBudgetRange(job.budget)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{formatDate(job.deadline)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {job.applicationCount || 0}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
-                        job.status
-                      )}`}
-                    >
-                      {job.status?.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleViewDetails(job)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      View Details
-                    </button>
-                  </td>
+        {viewMode === 'compact' ? (
+          /* Compact Table View */
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Title</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Client</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Category</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Budget</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {jobs.map((job, idx) => (
+                  <tr
+                    key={job._id}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                  >
+                    <td className="py-3 px-4">
+                      <div className="font-medium text-gray-900 text-sm truncate max-w-[200px]">{job.title}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-sm text-gray-600 truncate max-w-[150px]">{job.client?.name || 'N/A'}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-gray-600">{job.category || 'N/A'}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs font-medium text-gray-900">{formatBudgetRange(job.budget)}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getStatusBadgeClass(
+                          job.status
+                        )}`}
+                      >
+                        {job.status?.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleViewDetails(job)}
+                        className="text-blue-600 hover:text-blue-900 text-xs font-medium"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Detailed Table View */
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Job Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Client
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Budget
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Deadline
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Applications
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {jobs.map((job) => (
+                  <tr key={job._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{job.title}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <img
+                            className="h-10 w-10 rounded-full object-cover"
+                            src={job.client?.photo || '/default-avatar.png'}
+                            alt={job.client?.name}
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {job.client?.name}
+                          </div>
+                          <div className="text-sm text-gray-500">{job.client?.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {job.category || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatBudgetRange(job.budget)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{formatDate(job.deadline)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {job.applicationCount || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                          job.status
+                        )}`}
+                      >
+                        {job.status?.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => handleViewDetails(job)}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {jobs.length === 0 && (
           <div className="text-center py-12">

@@ -15,6 +15,8 @@ import {
   Calendar,
   Eye,
   Download,
+  List,
+  Grid,
 } from 'lucide-react';
 import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
 import DateRangePicker from '../../components/common/DateRangePicker';
@@ -28,6 +30,7 @@ const Applications = () => {
     startDate: searchParams.get('startDate') || null,
     endDate: searchParams.get('endDate') || null,
   });
+  const [viewMode, setViewMode] = useState('detailed'); // 'detailed' or 'compact'
   const page = parseInt(searchParams.get('page') || '1');
 
   // Fetch applications
@@ -168,14 +171,43 @@ const Applications = () => {
             Total: {totalCount} applications
           </p>
         </div>
-        <Button
-          variant="primary"
-          onClick={handleExport}
-          className="flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Export to CSV
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('detailed')}
+              className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                viewMode === 'detailed'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Detailed View"
+            >
+              <Grid className="w-4 h-4" />
+              <span className="hidden sm:inline">Detailed</span>
+            </button>
+            <button
+              onClick={() => setViewMode('compact')}
+              className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                viewMode === 'compact'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Compact View"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Compact</span>
+            </button>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleExport}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export to CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -227,102 +259,175 @@ const Applications = () => {
 
       {/* Applications Table */}
       <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Student
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Job
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Budget
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Applied
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact Unlocked
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {applications.map((application) => (
-                <tr key={application._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        src={application.student?.photo}
-                        alt={application.student?.name}
-                        className="w-8 h-8 rounded-full mr-2"
-                      />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {application.student?.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {application.student?.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {application.jobPost?.title}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {application.jobPost?.category}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {application.jobPost?.client?.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {application.jobPost?.client?.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-green-600">
-                       {application.proposedBudget?.currency || 'Unknown Currency'} {application.proposedBudget?.amount || 'N/A'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {application.estimatedDuration}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {getStatusBadge(application.status)}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(application.createdAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-center">
-                    {application.contactUnlockedByClient ? (
-                      <Badge variant="success" size="sm">Yes</Badge>
-                    ) : (
-                      <Badge variant="secondary" size="sm">No</Badge>
-                    )}
-                  </td>
+        {viewMode === 'compact' ? (
+          /* Compact Table View */
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Student</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Job</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Client</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Budget</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Applied</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {applications.map((application, idx) => (
+                  <tr
+                    key={application._id}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-primary-600 font-semibold text-xs">
+                            {application.student?.name?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm truncate max-w-[150px]">
+                            {application.student?.name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate max-w-[150px]">
+                            {application.student?.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                        {application.jobPost?.title}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {application.jobPost?.category}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-sm text-gray-600 truncate max-w-[150px]">
+                        {application.jobPost?.client?.name}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs font-semibold text-green-600">
+                        {application.proposedBudget?.currency || 'N/A'} {application.proposedBudget?.amount || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {getStatusBadge(application.status)}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-gray-500">
+                        {new Date(application.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Detailed Table View */
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Student
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Job
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Client
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Budget
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Applied
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact Unlocked
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {applications.map((application) => (
+                  <tr key={application._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img
+                          src={application.student?.photo}
+                          alt={application.student?.name}
+                          className="w-8 h-8 rounded-full mr-2"
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {application.student?.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {application.student?.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {application.jobPost?.title}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {application.jobPost?.category}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {application.jobPost?.client?.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {application.jobPost?.client?.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-green-600">
+                       {application.proposedBudget?.currency || 'Unknown Currency'} {application.proposedBudget?.amount || 'N/A'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {application.estimatedDuration}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {getStatusBadge(application.status)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(application.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      {application.contactUnlockedByClient ? (
+                        <Badge variant="success" size="sm">Yes</Badge>
+                      ) : (
+                        <Badge variant="secondary" size="sm">No</Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (

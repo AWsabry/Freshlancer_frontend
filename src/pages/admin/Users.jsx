@@ -23,6 +23,8 @@ import {
   FileText,
   Download,
   ExternalLink,
+  List,
+  Grid,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 import { exportToCSV, formatDate } from '../../utils/exportUtils';
@@ -56,6 +58,7 @@ const Users = () => {
     startDate: searchParams.get('startDate') || null,
     endDate: searchParams.get('endDate') || null,
   });
+  const [viewMode, setViewMode] = useState('detailed'); // 'detailed' or 'compact'
 
   const page = parseInt(searchParams.get('page') || '1');
 
@@ -334,14 +337,43 @@ const Users = () => {
             }
           </p>
         </div>
-        <Button
-          variant="primary"
-          onClick={handleExport}
-          className="flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Export to CSV
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('detailed')}
+              className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                viewMode === 'detailed'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Detailed View"
+            >
+              <Grid className="w-4 h-4" />
+              <span className="hidden sm:inline">Detailed</span>
+            </button>
+            <button
+              onClick={() => setViewMode('compact')}
+              className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                viewMode === 'compact'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Compact View"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Compact</span>
+            </button>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleExport}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export to CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -438,118 +470,224 @@ const Users = () => {
 
       {/* Users Table */}
       <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        src={user.photo}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full mr-3"
-                      />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
-                          {user.email}
+        {viewMode === 'compact' ? (
+          /* Compact Table View */
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">User</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Role</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Joined</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user, idx) => (
+                  <tr
+                    key={user._id}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-primary-600 font-semibold text-xs">
+                            {user.name?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">{user.name}</div>
+                          <div className="text-xs text-gray-500 truncate max-w-[200px]">{user.email}</div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <Badge
-                      variant={
-                        user.role === 'student'
-                          ? 'success'
-                          : user.role === 'client'
-                          ? 'info'
-                          : 'warning'
-                      }
-                    >
-                      {user.role}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex flex-col gap-1">
-                      {user.active === false ? (
-                        <Badge variant="default">Deleted</Badge>
-                      ) : user.suspended ? (
-                        <Badge variant="danger">Suspended</Badge>
-                      ) : (
-                        <Badge variant="success">Active</Badge>
-                      )}
-                      {user.emailVerified && (
-                        <Badge variant="info" size="sm">
-                          Verified
-                        </Badge>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {user.joinedAt ? formatDisplayDate(user.joinedAt) : 'N/A'}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="primary"
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant={
+                          user.role === 'student'
+                            ? 'success'
+                            : user.role === 'client'
+                            ? 'info'
+                            : 'warning'
+                        }
                         size="sm"
-                        onClick={() => handleView(user)}
                       >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                      <Button
-                        variant={user.suspended ? 'success' : 'warning'}
-                        size="sm"
-                        onClick={() => handleSuspend(user)}
-                      >
-                        {user.suspended ? (
-                          <><Unlock className="w-4 h-4 mr-1" />Unsuspend</>
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col gap-1">
+                        {user.active === false ? (
+                          <Badge variant="default" size="sm">Deleted</Badge>
+                        ) : user.suspended ? (
+                          <Badge variant="danger" size="sm">Suspended</Badge>
                         ) : (
-                          <><Ban className="w-4 h-4 mr-1" />Suspend</>
+                          <Badge variant="success" size="sm">Active</Badge>
                         )}
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleDelete(user)}
-                        disabled={user.role === 'admin'}
-                        title={user.role === 'admin' ? 'Cannot delete admin users' : 'Delete user'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-gray-500">
+                        {user.joinedAt ? formatDisplayDate(user.joinedAt) : 'N/A'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleView(user)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="View"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleSuspend(user)}
+                          className={`p-1.5 rounded transition-colors ${
+                            user.suspended
+                              ? 'text-green-600 hover:bg-green-50'
+                              : 'text-yellow-600 hover:bg-yellow-50'
+                          }`}
+                          title={user.suspended ? 'Unsuspend' : 'Suspend'}
+                        >
+                          {user.suspended ? (
+                            <Unlock className="w-4 h-4" />
+                          ) : (
+                            <Ban className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user)}
+                          disabled={user.role === 'admin'}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={user.role === 'admin' ? 'Cannot delete admin users' : 'Delete user'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Detailed Table View */
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Joined
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {users.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img
+                          src={user.photo}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full mr-3"
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-500 flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <Badge
+                        variant={
+                          user.role === 'student'
+                            ? 'success'
+                            : user.role === 'client'
+                            ? 'info'
+                            : 'warning'
+                        }
+                      >
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        {user.active === false ? (
+                          <Badge variant="default">Deleted</Badge>
+                        ) : user.suspended ? (
+                          <Badge variant="danger">Suspended</Badge>
+                        ) : (
+                          <Badge variant="success">Active</Badge>
+                        )}
+                        {user.emailVerified && (
+                          <Badge variant="info" size="sm">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {user.joinedAt ? formatDisplayDate(user.joinedAt) : 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleView(user)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          variant={user.suspended ? 'success' : 'warning'}
+                          size="sm"
+                          onClick={() => handleSuspend(user)}
+                        >
+                          {user.suspended ? (
+                            <><Unlock className="w-4 h-4 mr-1" />Unsuspend</>
+                          ) : (
+                            <><Ban className="w-4 h-4 mr-1" />Suspend</>
+                          )}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(user)}
+                          disabled={user.role === 'admin'}
+                          title={user.role === 'admin' ? 'Cannot delete admin users' : 'Delete user'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination - Hidden when filtering suspended users */}
         {!showSuspended && totalPages > 1 && (

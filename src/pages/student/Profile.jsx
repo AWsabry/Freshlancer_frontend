@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import Cropper from 'react-easy-crop';
 import { authService } from '../../services/authService';
 import { verificationService } from '../../services/verificationService';
 import Card from '../../components/common/Card';
@@ -38,6 +39,8 @@ import {
   AlertCircle,
   XCircle,
   RefreshCw,
+  Check,
+  X,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
@@ -106,6 +109,8 @@ const translations = {
     availability: 'Availability',
     available: 'Available',
     busy: 'Busy',
+    currency: 'Currency',
+    selectCurrency: 'Select currency',
     currencyAutoSet: 'Currency (Auto-set based on country)',
     currencyAutoSetInfo: 'Currency is automatically set based on your selected country',
     selectCountryFirst: 'Select country first',
@@ -201,6 +206,15 @@ const translations = {
     replaceResume: 'Replace Resume',
     noResumeUploaded: 'No resume uploaded yet',
     uploadResume: 'Upload Resume',
+    changePhoto: 'Change Photo',
+    uploadPhoto: 'Upload Photo',
+    photoUploaded: 'Photo uploaded successfully!',
+    photoUploadFailed: 'Failed to upload photo',
+    selectPhoto: 'Select a photo',
+    photoSupportedFormats: 'Supported formats: JPG, PNG, GIF, WEBP (Max 5MB)',
+    cropPhoto: 'Crop Photo',
+    cropPhotoDescription: 'Adjust the image to your desired size and position',
+    saveCrop: 'Save & Upload',
     supportedFormats: 'Supported formats: PDF, DOC, DOCX (Max 5MB)',
     additionalDocuments: 'Additional Documents (Optional)',
     documentDescription: 'Document Description (Optional)',
@@ -287,6 +301,8 @@ const translations = {
     availability: 'Disponibilità',
     available: 'Disponibile',
     busy: 'Occupato',
+    currency: 'Valuta',
+    selectCurrency: 'Seleziona valuta',
     currencyAutoSet: 'Valuta (Impostata automaticamente in base al paese)',
     currencyAutoSetInfo: 'La valuta viene impostata automaticamente in base al paese selezionato',
     selectCountryFirst: 'Seleziona prima il paese',
@@ -380,6 +396,15 @@ const translations = {
     uploaded: 'Caricato il:',
     download: 'Scarica',
     replaceResume: 'Sostituisci CV',
+    changePhoto: 'Cambia Foto',
+    uploadPhoto: 'Carica Foto',
+    photoUploaded: 'Foto caricata con successo!',
+    photoUploadFailed: 'Impossibile caricare la foto',
+    selectPhoto: 'Seleziona una foto',
+    photoSupportedFormats: 'Formati supportati: JPG, PNG, GIF, WEBP (Max 5MB)',
+    cropPhoto: 'Ritaglia Foto',
+    cropPhotoDescription: 'Regola l\'immagine alla dimensione e posizione desiderate',
+    saveCrop: 'Salva e Carica',
     noResumeUploaded: 'Nessun CV caricato ancora',
     uploadResume: 'Carica CV',
     supportedFormats: 'Formati supportati: PDF, DOC, DOCX (Max 5MB)',
@@ -585,9 +610,18 @@ const Profile = () => {
   const [verificationError, setVerificationError] = useState(null);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [documentDescription, setDocumentDescription] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoLoadError, setPhotoLoadError] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const fileInputRef = useRef(null);
   const verificationFileInputRef = useRef(null);
   const additionalDocumentInputRef = useRef(null);
+  const photoInputRef = useRef(null);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -626,6 +660,39 @@ const Profile = () => {
 
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
+
+  // Helper function to get photo URL
+  const getPhotoUrl = useCallback((photo) => {
+    if (!photo) return null;
+    
+    // If it's already a full URL (starts with http), return as is
+    if (photo.startsWith('http://') || photo.startsWith('https://')) {
+      return photo;
+    }
+    
+    // If it's a relative path (starts with /), prepend API_BASE_URL
+    if (photo.startsWith('/')) {
+      return `${API_BASE_URL}${photo}`;
+    }
+    
+    // Otherwise, prepend API_BASE_URL with a slash
+    return `${API_BASE_URL}/${photo}`;
+  }, []);
+
+  // Check if photo exists and is valid (not default Firebase image)
+  const hasValidPhoto = useCallback((photo) => {
+    if (!photo || typeof photo !== 'string') {
+      return false;
+    }
+    // Check if it's the default Firebase image
+    const isDefaultPhoto = photo.includes('firebasestorage') && photo.includes('default.jpg');
+    return !isDefaultPhoto;
+  }, []);
+
+  // Reset photo load error when user or photo changes
+  useEffect(() => {
+    setPhotoLoadError(false);
+  }, [user?.photo, photoPreview]);
 
   // Fetch verification status and history
   const { data: verificationData, isLoading: loadingVerification, error: verificationQueryError } = useQuery({
@@ -691,7 +758,9 @@ const Profile = () => {
       setValue('phone', user.phone || '');
       setValue('age', user.age || '');
       setValue('nationality', user.nationality || '');
-      setValue('location.country', user.location?.country || '');
+      // Use user.country (from registration) - country is NOT stored in location.country
+      // Location only contains city (and future fields like zip, lat, long)
+      setValue('location.country', user.country || '');
       setValue('location.city', user.location?.city || '');
       setValue('location.timezone', user.location?.timezone || '');
 
@@ -779,6 +848,190 @@ const Profile = () => {
       alert(error.response?.data?.message || t.documentDeleteFailed);
     },
   });
+
+  // Upload photo mutation
+  const uploadPhotoMutation = useMutation({
+    mutationFn: (file) => authService.uploadPhoto(file),
+    onSuccess: async (response) => {
+      setUploadingPhoto(false);
+      
+      // Update preview with the new photo URL from response
+      // Backend returns: { status: 'success', data: { user: {...}, photo: '...' } }
+      const photo = response.data?.data?.photo || response.data?.data?.user?.photo;
+      if (photo) {
+        const photoUrl = photo.startsWith('/uploads/') 
+          ? `${API_BASE_URL}${photo}` 
+          : photo;
+        setPhotoPreview(photoUrl);
+      }
+      
+      // Clear crop modal state
+      setImageToCrop(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedAreaPixels(null);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+      
+      // Invalidate and refetch user profile to get updated photo
+      await queryClient.invalidateQueries(['userProfile']);
+      await queryClient.refetchQueries(['userProfile']);
+      
+      // Clear preview after a short delay to show the actual uploaded photo
+      setTimeout(() => {
+        setPhotoPreview(null);
+      }, 1000);
+      
+      alert(t.photoUploaded);
+    },
+    onError: (error) => {
+      setUploadingPhoto(false);
+      setPhotoPreview(null);
+      console.error('Photo upload error:', error);
+      alert(error.response?.data?.message || t.photoUploadFailed);
+    },
+  });
+
+  // Create cropped image blob
+  const createImage = (url) =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', (error) => reject(error));
+      image.src = url;
+    });
+
+  const getCroppedImg = async (imageSrc, pixelCrop) => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('No 2d context');
+    }
+
+    // Set canvas size to match cropped area
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    // Draw the cropped image
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+
+    // Convert canvas to blob
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
+        }
+        resolve(blob);
+      }, 'image/jpeg', 0.95);
+    });
+  };
+
+  // Handle crop completion
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  // Handle photo file selection
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(t.photoSupportedFormats);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+      return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+      return;
+    }
+    
+    // Create preview and show crop modal
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageToCrop(reader.result);
+      setShowCropModal(true);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedAreaPixels(null);
+    };
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle crop and upload
+  const handleCropAndUpload = async () => {
+    if (!imageToCrop || !croppedAreaPixels) {
+      alert('Please adjust the crop area before saving.');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      const croppedBlob = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      
+      // Create a File object from the blob
+      const croppedFile = new File([croppedBlob], 'profile-photo.jpg', {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+
+      // Upload the cropped image
+      uploadPhotoMutation.mutate(croppedFile);
+      
+      // Close crop modal
+      setShowCropModal(false);
+      setImageToCrop(null);
+      setPhotoPreview(imageToCrop); // Show preview while uploading
+    } catch (error) {
+      alert(t.photoUploadFailed);
+      setUploadingPhoto(false);
+    }
+  };
+
+  // Handle crop cancel
+  const handleCropCancel = () => {
+    setShowCropModal(false);
+    setImageToCrop(null);
+    setPhotoPreview(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    if (photoInputRef.current) {
+      photoInputRef.current.value = '';
+    }
+  };
 
   // Upload verification document mutation
   const uploadVerificationMutation = useMutation({
@@ -891,151 +1144,210 @@ const Profile = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6">
       {/* Header Card */}
       <Card>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-6">
-            <img
-              src={user.photo}
-              alt={user.name}
-              className="w-32 h-32 rounded-full object-cover border-4 border-primary-100"
-            />
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-                {isVerified ? (
-                  <Badge variant="success" className="flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" />
-                    {t.verified}
-                  </Badge>
+        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full sm:w-auto">
+            <div className="relative">
+              {(() => {
+                const photoUrl = photoPreview || (user.photo && hasValidPhoto(user.photo) && !photoLoadError ? getPhotoUrl(user.photo) : null);
+                
+                // If photo failed to load or no valid photo, show initial
+                if (!photoUrl || photoLoadError) {
+                  return (
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-primary-100 border-4 border-primary-100 flex items-center justify-center flex-shrink-0 relative">
+                      <span className="text-primary-600 font-bold text-2xl sm:text-3xl md:text-4xl">
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  );
+                }
+                
+                // Show image if we have a valid photo URL
+                return (
+                  <img
+                    key={photoUrl} // Force re-render when URL changes
+                    src={photoUrl}
+                    alt={user.name}
+                    className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-primary-100 flex-shrink-0"
+                    onError={(e) => {
+                      setPhotoLoadError(true);
+                      // Hide the broken image
+                      e.target.style.display = 'none';
+                    }}
+                    onLoad={() => {
+                      setPhotoLoadError(false);
+                    }}
+                  />
+                );
+              })()}
+              {/* Edit Photo Button */}
+              <input
+                type="file"
+                ref={photoInputRef}
+                onChange={handlePhotoChange}
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                className="hidden"
+                disabled={uploadingPhoto}
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!uploadingPhoto && photoInputRef.current) {
+                    photoInputRef.current.click();
+                  }
+                }}
+                disabled={uploadingPhoto}
+                className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-white hover:bg-primary-50 text-primary-600 rounded-full flex items-center justify-center shadow-lg border-2 border-primary-600 transition-all duration-200 hover:scale-110 z-10"
+                title={t.changePhoto}
+              >
+                {uploadingPhoto ? (
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Badge variant={getVerificationBadgeVariant(verificationStatus)}>
-                      {verificationStatus === 'pending' ? t.pending : verificationStatus === 'rejected' ? t.rejected : t.unverified}
-                    </Badge>
-                    <button
-                      onClick={handleRefreshVerification}
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                      title={t.refreshVerification}
-                      disabled={isLoading || loadingVerification}
-                    >
-                      <RefreshCw 
-                        className={`w-4 h-4 text-gray-600 ${isLoading || loadingVerification ? 'animate-spin' : ''}`}
-                      />
-                    </button>
-                  </div>
+                  <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                 )}
+              </button>
+            </div>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{user.name}</h1>
+                <div className="flex items-center gap-2">
+                  {isVerified ? (
+                    <Badge variant="success" className="flex items-center gap-1 text-xs sm:text-sm">
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      {t.verified}
+                    </Badge>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge variant={getVerificationBadgeVariant(verificationStatus)} className="text-xs sm:text-sm">
+                        {verificationStatus === 'pending' ? t.pending : verificationStatus === 'rejected' ? t.rejected : t.unverified}
+                      </Badge>
+                      <button
+                        onClick={handleRefreshVerification}
+                        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                        title={t.refreshVerification}
+                        disabled={isLoading || loadingVerification}
+                      >
+                        <RefreshCw 
+                          className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-600 ${isLoading || loadingVerification ? 'animate-spin' : ''}`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-4 text-gray-600 mb-3">
-                <span className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  {user.email}
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">
+                <span className="flex items-center gap-1.5 sm:gap-2">
+                  <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">{user.email}</span>
                 </span>
                 {user.emailVerified && (
-                  <Badge variant="info" size="sm">{t.emailVerified || 'Email Verified'}</Badge>
+                  <Badge variant="info" size="sm" className="text-xs">{t.emailVerified || 'Email Verified'}</Badge>
                 )}
               </div>
               {studentProfile?.bio && (
-                <p className="text-gray-700 max-w-2xl">{studentProfile.bio}</p>
+                <p className="text-sm sm:text-base text-gray-700 max-w-2xl">{studentProfile.bio}</p>
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
               onClick={handleOpenEditModal}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto"
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
               {t.editProfile}
             </Button>
           </div>
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Personal Information */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
           {/* Personal Details */}
           <Card title={t.personalDetails}>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                  <User className="w-4 h-4" />
+                <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   {t.fullName}
                 </label>
-                <p className="text-gray-900">{user.name}</p>
+                <p className="text-sm sm:text-base text-gray-900">{user.name}</p>
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                  <Mail className="w-4 h-4" />
+                <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                  <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   {t.email}
                 </label>
-                <p className="text-gray-900">{user.email}</p>
+                <p className="text-sm sm:text-base text-gray-900 break-words">{user.email}</p>
               </div>
 
               {user.phone && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                    <Phone className="w-4 h-4" />
+                  <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     {t.phone}
                   </label>
-                  <p className="text-gray-900">{user.phone}</p>
+                  <p className="text-sm sm:text-base text-gray-900">{user.phone}</p>
                 </div>
               )}
 
               {user.age && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                    <Calendar className="w-4 h-4" />
+                  <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     {t.age}
                   </label>
-                  <p className="text-gray-900">{user.age} {t.yearsOld}</p>
+                  <p className="text-sm sm:text-base text-gray-900">{user.age} {t.yearsOld}</p>
                 </div>
               )}
 
               {user.gender && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                    <User className="w-4 h-4" />
+                  <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                    <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     {t.gender}
                   </label>
-                  <p className="text-gray-900">{user.gender}</p>
+                  <p className="text-sm sm:text-base text-gray-900">{user.gender}</p>
                 </div>
               )}
 
               {user.nationality && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                    <Globe className="w-4 h-4" />
+                  <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     {t.nationality}
                   </label>
-                  <p className="text-gray-900">{user.nationality}</p>
+                  <p className="text-sm sm:text-base text-gray-900">{user.nationality}</p>
                 </div>
               )}
 
-              {user.location && (user.location.city || user.location.country) && (
+              {(user.location?.city || user.country) && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                    <MapPin className="w-4 h-4" />
+                  <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     {t.locationLabel}
                   </label>
-                  <p className="text-gray-900">
-                    {[user.location.city, user.location.country].filter(Boolean).join(', ')}
+                  <p className="text-sm sm:text-base text-gray-900">
+                    {[user.location?.city, user.country].filter(Boolean).join(', ')}
                   </p>
                 </div>
               )}
 
               {(user.joinedAt || user.createdAt) && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                    <Calendar className="w-4 h-4" />
+                  <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     {t.memberSince || 'Member Since'}
                   </label>
-                  <p className="text-gray-900">
+                  <p className="text-sm sm:text-base text-gray-900">
                     {new Date(user.joinedAt || user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -1050,51 +1362,51 @@ const Profile = () => {
           {/* Professional Info */}
           {studentProfile && (
             <Card title={t.professionalDetails}>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {studentProfile.university && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                      <BookOpen className="w-4 h-4" />
+                    <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                      <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.university}
                     </label>
-                    <p className="text-gray-900">{studentProfile.university}</p>
+                    <p className="text-sm sm:text-base text-gray-900">{studentProfile.university}</p>
                   </div>
                 )}
 
                 {studentProfile.graduationYear && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                      <Calendar className="w-4 h-4" />
+                    <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.graduationYear}
                     </label>
-                    <p className="text-gray-900">{studentProfile.graduationYear}</p>
+                    <p className="text-sm sm:text-base text-gray-900">{studentProfile.graduationYear}</p>
                   </div>
                 )}
 
                 {studentProfile.experienceLevel && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                      <Briefcase className="w-4 h-4" />
+                    <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                      <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.experienceLevelLabel}
                     </label>
-                    <Badge variant="info">{studentProfile.experienceLevel}</Badge>
+                    <Badge variant="info" className="text-xs sm:text-sm">{studentProfile.experienceLevel}</Badge>
                   </div>
                 )}
 
                 {studentProfile.yearsOfExperience !== undefined && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                      <Clock className="w-4 h-4" />
+                    <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.yearsOfExperience}
                     </label>
-                    <p className="text-gray-900">{studentProfile.yearsOfExperience} {t.years || 'years'}</p>
+                    <p className="text-sm sm:text-base text-gray-900">{studentProfile.yearsOfExperience} {t.years || 'years'}</p>
                   </div>
                 )}
 
                 {studentProfile.availability && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                      <Clock className="w-4 h-4" />
+                    <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.availability}
                     </label>
                     <Badge
@@ -1105,6 +1417,7 @@ const Profile = () => {
                           ? 'warning'
                           : 'secondary'
                       }
+                      className="text-xs sm:text-sm"
                     >
                       {studentProfile.availability}
                     </Badge>
@@ -1113,11 +1426,11 @@ const Profile = () => {
 
                 {studentProfile.hourlyRate && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                      <DollarSign className="w-4 h-4" />
+                    <label className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-500 mb-1">
+                      <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.hourlyRate}
                     </label>
-                    <p className="text-gray-900">
+                    <p className="text-sm sm:text-base text-gray-900">
                       {studentProfile.hourlyRate.currency} {studentProfile.hourlyRate.min} - 
                       {studentProfile.hourlyRate.max}
                     </p>
@@ -1179,40 +1492,40 @@ const Profile = () => {
         </div>
 
         {/* Right Column - Education, etc. */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Education */}
           {(studentProfile?.university || studentProfile?.graduationYear) && (
             <Card>
-              <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
-                <GraduationCap className="w-6 h-6 text-primary-600" />
+              <h3 className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 flex-shrink-0" />
                 {t.education}
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* University and Expected Graduation Year */}
-                <div className="border-l-4 border-primary-500 pl-4 py-2 bg-primary-50 rounded-r-lg">
+                <div className="border-l-4 border-primary-500 pl-3 sm:pl-4 py-2 bg-primary-50 rounded-r-lg">
                   {studentProfile.university && (
                     <div className="mb-2">
-                      <p className="text-sm text-gray-600 mb-1">{t.university}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-lg text-gray-900">{studentProfile.university}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.university}</p>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <p className="font-bold text-base sm:text-lg text-gray-900 truncate">{studentProfile.university}</p>
                         {studentProfile.universityLink && (
                           <a
                             href={studentProfile.universityLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                            className="text-primary-600 hover:text-primary-700 flex items-center gap-1 flex-shrink-0"
                             title={t.visitUniversity}
                           >
-                            <LinkIcon className="w-4 h-4" />
+                            <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           </a>
                         )}
                       </div>
                     </div>
                   )}
                   {studentProfile.graduationYear && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-primary-600" />
-                      <span className="text-sm text-gray-700">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-primary-600 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-700">
                         <span className="font-semibold">{t.expectedGraduation || 'Expected Graduation'}:</span> {studentProfile.graduationYear}
                       </span>
                     </div>
@@ -1225,11 +1538,11 @@ const Profile = () => {
           {/* Languages */}
           {studentProfile?.languages && studentProfile.languages.length > 0 && (
             <Card title={t.languages}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {studentProfile.languages.map((lang, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-gray-900">{lang.language}</span>
-                    <Badge variant="secondary">{lang.proficiency}</Badge>
+                  <div key={index} className="flex items-center justify-between gap-2">
+                    <span className="text-sm sm:text-base text-gray-900 truncate">{lang.language}</span>
+                    <Badge variant="secondary" className="text-xs sm:text-sm flex-shrink-0">{lang.proficiency}</Badge>
                   </div>
                 ))}
               </div>
@@ -1239,18 +1552,18 @@ const Profile = () => {
           {/* Certifications */}
           {studentProfile?.certifications && studentProfile.certifications.length > 0 && (
             <Card title={t.certifications}>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {studentProfile.certifications.map((cert, index) => (
-                  <div key={index} className="border-l-4 border-green-500 pl-4 py-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{cert.name}</h3>
-                        <p className="text-gray-700">{cert.issuingOrganization}</p>
+                  <div key={index} className="border-l-4 border-green-500 pl-3 sm:pl-4 py-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-2 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900">{cert.name}</h3>
+                        <p className="text-xs sm:text-sm text-gray-700">{cert.issuingOrganization}</p>
                         {cert.credentialId && (
-                          <p className="text-sm text-gray-600">{t.credentialId} {cert.credentialId}</p>
+                          <p className="text-xs text-gray-600">{t.credentialId} {cert.credentialId}</p>
                         )}
                       </div>
-                      <div className="text-right text-sm text-gray-600">
+                      <div className="text-left sm:text-right text-xs sm:text-sm text-gray-600 flex-shrink-0">
                         {cert.issueDate && (
                           <p>{new Date(cert.issueDate).toLocaleDateString()}</p>
                         )}
@@ -1266,9 +1579,9 @@ const Profile = () => {
                         href={cert.credentialUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-2"
+                        className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-2"
                       >
-                        <LinkIcon className="w-4 h-4" />
+                        <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         {t.viewCredential}
                       </a>
                     )}
@@ -1281,15 +1594,15 @@ const Profile = () => {
           {/* Portfolio */}
           {studentProfile?.portfolio && studentProfile.portfolio.length > 0 && (
             <Card title={t.portfolio}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {studentProfile.portfolio.map((project, index) => (
-                  <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 mb-2">{project.title}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{project.description}</p>
+                  <div key={index} className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-2">{project.title}</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">{project.description}</p>
                     {project.technologies && project.technologies.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                         {project.technologies.map((tech, techIndex) => (
-                          <Badge key={techIndex} variant="secondary" size="sm">
+                          <Badge key={techIndex} variant="secondary" size="sm" className="text-xs">
                             {tech}
                           </Badge>
                         ))}
@@ -1300,14 +1613,14 @@ const Profile = () => {
                         href={project.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
                       >
-                        <LinkIcon className="w-4 h-4" />
+                        <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         {t.viewProject}
                       </a>
                     )}
                     {project.completedDate && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-2">
                         {t.completed || 'Completed'}: {new Date(project.completedDate).toLocaleDateString()}
                       </p>
                     )}
@@ -1320,16 +1633,16 @@ const Profile = () => {
           {/* Social Links */}
           {studentProfile?.socialLinks && Object.values(studentProfile.socialLinks).some(link => link) && (
             <Card title={t.socialLinksTitle}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {studentProfile.socialLinks.github && (
                   <a
                     href={studentProfile.socialLinks.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-gray-700 hover:text-primary-600"
                   >
-                    <LinkIcon className="w-4 h-4" />
-                    GitHub
+                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">GitHub</span>
                   </a>
                 )}
                 {studentProfile.socialLinks.linkedin && (
@@ -1337,10 +1650,10 @@ const Profile = () => {
                     href={studentProfile.socialLinks.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-gray-700 hover:text-primary-600"
                   >
-                    <LinkIcon className="w-4 h-4" />
-                    LinkedIn
+                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">LinkedIn</span>
                   </a>
                 )}
                 {studentProfile.socialLinks.website && (
@@ -1348,10 +1661,10 @@ const Profile = () => {
                     href={studentProfile.socialLinks.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-gray-700 hover:text-primary-600"
                   >
-                    <LinkIcon className="w-4 h-4" />
-                    Website
+                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">Website</span>
                   </a>
                 )}
                 {studentProfile.socialLinks.behance && (
@@ -1359,10 +1672,10 @@ const Profile = () => {
                     href={studentProfile.socialLinks.behance}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-gray-700 hover:text-primary-600"
                   >
-                    <LinkIcon className="w-4 h-4" />
-                    Behance
+                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">Behance</span>
                   </a>
                 )}
                 {studentProfile.socialLinks.telegram && (
@@ -1370,10 +1683,10 @@ const Profile = () => {
                     href={studentProfile.socialLinks.telegram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-gray-700 hover:text-primary-600"
                   >
-                    <LinkIcon className="w-4 h-4" />
-                    Telegram
+                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">Telegram</span>
                   </a>
                 )}
                 {studentProfile.socialLinks.whatsapp && (
@@ -1381,10 +1694,10 @@ const Profile = () => {
                     href={studentProfile.socialLinks.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-gray-700 hover:text-primary-600"
                   >
-                    <LinkIcon className="w-4 h-4" />
-                    WhatsApp
+                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">WhatsApp</span>
                   </a>
                 )}
               </div>
@@ -1401,26 +1714,26 @@ const Profile = () => {
                 message={t.verificationLoadFailed}
               />
             ) : hasApprovedVerification ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Alert
                   type="success"
                   title={t.verificationComplete}
                   message={t.verificationCompleteMessage}
                 />
                 {verifications.filter(v => v && v.status === 'approved').map((verification, index) => (
-                  <div key={verification._id || `approved-${index}`} className="p-4 bg-green-50 rounded-lg border border-green-200">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold text-gray-900 capitalize">
+                  <div key={verification._id || `approved-${index}`} className="p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5 sm:mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <h4 className="text-sm sm:text-base font-semibold text-gray-900 capitalize">
                             {verification.documentType ? verification.documentType.replace(/_/g, ' ') : t.verificationDocument || 'Verification Document'}
                           </h4>
-                          <Badge variant="success">{t.approved}</Badge>
+                          <Badge variant="success" className="text-xs sm:text-sm self-start sm:self-auto">{t.approved}</Badge>
                         </div>
-                        <p className="text-sm text-gray-700">{verification.institutionName || t.na}</p>
+                        <p className="text-xs sm:text-sm text-gray-700">{verification.institutionName || t.na}</p>
                         {verification.reviewedAt && (
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-[10px] sm:text-xs text-gray-600 mt-1">
                             {t.approvedOn} {new Date(verification.reviewedAt).toLocaleDateString()}
                           </p>
                         )}
@@ -1430,25 +1743,25 @@ const Profile = () => {
                 ))}
               </div>
             ) : hasPendingVerification ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Alert
                   type="info"
                   title={t.verificationPending}
                   message={t.verificationPendingMessage}
                 />
                 {verifications.filter(v => v && v.status === 'pending').map((verification, index) => (
-                  <div key={verification._id || `pending-${index}`} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-start gap-3">
-                      <Clock className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold text-gray-900 capitalize">
+                  <div key={verification._id || `pending-${index}`} className="p-3 sm:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0 mt-0.5 sm:mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                          <h4 className="text-sm sm:text-base font-semibold text-gray-900 capitalize">
                             {verification.documentType ? verification.documentType.replace(/_/g, ' ') : t.verificationDocument || 'Verification Document'}
                           </h4>
-                          <Badge variant="warning">{t.pendingReview}</Badge>
+                          <Badge variant="warning" className="text-xs sm:text-sm self-start sm:self-auto">{t.pendingReview}</Badge>
                         </div>
-                        <p className="text-sm text-gray-700">{verification.institutionName || t.na}</p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs sm:text-sm text-gray-700">{verification.institutionName || t.na}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-600 mt-1">
                           {t.submitted} {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : t.na}
                         </p>
                       </div>
@@ -1457,7 +1770,7 @@ const Profile = () => {
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Alert
                   type="warning"
                   title={t.verificationRequired}
@@ -1465,7 +1778,7 @@ const Profile = () => {
                 />
                 
                 {/* Verification Upload Form */}
-                <form onSubmit={handleSubmitVerification(onSubmitVerification)} className="space-y-4">
+                <form onSubmit={handleSubmitVerification(onSubmitVerification)} className="space-y-3 sm:space-y-4">
                   {verificationError && (
                     <Alert
                       type="error"
@@ -1493,7 +1806,7 @@ const Profile = () => {
                     {...registerVerification('institutionName', { required: t.institutionNameRequired })}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <Input
                       label={t.studentIdNumber}
                       placeholder={t.studentIdPlaceholder}
@@ -1527,13 +1840,13 @@ const Profile = () => {
 
                   {/* File Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       {t.uploadDocument} <span className="text-red-500">*</span>
                     </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
+                    <div className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
                       <div className="space-y-1 text-center">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="flex text-sm text-gray-600">
+                        <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                        <div className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm text-gray-600 gap-1">
                           <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
                             <span>{t.uploadFile}</span>
                             <input
@@ -1555,13 +1868,13 @@ const Profile = () => {
                               }}
                             />
                           </label>
-                          <p className="pl-1">{t.dragAndDrop}</p>
+                          <p className="sm:pl-1">{t.dragAndDrop}</p>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[10px] sm:text-xs text-gray-500">
                           {t.fileFormats}
                         </p>
                         {verificationFile && (
-                          <p className="text-sm text-primary-600 font-medium">
+                          <p className="text-xs sm:text-sm text-primary-600 font-medium truncate max-w-full px-2">
                             {t.selected} {verificationFile.name}
                           </p>
                         )}
@@ -1572,11 +1885,11 @@ const Profile = () => {
                   <Button
                     type="submit"
                     variant="primary"
-                    className="w-full"
+                    className="w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
                     loading={uploadVerificationMutation.isPending}
                     disabled={uploadVerificationMutation.isPending}
                   >
-                    <Shield className="w-4 h-4 mr-2" />
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                     {t.submitForVerification}
                   </Button>
                 </form>
@@ -1585,21 +1898,21 @@ const Profile = () => {
 
             {/* Verification History */}
             {verifications && verifications.length > 0 && verifications.some(v => v && v.status === 'rejected') && (
-              <div className="mt-6 pt-6 border-t">
-                <h4 className="font-semibold text-gray-900 mb-3">{t.verificationHistory}</h4>
-                <div className="space-y-3">
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
+                <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">{t.verificationHistory}</h4>
+                <div className="space-y-2 sm:space-y-3">
                   {verifications.filter(v => v && v.status === 'rejected').map((verification, index) => (
-                    <div key={verification._id || `rejected-${index}`} className="p-4 bg-red-50 rounded-lg border border-red-200">
-                      <div className="flex items-start gap-3">
-                        <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold text-gray-900 capitalize">
+                    <div key={verification._id || `rejected-${index}`} className="p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5 sm:mt-1" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                            <h4 className="text-sm sm:text-base font-semibold text-gray-900 capitalize">
                               {verification.documentType?.replace('_', ' ')}
                             </h4>
-                            <Badge variant="error">{t.rejected}</Badge>
+                            <Badge variant="error" className="text-xs sm:text-sm self-start sm:self-auto">{t.rejected}</Badge>
                           </div>
-                          <p className="text-sm text-gray-700">{verification.institutionName || t.na}</p>
+                          <p className="text-xs sm:text-sm text-gray-700">{verification.institutionName || t.na}</p>
                           {verification.rejectionReason && (
                             <Alert
                               type="error"
@@ -1607,7 +1920,7 @@ const Profile = () => {
                               className="mt-2"
                             />
                           )}
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-[10px] sm:text-xs text-gray-600 mt-1">
                             {t.submitted} {(verification.uploadedAt || verification.createdAt) ? new Date(verification.uploadedAt || verification.createdAt).toLocaleDateString() : t.na}
                           </p>
                         </div>
@@ -1622,24 +1935,25 @@ const Profile = () => {
           {/* Resume */}
           <Card title={t.resumeCv}>
             {studentProfile?.resume && studentProfile.resume.url ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-8 h-8 text-primary-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">{studentProfile.resume.filename}</p>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm sm:text-base font-medium text-gray-900 truncate">{studentProfile.resume.filename}</p>
                       {studentProfile.resume.uploadedAt && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           {t.uploaded} {new Date(studentProfile.resume.uploadedAt).toLocaleDateString()}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button
                       variant="outline"
                       size="sm"
                   onClick={() => window.open(`${API_BASE_URL}${studentProfile.resume.url}`, '_blank')}
+                      className="flex-1 sm:flex-initial text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                     >
                       {t.download}
                     </Button>
@@ -1649,13 +1963,13 @@ const Profile = () => {
                       onClick={handleDeleteResume}
                       loading={deleteResumeMutation.isLoading}
                       disabled={deleteResumeMutation.isLoading}
-                      className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
+                      className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700 px-3 sm:px-4 py-1.5 sm:py-2"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                 </div>
-                <div className="pt-3 border-t">
+                <div className="pt-2 sm:pt-3 border-t">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1669,17 +1983,17 @@ const Profile = () => {
                     onClick={() => fileInputRef.current?.click()}
                     loading={uploadingResume}
                     disabled={uploadingResume}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto"
                   >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                     {t.replaceResume}
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">{t.noResumeUploaded}</p>
+              <div className="text-center py-6 sm:py-8 px-4">
+                <FileText className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{t.noResumeUploaded}</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1692,12 +2006,12 @@ const Profile = () => {
                   onClick={() => fileInputRef.current?.click()}
                   loading={uploadingResume}
                   disabled={uploadingResume}
-                  className="flex items-center gap-2 mx-auto"
+                  className="flex items-center gap-1.5 sm:gap-2 mx-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
                 >
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                   {t.uploadResume}
                 </Button>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-2">
                   {t.supportedFormats}
                 </p>
               </div>
@@ -1706,10 +2020,10 @@ const Profile = () => {
 
           {/* Additional Documents */}
           <Card title={t.additionalDocuments}>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Upload Form */}
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <div className="space-y-3">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-gray-50">
+                <div className="space-y-2 sm:space-y-3">
                   <Input
                     label={t.documentDescription}
                     placeholder={t.documentDescriptionPlaceholder}
@@ -1730,12 +2044,12 @@ const Profile = () => {
                     onClick={() => additionalDocumentInputRef.current?.click()}
                     loading={uploadingDocument || uploadAdditionalDocumentMutation.isPending}
                     disabled={uploadingDocument || uploadAdditionalDocumentMutation.isPending}
-                    className="flex items-center gap-2 w-full"
+                    className="flex items-center gap-1.5 sm:gap-2 w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
                   >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                     {uploadingDocument ? t.uploading : t.uploadDocumentButton}
                   </Button>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {t.supportedFormatsAdditional}
                   </p>
                 </div>
@@ -1743,31 +2057,32 @@ const Profile = () => {
 
               {/* Documents List */}
               {studentProfile?.additionalDocuments && studentProfile.additionalDocuments.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {studentProfile.additionalDocuments.map((doc, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <FileText className="w-6 h-6 text-primary-600 flex-shrink-0" />
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto">
+                        <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{doc.filename}</p>
+                          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{doc.filename}</p>
                           {doc.description && (
-                            <p className="text-sm text-gray-600 truncate">{doc.description}</p>
+                            <p className="text-xs text-gray-600 truncate">{doc.description}</p>
                           )}
                           {doc.uploadedAt && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-[10px] sm:text-xs text-gray-500">
                               {t.uploaded} {new Date(doc.uploadedAt).toLocaleDateString()}
                             </p>
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => window.open(`${API_BASE_URL}${doc.url}`, '_blank')}
+                          className="flex-1 sm:flex-initial text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                         >
                           {t.view}
                         </Button>
@@ -1777,24 +2092,102 @@ const Profile = () => {
                           onClick={() => handleDeleteAdditionalDocument(index)}
                           loading={deleteAdditionalDocumentMutation.isPending}
                           disabled={deleteAdditionalDocumentMutation.isPending}
-                          className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
+                          className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700 px-3 sm:px-4 py-1.5 sm:py-2"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-500">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm">{t.noAdditionalDocuments}</p>
+                <div className="text-center py-4 sm:py-6 text-gray-500 px-4">
+                  <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs sm:text-sm">{t.noAdditionalDocuments}</p>
                 </div>
               )}
             </div>
           </Card>
         </div>
       </div>
+
+      {/* Crop Photo Modal */}
+      <Modal
+        isOpen={showCropModal}
+        onClose={handleCropCancel}
+        title={t.cropPhoto}
+        size="lg"
+      >
+        <div className="space-y-4 sm:space-y-6">
+          <p className="text-sm sm:text-base text-gray-600">{t.cropPhotoDescription}</p>
+          <div 
+            className="relative w-full mx-auto rounded-lg overflow-hidden" 
+            style={{ 
+              height: '300px',
+              maxHeight: '70vh',
+              backgroundColor: '#000' 
+            }}
+          >
+            {imageToCrop && (
+              <Cropper
+                image={imageToCrop}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                style={{
+                  containerStyle: {
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
+                  },
+                }}
+              />
+            )}
+          </div>
+          <div className="space-y-3 sm:space-y-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Zoom: {Math.round(zoom * 100)}%
+              </label>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+              />
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCropCancel}
+                disabled={uploadingPhoto}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
+              >
+                <X className="w-4 h-4" />
+                {t.cancel}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleCropAndUpload}
+                loading={uploadingPhoto}
+                disabled={uploadingPhoto || !croppedAreaPixels}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
+              >
+                <Check className="w-4 h-4" />
+                {t.saveCrop}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* Edit Profile Modal */}
       <Modal
@@ -1806,7 +2199,7 @@ const Profile = () => {
         }}
         title={t.editProfile}
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
           {/* Error Alert */}
           {formError && (
             <Alert
@@ -1818,8 +2211,8 @@ const Profile = () => {
           
           {/* Personal Information Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.personalInformation}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t.personalInformation}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <Input
                 label={t.fullName}
                 {...register('name', { required: t.nameRequired })}
@@ -1934,8 +2327,8 @@ const Profile = () => {
 
           {/* Location Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.location}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t.location}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Select
                   label={t.countryOfStudy}
@@ -2159,7 +2552,7 @@ const Profile = () => {
 
           {/* Professional Information Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.professionalInformation}</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t.professionalInformation}</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="col-span-full">
                 <Input
@@ -2200,7 +2593,7 @@ const Profile = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Select
                   label={t.experienceLevel}
                   required
@@ -2238,20 +2631,50 @@ const Profile = () => {
                   ]}
                 />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t.currencyAutoSet}
-                  </label>
-                  <Input
-                    {...register('studentProfile.hourlyRate.currency')}
-                    disabled
-                    className="bg-gray-100 cursor-not-allowed"
-                    placeholder={t.selectCountryFirst}
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    {t.currencyAutoSetInfo}
-                  </p>
-                </div>
+                <Select
+                  label={t.currency}
+                  {...register('studentProfile.hourlyRate.currency')}
+                  error={errors.studentProfile?.hourlyRate?.currency?.message}
+                  options={[
+                    { value: 'USD', label: 'USD - US Dollar' },
+                    { value: 'EUR', label: 'EUR - Euro' },
+                    { value: 'EGP', label: 'EGP - Egyptian Pound' },
+                    { value: 'GBP', label: 'GBP - British Pound' },
+                    { value: 'AED', label: 'AED - UAE Dirham' },
+                    { value: 'SAR', label: 'SAR - Saudi Riyal' },
+                    { value: 'QAR', label: 'QAR - Qatari Riyal' },
+                    { value: 'KWD', label: 'KWD - Kuwaiti Dinar' },
+                    { value: 'BHD', label: 'BHD - Bahraini Dinar' },
+                    { value: 'OMR', label: 'OMR - Omani Rial' },
+                    { value: 'JOD', label: 'JOD - Jordanian Dinar' },
+                    { value: 'LBP', label: 'LBP - Lebanese Pound' },
+                    { value: 'ILS', label: 'ILS - Israeli Shekel' },
+                    { value: 'TRY', label: 'TRY - Turkish Lira' },
+                    { value: 'ZAR', label: 'ZAR - South African Rand' },
+                    { value: 'MAD', label: 'MAD - Moroccan Dirham' },
+                    { value: 'TND', label: 'TND - Tunisian Dinar' },
+                    { value: 'DZD', label: 'DZD - Algerian Dinar' },
+                    { value: 'NGN', label: 'NGN - Nigerian Naira' },
+                    { value: 'KES', label: 'KES - Kenyan Shilling' },
+                    { value: 'GHS', label: 'GHS - Ghanaian Cedi' },
+                    { value: 'UGX', label: 'UGX - Ugandan Shilling' },
+                    { value: 'TZS', label: 'TZS - Tanzanian Shilling' },
+                    { value: 'ETB', label: 'ETB - Ethiopian Birr' },
+                    { value: 'CHF', label: 'CHF - Swiss Franc' },
+                    { value: 'SEK', label: 'SEK - Swedish Krona' },
+                    { value: 'NOK', label: 'NOK - Norwegian Krone' },
+                    { value: 'DKK', label: 'DKK - Danish Krone' },
+                    { value: 'PLN', label: 'PLN - Polish Zloty' },
+                    { value: 'CZK', label: 'CZK - Czech Koruna' },
+                    { value: 'HUF', label: 'HUF - Hungarian Forint' },
+                    { value: 'RON', label: 'RON - Romanian Leu' },
+                    { value: 'BGN', label: 'BGN - Bulgarian Lev' },
+                    { value: 'HRK', label: 'HRK - Croatian Kuna' },
+                    { value: 'RUB', label: 'RUB - Russian Ruble' },
+                    { value: 'UAH', label: 'UAH - Ukrainian Hryvnia' },
+                  ]}
+                  placeholder={t.selectCurrency}
+                />
 
                 <Input
                   label={t.hourlyRateMin}
@@ -2278,8 +2701,8 @@ const Profile = () => {
 
           {/* Social Links Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.socialLinks}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t.socialLinks}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <Input
                 label={t.github}
                 {...register('studentProfile.socialLinks.github')}
@@ -2325,12 +2748,13 @@ const Profile = () => {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowEditModal(false)}
               disabled={updateProfileMutation.isLoading}
+              className="w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
             >
               {t.cancel}
             </Button>
@@ -2339,9 +2763,9 @@ const Profile = () => {
               variant="primary"
               loading={updateProfileMutation.isLoading}
               disabled={updateProfileMutation.isLoading}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3 h-3 sm:w-4 sm:h-4" />
               {t.saveChanges}
             </Button>
           </div>

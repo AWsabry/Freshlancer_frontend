@@ -702,28 +702,28 @@ const Landing = () => {
 
       {/* Professional Navigation Bar */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
             {/* Logo Space - Recommended size: 150px width × 50px height */}
-            <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
               <Link to="/" className="flex items-center">
                 <img
                   src={logo}
                   alt="Freshlancer logo"
-                  className="h-[50px] w-auto max-w-[150px] object-contain"
+                  className="h-8 sm:h-10 md:h-[50px] w-auto max-w-[120px] sm:max-w-[150px] object-contain"
                 />
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.features}</a>
-              <a href="#how-it-works" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.howItWorks}</a>
-              <a href="#about" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.about}</a>
-              <a href="#contact" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.contact}</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.testimonials}</a>
+            <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+              <a href="#features" className="text-sm xl:text-base text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.features}</a>
+              <a href="#how-it-works" className="text-sm xl:text-base text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.howItWorks}</a>
+              <a href="#about" className="text-sm xl:text-base text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.about}</a>
+              <a href="#contact" className="text-sm xl:text-base text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.contact}</a>
+              <a href="#testimonials" className="text-sm xl:text-base text-gray-700 hover:text-[#065084] font-medium transition-colors">{t.nav.testimonials}</a>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <div className="flex items-center">
                 <label htmlFor="language-select" className="sr-only">
                   {t.languageLabel}
@@ -735,17 +735,18 @@ const Landing = () => {
                   <Button
                     onClick={() => navigate(getDashboardPath())}
                     aria-label={t.hero.dashboardAria}
-                    className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all"
+                    className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2"
                   >
-                    <LayoutDashboard className="w-4 h-4 mr-2" aria-hidden="true" />
-                    {t.nav.dashboard}
+                    <LayoutDashboard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" aria-hidden="true" />
+                    <span className="hidden sm:inline">{t.nav.dashboard}</span>
+                    <span className="sm:hidden">Dashboard</span>
                   </Button>
 
                   <select
                   id="language-select"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#065084] bg-white"
+                  className="border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#065084] bg-white"
                   aria-label={t.languageLabel}
                 >
                   <option value="en">{t.languageOptions.en}</option>
@@ -758,16 +759,17 @@ const Landing = () => {
                     variant="outline"
                     onClick={() => navigate('/login')}
                     aria-label={t.hero.secondaryAria}
-                    className="border-gray-300 text-gray-700 hover:border-[#065084] hover:text-[#065084]"
+                    className="border-gray-300 text-gray-700 hover:border-[#065084] hover:text-[#065084] text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 hidden sm:inline-flex"
                   >
                     {t.nav.signIn}
                   </Button>
                   <Button
                     onClick={() => navigate('/register')}
                     aria-label={t.nav.getStarted}
-                    className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all"
+                    className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2"
                   >
-                    {t.nav.getStarted}
+                    <span className="hidden sm:inline">{t.nav.getStarted}</span>
+                    <span className="sm:hidden">Start</span>
                   </Button>
                 </>
               )}
@@ -778,16 +780,16 @@ const Landing = () => {
 
       {/* Hero Section - Professional Design */}
       <header className="relative overflow-hidden bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Left Content */}
-            <article className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#065084]/10 rounded-md text-sm font-medium text-[#065084] border border-[#065084]/20">
-                <Zap className="w-4 h-4" aria-hidden="true" />
-                <span>{t.hero.badge}</span>
+            <article className="space-y-6 sm:space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#065084]/10 rounded-md text-xs sm:text-sm font-medium text-[#065084] border border-[#065084]/20">
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
+                <span className="truncate">{t.hero.badge}</span>
               </div>
 
-              <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 {t.hero.headingLine1}
                 <br />
                 <span className="text-[#065084] font-extrabold" style={{ fontWeight: 900 }}>
@@ -795,38 +797,38 @@ const Landing = () => {
                 </span>
               </h2>
 
-              <p className="text-xl text-gray-600 leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed">
                 {t.hero.description}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {isAuthenticated ? (
                   <Button
                     size="lg"
                     onClick={() => navigate(getDashboardPath())}
-                    className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-lg px-8 py-4"
+                    className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
                     aria-label={t.hero.dashboardAria}
                   >
-                    <LayoutDashboard className="w-5 h-5 mr-2" aria-hidden="true" />
+                    <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 mr-2" aria-hidden="true" />
                     {t.hero.dashboardCta}
-                    <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" aria-hidden="true" />
                   </Button>
                 ) : (
                   <>
                     <Button
                       size="lg"
                       onClick={() => navigate('/register')}
-                      className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-lg px-8 py-4"
+                      className="bg-[#065084] text-white hover:bg-[#043d6b] transition-all text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
                       aria-label={t.hero.primaryAria}
                     >
                       {t.hero.primaryCta}
-                      <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="outline"
                       size="lg"
                       onClick={() => navigate('/login')}
-                      className="border-2 border-gray-300 text-gray-700 hover:border-[#065084] hover:text-[#065084] text-lg px-8 py-4"
+                      className="border-2 border-gray-300 text-gray-700 hover:border-[#065084] hover:text-[#065084] text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
                       aria-label={t.hero.secondaryAria}
                     >
                       {t.hero.secondaryCta}
@@ -835,25 +837,25 @@ const Landing = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-6 pt-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 pt-2 sm:pt-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">{t.hero.noCreditCard}</span>
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-gray-600">{t.hero.noCreditCard}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">{t.hero.quickSignup}</span>
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-gray-600">{t.hero.quickSignup}</span>
                 </div>
               </div>
             </article>
 
             {/* Right Image Space - 600x500px recommended */}
-            <div className="relative">
-              <div className="w-full h-[500px] bg-[#065084]/5 rounded-lg flex items-center justify-center border border-gray-200 shadow-lg overflow-hidden">
+            <div className="relative order-first lg:order-last">
+              <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-[#065084]/5 rounded-lg flex items-center justify-center border border-gray-200 shadow-lg overflow-hidden">
                 <img
                   src={heroLogo}
                   alt="Freshlancer hero logo"
-                  className="h-[400px] w-auto max-w-[500px] object-contain animate-bounce-slow"
+                  className="h-[250px] sm:h-[350px] md:h-[400px] w-auto max-w-full sm:max-w-[500px] object-contain animate-bounce-slow"
                   style={{
                     animation: 'bounce-slow 2s ease-in-out infinite'
                   }}
@@ -863,19 +865,19 @@ const Landing = () => {
           </div>
 
           {/* Stats Section - Modern Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-12 sm:mt-16 md:mt-20">
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all"
+                className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-all"
               >
-                <div className="text-[#065084] mb-3">
-                  {stat.icon}
+                <div className="text-[#065084] mb-2 sm:mb-3">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8">{stat.icon}</div>
                 </div>
-                <div className="text-3xl lg:text-4xl font-bold text-[#065084] mb-2">
+                <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#065084] mb-1 sm:mb-2">
                   {stat.number}
                 </div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-xs sm:text-sm text-gray-600 leading-tight">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -883,32 +885,32 @@ const Landing = () => {
       </header>
 
       {/* Features Section - Modern Card Grid */}
-      <section id="features" className="py-24 bg-white" aria-labelledby="features-heading">
+      <section id="features" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white" aria-labelledby="features-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 id="features-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12 md:mb-16">
+            <h2 id="features-heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
               {t.featureSection.headingPrefix}{' '}
               <span className="text-[#065084]">{t.featureSection.headingHighlight}</span>
               {t.featureSection.headingSuffix}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
               {t.featureSection.subheading}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {features.map((feature, index) => (
               <article
                 key={index}
-                className="group bg-white p-8 rounded-lg border border-gray-200 hover:border-[#065084] hover:shadow-lg transition-all"
+                className="group bg-white p-6 sm:p-8 rounded-lg border border-gray-200 hover:border-[#065084] hover:shadow-lg transition-all"
               >
-                <div className={`w-14 h-14 ${feature.color} rounded-lg flex items-center justify-center text-white mb-6 transition-transform`}>
-                  {feature.icon}
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 ${feature.color} rounded-lg flex items-center justify-center text-white mb-4 sm:mb-6 transition-transform`}>
+                  <div className="w-5 h-5 sm:w-6 sm:h-6">{feature.icon}</div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
               </article>
@@ -918,27 +920,27 @@ const Landing = () => {
       </section>
 
       {/* Job Categories Section */}
-      <section className="py-24 bg-gray-50" aria-labelledby="categories-heading">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gray-50" aria-labelledby="categories-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 id="categories-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12 md:mb-16">
+            <h2 id="categories-heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
               {t.categorySection.heading}
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 px-4">
               {t.categorySection.subheading}
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             {jobCategories.map((category, index) => (
               <div
                 key={index}
-                className="group bg-white p-6 rounded-lg border border-gray-200 hover:border-[#065084] hover:shadow-md transition-all cursor-pointer"
+                className="group bg-white p-4 sm:p-6 rounded-lg border border-gray-200 hover:border-[#065084] hover:shadow-md transition-all cursor-pointer"
               >
-                <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center text-white mb-3 transition-transform`}>
-                  {category.icon}
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 ${category.color} rounded-lg flex items-center justify-center text-white mb-2 sm:mb-3 transition-transform`}>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5">{category.icon}</div>
                 </div>
-                <h3 className="font-bold text-gray-900 group-hover:text-[#065084] transition-colors">
+                <h3 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#065084] transition-colors leading-tight">
                   {category.name}
                 </h3>
               </div>
@@ -948,41 +950,41 @@ const Landing = () => {
       </section>
 
       {/* Benefits Section - Dual Cards with Brand Colors */}
-      <section className="py-24 bg-white" aria-labelledby="benefits-heading">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white" aria-labelledby="benefits-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 id="benefits-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16 text-center">
+          <h2 id="benefits-heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-8 sm:mb-12 md:mb-16 text-center px-4">
             {benefits.heading}
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* For Students Card */}
             <article className="relative bg-white rounded-lg overflow-hidden border-2 border-[#25aaad] hover:border-[#25aaad] transition-all shadow-lg hover:shadow-xl">
-              <div className="relative p-10">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-[#25aaad] rounded-lg flex items-center justify-center shadow-md">
-                    <Award className="w-8 h-8 text-white" aria-hidden="true" />
+              <div className="relative p-6 sm:p-8 md:p-10">
+                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-[#25aaad] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                    <Award className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" aria-hidden="true" />
                   </div>
-                  <div>
-                    <h3 className="text-3xl font-bold text-gray-900">{benefits.students.title}</h3>
-                    <p className="text-[#25aaad] font-medium">{benefits.students.tagline}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{benefits.students.title}</h3>
+                    <p className="text-sm sm:text-base text-[#25aaad] font-medium">{benefits.students.tagline}</p>
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-8 text-lg">
+                <p className="text-sm sm:text-base md:text-lg text-gray-600 mb-6 sm:mb-8">
                   {benefits.students.intro}
                 </p>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                   {benefits.students.list.map((benefit, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-[#25aaad] mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span className="text-gray-700">{benefit}</span>
+                    <li key={index} className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#25aaad] mt-0.5 flex-shrink-0" aria-hidden="true" />
+                      <span className="text-xs sm:text-sm md:text-base text-gray-700">{benefit}</span>
                     </li>
                   ))}
                 </ul>
 
                 {/* Image Space for Students - 400x300px */}
-                <div className="w-full h-[300px] rounded-lg mb-6 overflow-hidden border border-[#25aaad]/30">
+                <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] rounded-lg mb-4 sm:mb-6 overflow-hidden border border-[#25aaad]/30">
                   <img 
                     src={Studentimage} 
                     alt="Student freelancer working on projects" 
@@ -991,12 +993,12 @@ const Landing = () => {
                 </div>
 
                 <Button
-                  className="w-full bg-[#25aaad] text-white hover:bg-[#1a8b8d] text-lg py-6"
+                  className="w-full bg-[#25aaad] text-white hover:bg-[#1a8b8d] text-sm sm:text-base md:text-lg py-4 sm:py-5 md:py-6"
                   onClick={() => navigate('/register')}
                   aria-label={benefits.students.cta}
                 >
                   {benefits.students.cta}
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </Button>
               </div>
             </article>

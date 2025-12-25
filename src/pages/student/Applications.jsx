@@ -113,9 +113,12 @@ const Applications = () => {
   const t = translations[language] || translations.en;
 
   // Fetch student's applications
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['myApplications'],
     queryFn: () => applicationService.getMyApplications(),
+    refetchOnWindowFocus: true, // Refetch when user returns to the tab
+    refetchOnMount: true, // Refetch when component mounts
+    refetchInterval: 30000, // Refetch every 30 seconds to check for status updates
   });
 
   // Fetch current user to check premium status
@@ -192,13 +195,13 @@ const Applications = () => {
   if (error) {
     return (
       <Card>
-        <div className="text-center py-12">
-          <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <p className="text-gray-600 mb-4">{t.failedToLoad}</p>
-          <p className="text-sm text-gray-500 mb-4">
+        <div className="text-center py-8 sm:py-12 px-4">
+          <XCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-red-500 mb-3 sm:mb-4" />
+          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{t.failedToLoad}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
             {error.response?.data?.message || error.message}
           </p>
-          <Button onClick={() => window.location.reload()}>{t.retry}</Button>
+          <Button onClick={() => window.location.reload()} className="text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">{t.retry}</Button>
         </div>
       </Card>
     );
@@ -212,59 +215,59 @@ const Applications = () => {
 
     return (
       <Card key={application._id}>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0 w-full">
             {/* Job Title and Status */}
-            <div className="flex items-start gap-3 mb-3">
-              <h3 className="text-xl font-bold text-gray-900 flex-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-start gap-2 sm:gap-3 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 line-clamp-2">
                 {application.jobPost?.title || t.jobTitle}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 {getStatusBadge(application.status || 'pending')}
                 {/* Contact Unlocked Badge - Show if contactUnlockedByClient is true (premium users only) */}
                 {application.contactUnlockedByClient === true && (
-                  <Badge variant="success" className="flex items-center gap-1">
+                  <Badge variant="success" className="flex items-center gap-1 text-xs">
                     <Unlock className="w-3 h-3" />
-                    {t.contactUnlocked}
+                    <span className="hidden sm:inline">{t.contactUnlocked}</span>
+                    <span className="sm:hidden">Unlocked</span>
                   </Badge>
                 )}
+                {/* Job Category */}
+                {application.jobPost?.category && (
+                  <Badge variant="default" className="text-xs">{application.jobPost.category}</Badge>
+                )}
               </div>
-              {/* Job Category */}
-              <div className="flex items-center gap-2">
-              {application.jobPost?.category && (
-                <Badge variant="default">{application.jobPost.category}</Badge>
-              )}
-              </div>
-
             </div>
 
             {/* Withdrawal Notice - Show if withdrawn by client */}
             {application.status === 'withdrawn' &&
              application.withdrawalReason === 'Job was withdrawn by client' && (
-              <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <p className="text-sm text-orange-800 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  {t.jobWithdrawn}
+              <div className="mb-3 p-2 sm:p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-xs sm:text-sm text-orange-800 flex items-center gap-1.5 sm:gap-2">
+                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span>{t.jobWithdrawn}</span>
                 </p>
               </div>
             )}
 
           {/* Company Info - Only for Premium Users */}
           {isPremium && application.jobPost?.client && !application.jobPost.client.message && (
-            <p className="text-gray-600 mb-3 flex items-center gap-2">
-              <Briefcase className="w-4 h-4" />
-              {application.jobPost.client.clientProfile?.companyName ||
-               application.jobPost.client.email ||
-               application.jobPost.client.name ||
-               'N/A'}
+            <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2">
+              <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">
+                {application.jobPost.client.clientProfile?.companyName ||
+                 application.jobPost.client.email ||
+                 application.jobPost.client.name ||
+                 'N/A'}
+              </span>
             </p>
           )}
 
           {/* Premium Upgrade Message for Free Users */}
           {(!isPremium || (application.jobPost?.client && application.jobPost.client.message)) && (
-            <p className="text-gray-600 mb-3 flex items-center gap-2">
-              <Briefcase className="w-4 h-4" />
-              <span className="text-sm text-gray-500 italic">
+            <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2">
+              <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-gray-500 italic">
                 {application.jobPost?.client?.message || t.premiumMembersOnly}
               </span>
             </p>
@@ -272,22 +275,22 @@ const Applications = () => {
 
           {/* Contact Unlocked Status - Show message for non-premium users */}
           {application.contactUnlockedByClient === 'premium members only' && (
-            <p className="text-gray-600 mb-3 flex items-center gap-2">
-              <Unlock className="w-4 h-4" />
-              <span className="text-sm text-gray-500 italic">
+            <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2">
+              <Unlock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-gray-500 italic">
                 {t.premiumMembersOnly}
               </span>
             </p>
           )}
 
           {/* Application Details */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
             {/* Proposed Budget */}
             {application.proposedBudget && (
               <div className="flex items-center gap-2 text-gray-600">
-                <div>
-                  <p className="text-xs text-gray-500">{t.yourBid}</p>
-                  <p className="font-semibold text-green-600">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-gray-500">{t.yourBid}</p>
+                  <p className="font-semibold text-sm sm:text-base text-green-600 truncate">
                     {application.proposedBudget.currency} {application.proposedBudget.amount}
                   </p>
                 </div>
@@ -296,10 +299,10 @@ const Applications = () => {
 
             {/* Applied Date */}
             <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="w-5 h-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">{t.appliedOn}</p>
-                <p className="font-semibold text-sm">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-gray-500">{t.appliedOn}</p>
+                <p className="font-semibold text-xs sm:text-sm">
                   {new Date(application.createdAt).toLocaleDateString()}
                 </p>
               </div>
@@ -308,10 +311,10 @@ const Applications = () => {
             {/* Duration */}
             {application.estimatedDuration && (
               <div className="flex items-center gap-2 text-gray-600">
-                <Clock className="w-5 h-5 text-primary-600" />
-                <div>
-                  <p className="text-xs text-gray-500">{t.duration}</p>
-                  <p className="font-semibold text-sm">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-gray-500">{t.duration}</p>
+                  <p className="font-semibold text-xs sm:text-sm truncate">
                     {application.estimatedDuration}
                   </p>
                 </div>
@@ -321,18 +324,18 @@ const Applications = () => {
             {/* Job Budget Range - Only for Premium Users */}
             {isPremium && application.jobPost?.budget && !application.jobPost.budget.message ? (
               <div className="flex items-center gap-2 text-gray-600">
-                <div>
-                  <p className="text-xs text-gray-500">{t.jobBudget}</p>
-                  <p className="font-semibold text-sm">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-gray-500">{t.jobBudget}</p>
+                  <p className="font-semibold text-xs sm:text-sm truncate">
                     {application.jobPost.budget.currency} {application.jobPost.budget.min} - {application.jobPost.budget.max}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 text-gray-600">
-                <div>
-                  <p className="text-xs text-gray-500">{t.jobBudget}</p>
-                  <p className="font-semibold text-sm text-gray-400 italic">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-gray-500">{t.jobBudget}</p>
+                  <p className="font-semibold text-xs sm:text-sm text-gray-400 italic truncate">
                     {application.jobPost?.budget?.message || t.premiumMembersOnly}
                   </p>
                 </div>
@@ -342,8 +345,8 @@ const Applications = () => {
 
           {/* Proposal Type */}
           {application.proposalType && (
-            <div className="mb-3">
-              <span className="inline-block px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-medium">
+            <div className="mb-2 sm:mb-3">
+              <span className="inline-block px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-50 text-primary-700 rounded-full text-xs sm:text-sm font-medium">
                 {application.proposalType.charAt(0).toUpperCase() +
                  application.proposalType.slice(1)} {t.proposal}
               </span>
@@ -352,11 +355,11 @@ const Applications = () => {
 
           {/* Client Feedback */}
           {application.clientFeedback && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3">
-              <p className="text-sm font-semibold text-blue-900 mb-1">
+            <div className="p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg mb-2 sm:mb-3">
+              <p className="text-xs sm:text-sm font-semibold text-blue-900 mb-1">
                 {t.clientFeedback}
               </p>
-              <p className="text-sm text-blue-800">
+              <p className="text-xs sm:text-sm text-blue-800">
                 {application.clientFeedback.message}
               </p>
             </div>
@@ -367,14 +370,14 @@ const Applications = () => {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 pt-4 border-t">
+      <div className="flex gap-2 pt-3 sm:pt-4 border-t">
         <Button
           variant="primary"
           size="sm"
           onClick={() => navigate(`/student/applications/${application._id}`)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto"
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
           {t.viewApplication}
         </Button>
       </div>
@@ -383,19 +386,19 @@ const Applications = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t.myApplications}</h1>
-          <p className="text-gray-600 mt-1">{t.trackApplications}</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.myApplications}</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">{t.trackApplications}</p>
         </div>
         <Button
           variant="primary"
           onClick={() => navigate('/student/jobs')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 w-full sm:w-auto"
         >
-          <Briefcase className="w-5 h-5" />
+          <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
           {t.browseJobs}
         </Button>
       </div>
@@ -403,75 +406,88 @@ const Applications = () => {
       {/* No Applications */}
       {allApplications.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600 mb-4">{t.noApplicationsYet}</p>
+          <div className="text-center py-8 sm:py-12 px-4">
+            <FileText className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400 mb-3 sm:mb-4" />
+            <p className="text-sm sm:text-base text-gray-600 mb-4">{t.noApplicationsYet}</p>
           </div>
         </Card>
       ) : (
         <>
           {/* Status Filter */}
-          <Card className="mb-6">
-            <div className="flex items-center gap-4">
-              <Filter className="w-5 h-5 text-gray-600" />
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+          <Card className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0 mt-1 sm:mt-0" />
+              <div className="flex-1 w-full">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   {t.filterByStatus}
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   <button
                     onClick={() => setStatusFilter('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition ${
                       statusFilter === 'all'
                         ? 'bg-primary-600 text-black'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {t.all} ({statusCounts.all})
+                    {t.all} <span className="hidden sm:inline">({statusCounts.all})</span>
+                    <span className="sm:hidden">({statusCounts.all})</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('pending')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1 sm:gap-2 ${
                       statusFilter === 'pending'
                         ? 'bg-blue-600 text-white'
                         : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
                     }`}
                   >
-                    <Clock className="w-4 h-4" />
-                    {t.pending} ({statusCounts.pending})
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{t.pending}</span>
+                    <span className="sm:hidden">Pending</span>
+                    <span className="hidden sm:inline">({statusCounts.pending})</span>
+                    <span className="sm:hidden">({statusCounts.pending})</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('accepted')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1 sm:gap-2 ${
                       statusFilter === 'accepted'
                         ? 'bg-green-600 text-white'
                         : 'bg-green-50 text-green-700 hover:bg-green-100'
                     }`}
                   >
-                    <CheckCircle className="w-4 h-4" />
-                    {t.accepted} ({statusCounts.accepted})
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{t.accepted}</span>
+                    <span className="sm:hidden">Accepted</span>
+                    <span className="hidden sm:inline">({statusCounts.accepted})</span>
+                    <span className="sm:hidden">({statusCounts.accepted})</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('rejected')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1 sm:gap-2 ${
                       statusFilter === 'rejected'
                         ? 'bg-red-600 text-white'
                         : 'bg-red-50 text-red-700 hover:bg-red-100'
                     }`}
                   >
-                    <XCircle className="w-4 h-4" />
-                    {t.rejected} ({statusCounts.rejected})
+                    <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{t.rejected}</span>
+                    <span className="sm:hidden">Rejected</span>
+                    <span className="hidden sm:inline">({statusCounts.rejected})</span>
+                    <span className="sm:hidden">({statusCounts.rejected})</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('withdrawn')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                    className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1 sm:gap-2 ${
                       statusFilter === 'withdrawn'
                         ? 'bg-gray-600 text-white'
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <AlertCircle className="w-4 h-4" />
-                    {t.withdrawn} ({statusCounts.withdrawn})
+                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{t.withdrawn}</span>
+                    <span className="sm:hidden">Withdrawn</span>
+                    <span className="hidden sm:inline">({statusCounts.withdrawn})</span>
+                    <span className="sm:hidden">({statusCounts.withdrawn})</span>
                   </button>
                 </div>
               </div>
@@ -481,9 +497,9 @@ const Applications = () => {
           {/* Applications List */}
           {applications.length === 0 ? (
             <Card>
-              <div className="text-center py-8">
-                <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-600">
+              <div className="text-center py-6 sm:py-8 px-4">
+                <FileText className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2 sm:mb-3" />
+                <p className="text-sm sm:text-base text-gray-600">
                   {statusFilter === 'all'
                     ? t.noApplications
                     : t.noStatusApplications.replace('{status}', t[statusFilter] || statusFilter)}
@@ -492,7 +508,7 @@ const Applications = () => {
               </div>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {applications.map((application) => renderApplicationCard(application))}
             </div>
           )}

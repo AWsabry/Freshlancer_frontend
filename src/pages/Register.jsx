@@ -685,12 +685,10 @@ const Register = () => {
         userData.nationality = data.nationality;
         userData.gender = data.gender; // Gender is required for students
         
-        // Store country of study in country field
+        // Store country of study in country field (NOT in location.country)
+        // Location will only contain city (and future fields like zip, lat, long)
         if (data.countryOfStudy) {
           userData.country = data.countryOfStudy;
-          userData.location = {
-            country: data.countryOfStudy,
-          };
         }
         
         // Determine currency based on country of study

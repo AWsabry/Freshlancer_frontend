@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
 import { applicationService } from '../../services/applicationService';
+import { API_BASE_URL } from '../../config/env';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -249,6 +250,34 @@ const JobApplicationsDetail = () => {
 
   const t = translations[language] || translations.en;
 
+  // Helper function to get photo URL
+  const getPhotoUrl = useCallback((photo) => {
+    if (!photo) return null;
+    
+    // If it's already a full URL (starts with http), return as is
+    if (photo.startsWith('http://') || photo.startsWith('https://')) {
+      return photo;
+    }
+    
+    // If it's a relative path (starts with /), prepend API_BASE_URL
+    if (photo.startsWith('/')) {
+      return `${API_BASE_URL}${photo}`;
+    }
+    
+    // Otherwise, prepend API_BASE_URL with a slash
+    return `${API_BASE_URL}/${photo}`;
+  }, []);
+
+  // Check if photo exists and is valid (not default Firebase image)
+  const hasValidPhoto = useCallback((photo) => {
+    if (!photo || typeof photo !== 'string') {
+      return false;
+    }
+    // Check if it's the default Firebase image
+    const isDefaultPhoto = photo.includes('firebasestorage') && photo.includes('default.jpg');
+    return !isDefaultPhoto;
+  }, []);
+
   // State for filters and sorting
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -266,6 +295,18 @@ const JobApplicationsDetail = () => {
   // State for insufficient points modal
   const [showInsufficientPointsModal, setShowInsufficientPointsModal] = useState(false);
   const [insufficientPointsMessage, setInsufficientPointsMessage] = useState('');
+  
+  // State for image errors
+  const [imageErrors, setImageErrors] = useState({});
+  const [modalImageErrors, setModalImageErrors] = useState({});
+  
+  const handleImageError = (key) => {
+    setImageErrors(prev => ({ ...prev, [key]: true }));
+  };
+  
+  const handleModalImageError = (key) => {
+    setModalImageErrors(prev => ({ ...prev, [key]: true }));
+  };
 
   // Fetch job details
   const { data: jobData, isLoading: loadingJob } = useQuery({
@@ -417,10 +458,10 @@ const JobApplicationsDetail = () => {
   const SortIcon = sortOrder === 'asc' ? SortAsc : SortDesc;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Button variant="secondary" onClick={() => navigate('/client/applications')}>
+        <Button variant="secondary" onClick={() => navigate('/client/applications')} className="w-full sm:w-auto">
           <ArrowLeft className="w-4 h-4 mr-2" />
           {t.backToAllApplications}
         </Button>
@@ -438,10 +479,10 @@ const JobApplicationsDetail = () => {
       {/* Job Details Card */}
       <Card>
         <div className="flex items-start gap-4">
-          <Briefcase className="w-8 h-8 text-primary-600 mt-1" />
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">{job?.title}</h1>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <Briefcase className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 mt-1 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">{job?.title}</h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
               <div className="flex items-center gap-2 text-gray-700">
                 <div>
                   <p className="text-xs text-gray-500">{t.budget}</p>
@@ -481,10 +522,10 @@ const JobApplicationsDetail = () => {
       {/* Filters and Sorting */}
       <Card>
         <div className="flex items-center gap-4 mb-4">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="font-bold text-gray-900">{t.filtersSorting}</h3>
+          <Filter className="w-5 h-5 text-gray-600 flex-shrink-0" />
+          <h3 className="font-bold text-gray-900 text-sm sm:text-base">{t.filtersSorting}</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
           {/* Nationality Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -617,24 +658,28 @@ const JobApplicationsDetail = () => {
               const isUnlocked = application.contactUnlockedByClient;
               const student = application.student;
               const isPremium = student?.studentProfile?.subscriptionTier === 'premium';
+              
+              // Create a unique key for image error state
+              const imageKey = `img-${application._id}`;
 
               return (
                 <div
                   key={application._id}
                   className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     {/* Student Info */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-3">
                         {isUnlocked ? (
                           <>
-                            <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                              {student?.photo ? (
+                            <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                              {student?.photo && hasValidPhoto(student.photo) && !imageErrors[imageKey] ? (
                                 <img
-                                  src={student.photo}
-                                  alt={student.name}
+                                  src={getPhotoUrl(student.photo)}
+                                  alt={student.name || 'Student'}
                                   className="w-12 h-12 rounded-full object-cover"
+                                  onError={() => handleImageError(imageKey)}
                                 />
                               ) : (
                                 <User className="w-6 h-6 text-primary-600" />
@@ -669,7 +714,7 @@ const JobApplicationsDetail = () => {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-3">
                         <div>
                           <p className="text-xs text-gray-500">{t.proposedBudgetLabel}</p>
                           <p className="font-bold text-green-600 text-lg">
@@ -710,7 +755,7 @@ const JobApplicationsDetail = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full sm:w-auto">
                       <Button
                         variant="secondary"
                         size="sm"
@@ -775,12 +820,12 @@ const JobApplicationsDetail = () => {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-6 border-t">
-            <p className="text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t">
+            <p className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
               {t.showing} {(page - 1) * limit + 1} {t.to} {Math.min(page * limit, totalCount)} {t.of}{' '}
               {totalCount} {t.results}
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto justify-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -819,20 +864,24 @@ const JobApplicationsDetail = () => {
               const fullStudent = fullApp.student;
               const isUnlocked = fullApp.contactUnlockedByClient;
               const isPremium = fullStudent?.studentProfile?.subscriptionTier === 'premium';
+              const modalImageKey = `modal-img-${fullApp._id}`;
 
               return (
                 <>
                   {/* Student Info Section */}
                   <Card>
                     <div className="flex items-start gap-4 mb-4">
-                      {isUnlocked && fullStudent?.photo ? (
-                        <img
-                          src={fullStudent.photo}
-                          alt={fullStudent.name || 'Student'}
-                          className="w-20 h-20 rounded-full object-cover"
-                        />
+                      {isUnlocked && fullStudent?.photo && hasValidPhoto(fullStudent.photo) && !modalImageErrors[modalImageKey] ? (
+                        <div className="relative w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                          <img
+                            src={getPhotoUrl(fullStudent.photo)}
+                            alt={fullStudent.name || 'Student'}
+                            className="w-20 h-20 rounded-full object-cover"
+                            onError={() => handleModalImageError(modalImageKey)}
+                          />
+                        </div>
                       ) : (
-                        <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
                           <User className="w-10 h-10 text-primary-600" />
                         </div>
                       )}

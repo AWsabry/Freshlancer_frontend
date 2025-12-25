@@ -119,13 +119,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-white p-6 sm:p-8 rounded-xl shadow-lg">
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
             {t.welcomeToFreshlancer}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-xs sm:text-sm text-gray-600">
             {t.signInToAccount}
           </p>
         </div>
@@ -134,8 +134,8 @@ const Login = () => {
           <Alert type="error" message={error} />
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
+        <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-3 sm:space-y-4">
             <Input
               label={t.emailAddress}
               type="email"
@@ -166,7 +166,7 @@ const Login = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="text-sm">
+            <div className="text-xs sm:text-sm">
               <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
                 {t.forgotPassword}
               </Link>
@@ -183,7 +183,7 @@ const Login = () => {
             {t.signIn}
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-xs sm:text-sm">
             <span className="text-gray-600">{t.dontHaveAccount} </span>
             <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
               {t.signUp}

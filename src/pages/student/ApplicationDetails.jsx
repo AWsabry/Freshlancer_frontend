@@ -206,9 +206,9 @@ const ApplicationDetails = () => {
 
   if (!application) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600">{t.applicationNotFound}</p>
-        <Button onClick={() => navigate('/student/applications')} className="mt-4">
+      <div className="text-center py-8 sm:py-12 px-4">
+        <p className="text-sm sm:text-base text-gray-600">{t.applicationNotFound}</p>
+        <Button onClick={() => navigate('/student/applications')} className="mt-3 sm:mt-4 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">
           {t.backToApplications}
         </Button>
       </div>
@@ -230,38 +230,39 @@ const ApplicationDetails = () => {
     const Icon = config.icon;
 
     return (
-      <div className="flex items-center gap-2">
-        <Icon className="w-5 h-5" />
-        <Badge variant={config.variant}>{config.label}</Badge>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+        <Badge variant={config.variant} className="text-xs sm:text-sm">{config.label}</Badge>
       </div>
     );
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6">
       {/* Back Button */}
       <button
         onClick={() => navigate('/student/applications')}
-        className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
+        className="flex items-center gap-1.5 sm:gap-2 text-primary-600 hover:text-primary-700 mb-4 sm:mb-6 text-sm sm:text-base"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         {t.backToApplications}
       </button>
 
       {/* Application Header */}
-      <Card className="mb-6">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">{t.applicationDetails}</h1>
-            <p className="text-gray-600">{t.applicationId} {application._id}</p>
+      <Card className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">{t.applicationDetails}</h1>
+            <p className="text-xs sm:text-sm text-gray-600 break-all">{t.applicationId} {application._id}</p>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col sm:flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
             {getStatusBadge(application.status)}
             {/* Contact Unlocked Indicator */}
             {application.contactUnlockedByClient === true && (
-              <Badge variant="success" className="flex items-center gap-1">
-                <Unlock className="w-4 h-4" />
-                {t.contactUnlockedByClient}
+              <Badge variant="success" className="flex items-center gap-1 text-xs sm:text-sm">
+                <Unlock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{t.contactUnlockedByClient}</span>
+                <span className="sm:hidden">Unlocked</span>
               </Badge>
             )}
           </div>
@@ -321,16 +322,25 @@ const ApplicationDetails = () => {
           />
         )}
 
+        {/* Job Withdrawn Flag - Show even if application is accepted or rejected */}
+        {job && job.status === 'cancelled' && (
+          <Alert
+            type="warning"
+            message={t.jobWithdrawnMessage}
+            className="mb-4"
+          />
+        )}
+
         {/* Client Feedback */}
         {application.clientFeedback && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+          <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2 flex items-center gap-1.5 sm:gap-2">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               {t.clientFeedback}
             </h3>
-            <p className="text-blue-800">{application.clientFeedback.message}</p>
+            <p className="text-sm sm:text-base text-blue-800">{application.clientFeedback.message}</p>
             {application.clientFeedback.timestamp && (
-              <p className="text-sm text-blue-600 mt-2">
+              <p className="text-xs sm:text-sm text-blue-600 mt-2">
                 {t.received} {new Date(application.clientFeedback.timestamp).toLocaleString(language === 'it' ? 'it-IT' : 'en-US')}
               </p>
             )}
@@ -338,7 +348,7 @@ const ApplicationDetails = () => {
         )}
 
         {/* Application Timeline */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
           <div>
             <p className="text-sm text-gray-600 mb-1">{t.appliedOn}</p>
             <p className="font-semibold text-gray-900">
@@ -372,24 +382,24 @@ const ApplicationDetails = () => {
 
       {/* Job Details */}
       {job && (
-        <Card className="mb-6">
-          <div className="flex items-start justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">{t.jobDetails}</h2>
+        <Card className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t.jobDetails}</h2>
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate(`/student/jobs/${job._id}`)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
               {t.viewFullJob}
             </Button>
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">{job.title}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{job.title}</h3>
 
-            <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 mb-3 sm:mb-4">
               {/* Client Email - Only for Premium Users */}
               {isPremium && job.client && (
                 <span className="flex items-center gap-1">
@@ -418,52 +428,52 @@ const ApplicationDetails = () => {
               {job.urgent && <Badge variant="error">{t.urgent}</Badge>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
               {/* Job Budget - Only for Premium Users */}
               {isPremium && job.budget && !job.budget.message ? (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">{t.jobBudget}</p>
-                  <div className="flex items-center gap-1 font-semibold text-gray-900">
-                    <DollarSign className="w-5 h-5" />
-                    {job.budget.currency} {job.budget.min} - {job.budget.max}
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.jobBudget}</p>
+                  <div className="flex items-center gap-1 font-semibold text-sm sm:text-base text-gray-900">
+                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                    <span className="truncate">{job.budget.currency} {job.budget.min} - {job.budget.max}</span>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">{t.jobBudget}</p>
-                  <div className="flex items-center gap-1 font-semibold text-gray-400">
-                    <span className="text-sm italic">{job.budget?.message || t.premiumMembersOnlyBudget}</span>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.jobBudget}</p>
+                  <div className="flex items-center gap-1 font-semibold text-xs sm:text-sm text-gray-400">
+                    <span className="italic">{job.budget?.message || t.premiumMembersOnlyBudget}</span>
                   </div>
                 </div>
               )}
 
               {job.duration && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">{t.duration}</p>
-                  <p className="font-semibold text-gray-900">{job.duration}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.duration}</p>
+                  <p className="text-sm sm:text-base font-semibold text-gray-900">{job.duration}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm text-gray-600 mb-1">{t.posted}</p>
-                <p className="font-semibold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.posted}</p>
+                <p className="text-sm sm:text-base font-semibold text-gray-900">
                   {new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
                 </p>
               </div>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">{t.description}</h4>
-              <p className="text-gray-700 whitespace-pre-line line-clamp-4">{job.description}</p>
+              <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1.5 sm:mb-2">{t.description}</h4>
+              <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-line line-clamp-4">{job.description}</p>
             </div>
 
             {job.skillsRequired && job.skillsRequired.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-semibold text-gray-900 mb-2">{t.skillsRequired}</h4>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-3 sm:mt-4">
+                <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1.5 sm:mb-2">{t.skillsRequired}</h4>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {job.skillsRequired.map((skill, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium"
+                      className="px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-50 text-primary-700 rounded-lg text-xs sm:text-sm font-medium"
                     >
                       {skill}
                     </span>
@@ -476,16 +486,16 @@ const ApplicationDetails = () => {
       )}
 
       {/* Your Proposal */}
-      <Card className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">{t.yourProposal}</h2>
+      <Card className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t.yourProposal}</h2>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Proposal Type and Budget */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.proposalType}</h3>
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 sm:mb-2">{t.proposalType}</h3>
               <div className="flex items-center gap-2">
-                <span className="px-4 py-2 bg-primary-50 text-primary-700 rounded-lg font-medium">
+                <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-primary-50 text-primary-700 rounded-lg text-xs sm:text-sm font-medium">
                   {application.proposalType?.charAt(0).toUpperCase() + application.proposalType?.slice(1) || t.standard}
                 </span>
               </div>
@@ -493,11 +503,11 @@ const ApplicationDetails = () => {
 
             {application.proposedBudget && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.yourProposedBudget}</h3>
-                <div className="flex items-center gap-1 text-2xl font-bold text-green-600">
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 sm:mb-2">{t.yourProposedBudget}</h3>
+                <div className="flex items-center gap-1 text-xl sm:text-2xl font-bold text-green-600">
                   {application.proposedBudget.amount}
                   {application.proposedBudget.currency && (
-                    <span className="text-lg"> {application.proposedBudget.currency}</span>
+                    <span className="text-base sm:text-lg"> {application.proposedBudget.currency}</span>
                   )}
                 </div>
               </div>
@@ -505,18 +515,18 @@ const ApplicationDetails = () => {
           </div>
 
           {/* Duration and Availability */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {application.estimatedDuration && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.estimatedDuration}</h3>
-                <p className="text-gray-900 font-medium">{application.estimatedDuration}</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 sm:mb-2">{t.estimatedDuration}</h3>
+                <p className="text-sm sm:text-base text-gray-900 font-medium">{application.estimatedDuration}</p>
               </div>
             )}
 
             {application.availabilityCommitment && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.availabilityCommitment}</h3>
-                <p className="text-gray-900 font-medium">{application.availabilityCommitment}</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 sm:mb-2">{t.availabilityCommitment}</h3>
+                <p className="text-sm sm:text-base text-gray-900 font-medium">{application.availabilityCommitment}</p>
               </div>
             )}
           </div>
@@ -524,33 +534,33 @@ const ApplicationDetails = () => {
           {/* Approach Selections */}
           {application.approachSelections && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t.approachMethodology}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">{t.approachMethodology}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {application.approachSelections.methodology && (
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">{t.methodology}</p>
-                    <p className="font-medium text-gray-900">{application.approachSelections.methodology}</p>
+                  <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.methodology}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">{application.approachSelections.methodology}</p>
                   </div>
                 )}
 
                 {application.approachSelections.deliveryFrequency && (
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">{t.deliveryFrequency}</p>
-                    <p className="font-medium text-gray-900">{application.approachSelections.deliveryFrequency}</p>
+                  <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.deliveryFrequency}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">{application.approachSelections.deliveryFrequency}</p>
                   </div>
                 )}
 
                 {application.approachSelections.revisions !== undefined && (
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">{t.numberOfRevisions}</p>
-                    <p className="font-medium text-gray-900">{application.approachSelections.revisions}</p>
+                  <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.numberOfRevisions}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">{application.approachSelections.revisions}</p>
                   </div>
                 )}
 
                 {application.approachSelections.communicationPreference && (
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">{t.communicationPreference}</p>
-                    <p className="font-medium text-gray-900">{application.approachSelections.communicationPreference}</p>
+                  <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.communicationPreference}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">{application.approachSelections.communicationPreference}</p>
                   </div>
                 )}
               </div>
@@ -560,8 +570,8 @@ const ApplicationDetails = () => {
           {/* Experience Level */}
           {application.relevantExperienceLevel && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">{t.relevantExperienceLevel}</h3>
-              <p className="text-gray-900 font-medium">{application.relevantExperienceLevel}</p>
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 sm:mb-2">{t.relevantExperienceLevel}</h3>
+              <p className="text-sm sm:text-base text-gray-900 font-medium">{application.relevantExperienceLevel}</p>
             </div>
           )}
         </div>
@@ -569,11 +579,11 @@ const ApplicationDetails = () => {
 
       {/* Actions */}
       <Card>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="outline"
             onClick={() => navigate('/student/applications')}
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
           >
             {t.backToAllApplications}
           </Button>
@@ -582,9 +592,9 @@ const ApplicationDetails = () => {
             <Button
               variant="secondary"
               onClick={() => navigate(`/student/jobs/${job._id}`)}
-              className="flex-1 flex items-center justify-center gap-2"
+              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
               {t.viewFullJobDetails}
             </Button>
           )}
@@ -595,7 +605,7 @@ const ApplicationDetails = () => {
               onClick={handleWithdraw}
               loading={withdrawMutation.isPending}
               disabled={withdrawMutation.isPending}
-              className="flex-1 text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
+              className="flex-1 text-red-600 hover:text-red-700 border-red-600 hover:border-red-700 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
             >
               {t.withdrawApplication}
             </Button>

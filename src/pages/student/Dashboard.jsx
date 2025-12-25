@@ -163,7 +163,7 @@ const StudentDashboard = () => {
   const applicationLimitPerMonth = subscriptionTier === 'premium' ? 100 : 10;
   const applicationsRemaining = applicationLimitPerMonth - applicationsUsedThisMonth;
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6">
       {/* Verification Alert */}
       {!isVerified && (
         <Alert
@@ -174,109 +174,109 @@ const StudentDashboard = () => {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="border-l-4 border-primary-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">{t.applicationsThisMonth}</p>
-              <p className="text-3xl font-bold text-gray-900">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">{t.applicationsThisMonth}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {applicationsUsedThisMonth}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                 {t.ofThisMonth.replace('{limit}', applicationLimitPerMonth)}
               </p>
             </div>
-            <Briefcase className="w-12 h-12 text-primary-500" />
+            <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-primary-500 flex-shrink-0" />
           </div>
         </Card>
 
         <Card className="border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">{t.applicationsRemaining}</p>
-              <p className="text-3xl font-bold text-green-600">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">{t.applicationsRemaining}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-green-600">
                 {applicationsRemaining}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                 {subscriptionTier === 'premium' ? t.premiumPlan : t.freePlan}
               </p>
             </div>
-            <FileText className="w-12 h-12 text-green-500" />
+            <FileText className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-500 flex-shrink-0" />
           </div>
         </Card>
 
         <Card className="border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm text-gray-600">{t.verification}</p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                <p className="text-xs sm:text-sm text-gray-600">{t.verification}</p>
                 {!isVerified && (
                   <button
                     onClick={handleRefreshVerification}
-                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-1 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
                     title="Refresh verification status"
                     disabled={loadingVerification || loadingUser}
                   >
                     <RefreshCw 
-                      className={`w-3 h-3 text-gray-600 ${loadingVerification || loadingUser ? 'animate-spin' : ''}`}
+                      className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-600 ${loadingVerification || loadingUser ? 'animate-spin' : ''}`}
                     />
                   </button>
                 )}
               </div>
-              <Badge variant={isVerified ? 'success' : verificationStatusText === 'pending' ? 'warning' : 'error'}>
+              <Badge variant={isVerified ? 'success' : verificationStatusText === 'pending' ? 'warning' : 'error'} className="text-xs sm:text-sm">
                 {isVerified ? t.verified : verificationStatusText === 'pending' ? t.pending : verificationStatusText === 'rejected' ? t.rejected : t.unverified}
               </Badge>
             </div>
             {isVerified ? (
-              <CheckCircle className="w-12 h-12 text-green-500" />
+              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-500 flex-shrink-0" />
             ) : (
-              <Clock className="w-12 h-12 text-yellow-500" />
+              <Clock className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-500 flex-shrink-0" />
             )}
           </div>
         </Card>
 
         <Card className="border-l-4 border-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">{t.package}</p>
-              <Badge variant="primary">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">{t.package}</p>
+              <Badge variant="primary" className="text-xs sm:text-sm mt-1">
                 {subscriptionTier === 'premium' ? t.premium : t.free}
               </Badge>
             </div>
-            <DollarSign className="w-12 h-12 text-purple-500" />
+            <DollarSign className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-500 flex-shrink-0" />
           </div>
         </Card>
       </div>
 
       {/* Quick Actions */}
       <Card title={t.quickActions}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {!isVerified ? (
             <Link to="/student/verification">
-              <Button variant="primary" className="w-full">
-                <AlertCircle className="w-5 h-5 mr-2" />
+              <Button variant="primary" className="w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                 {t.completeVerification}
               </Button>
             </Link>
           ) : (
             <Link to="/student/jobs">
-              <Button variant="primary" className="w-full">
-                <Briefcase className="w-5 h-5 mr-2" />
+              <Button variant="primary" className="w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                 {t.browseJobs}
               </Button>
             </Link>
           )}
 
           <Link to="/student/applications">
-            <Button variant="outline" className="w-full">
-              <FileText className="w-5 h-5 mr-2" />
+            <Button variant="outline" className="w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
               {t.viewApplications}
             </Button>
           </Link>
 
           {subscriptionTier === 'free' && applicationsRemaining < 3 && (
-            <Link to="/student/subscription">
-              <Button variant="success" className="w-full">
+            <Link to="/student/subscription" className="sm:col-span-2 lg:col-span-1">
+              <Button variant="success" className="w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">
                 {t.upgradeToPremium}
               </Button>
             </Link>
@@ -289,13 +289,13 @@ const StudentDashboard = () => {
         {loadingApplications ? (
           <Loading />
         ) : applications?.data?.applications?.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {applications.data.applications.map((app) => (
-              <div key={app._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{app.jobPost?.title}</h4>
-                  <p className="text-sm text-gray-600">{app.jobPost?.client?.companyName}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+              <div key={app._id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 line-clamp-2">{app.jobPost?.title}</h4>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{app.jobPost?.client?.companyName}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                     {t.applied} {new Date(app.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -305,28 +305,23 @@ const StudentDashboard = () => {
                     app.status === 'rejected' ? 'error' :
                     app.status === 'shortlisted' ? 'warning' : 'info'
                   }
+                  className="text-xs sm:text-sm flex-shrink-0"
                 >
                   {app.status}
                 </Badge>
               </div>
             ))}
             <Link to="/student/applications">
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5">
                 View All Applications
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            <Briefcase className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>{t.noApplicationsYet}</p>
-            {isVerified && (
-              <Link to="/student/jobs">
-                <Button variant="primary" size="sm" className="mt-4">
-                  {t.browseJobs}
-                </Button>
-              </Link>
-            )}
+          <div className="text-center py-6 sm:py-8 px-4 text-gray-500">
+            <Briefcase className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50" />
+            <p className="text-sm sm:text-base">{t.noApplicationsYet}</p>
+       
           </div>
         )}
       </Card>

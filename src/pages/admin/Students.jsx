@@ -23,6 +23,8 @@ import {
   Building,
   Hash,
   AlertCircle,
+  List,
+  Grid,
 } from 'lucide-react';
 
 const Students = () => {
@@ -38,6 +40,7 @@ const Students = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [reviewAction, setReviewAction] = useState(''); // 'approve' or 'reject'
+  const [viewMode, setViewMode] = useState('detailed'); // 'detailed' or 'compact'
 
   const page = parseInt(searchParams.get('page') || '1');
 
@@ -82,12 +85,16 @@ const Students = () => {
 
   const handleSearch = () => {
     setSearchTerm(searchInput.trim());
-    setSearchParams({ page: '1', status: verificationFilter });
+    const params = { page: '1' };
+    if (verificationFilter) params.status = verificationFilter;
+    setSearchParams(params);
   };
 
   const handleStatusFilter = (status) => {
     setVerificationFilter(status);
-    setSearchParams({ page: '1', status });
+    const params = { page: '1' };
+    if (status) params.status = status;
+    setSearchParams(params);
   };
 
   const handleReview = (student, document, action) => {
@@ -119,6 +126,7 @@ const Students = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       verified: { variant: 'success', label: 'Verified', icon: CheckCircle },
+      approved: { variant: 'approved', label: 'Verified', icon: CheckCircle },
       pending: { variant: 'warning', label: 'Pending', icon: Clock },
       rejected: { variant: 'error', label: 'Rejected', icon: XCircle },
       unverified: { variant: 'default', label: 'Unverified', icon: AlertCircle },
@@ -178,6 +186,33 @@ const Students = () => {
           <p className="text-gray-600 mt-1">
             {total} student{total !== 1 ? 's' : ''} found
           </p>
+        </div>
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('detailed')}
+            className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+              viewMode === 'detailed'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Detailed View"
+          >
+            <Grid className="w-4 h-4" />
+            <span className="hidden sm:inline">Detailed</span>
+          </button>
+          <button
+            onClick={() => setViewMode('compact')}
+            className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+              viewMode === 'compact'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Compact View"
+          >
+            <List className="w-4 h-4" />
+            <span className="hidden sm:inline">Compact</span>
+          </button>
         </div>
       </div>
 
@@ -260,17 +295,128 @@ const Students = () => {
       </Card>
 
       {/* Students List */}
-      <div className="space-y-4">
-        {students.length === 0 ? (
-          <Card>
-            <div className="text-center py-12">
-              <UsersIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No students found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters.</p>
-            </div>
-          </Card>
-        ) : (
-          students.map((student) => (
+      {students.length === 0 ? (
+        <Card>
+          <div className="text-center py-12">
+            <UsersIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No students found</h3>
+            <p className="text-gray-600">Try adjusting your search or filters.</p>
+          </div>
+        </Card>
+      ) : viewMode === 'compact' ? (
+        /* Compact Table View */
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Student</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Email</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Documents</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Joined</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((student, idx) => (
+                  <tr
+                    key={student._id}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-primary-600 font-semibold text-xs">
+                            {student.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="font-medium text-gray-900 text-sm">{student.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-gray-600">{student.email}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {getStatusBadge(student.studentProfile?.verificationStatus || 'unverified')}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col gap-1">
+                        {student.verificationDocuments && student.verificationDocuments.length > 0 ? (
+                          student.verificationDocuments.slice(0, 2).map((doc) => (
+                            <div key={doc._id} className="flex items-center gap-2">
+                              <FileText className="w-3 h-3 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                {getDocumentTypeBadge(doc.documentType)}
+                              </span>
+                              {getStatusBadge(doc.status)}
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-400">No documents</span>
+                        )}
+                        {student.verificationDocuments && student.verificationDocuments.length > 2 && (
+                          <span className="text-xs text-primary-600">
+                            +{student.verificationDocuments.length - 2} more
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-gray-500">{formatDate(student.joinedAt)}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        {student.verificationDocuments &&
+                          student.verificationDocuments.length > 0 &&
+                          student.verificationDocuments
+                            .filter((doc) => doc.status === 'pending')
+                            .map((doc) => (
+                              <div key={doc._id} className="flex gap-1">
+                                <button
+                                  onClick={() => handleReview(student, doc, 'approve')}
+                                  className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
+                                  title="Approve"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleReview(student, doc, 'reject')}
+                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Reject"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                                <a
+                                  href={doc.documentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  title="View Document"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </a>
+                              </div>
+                            ))}
+                        {(!student.verificationDocuments ||
+                          student.verificationDocuments.length === 0 ||
+                          student.verificationDocuments.every((doc) => doc.status !== 'pending')) && (
+                          <span className="text-xs text-gray-400">No actions</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+        /* Detailed Card View */
+        <div className="space-y-4">
+          {students.map((student) => (
             <Card key={student._id}>
               <div className="space-y-4">
                 {/* Student Info */}
@@ -287,7 +433,7 @@ const Students = () => {
                       <div className="mt-2 flex items-center gap-2">
                         {getStatusBadge(student.studentProfile?.verificationStatus || 'unverified')}
                         <span className="text-xs text-gray-500">
-                          Joined {formatDate(student.createdAt)}
+                          Joined {formatDate(student.joinedAt)}
                         </span>
                       </div>
                     </div>
@@ -404,44 +550,74 @@ const Students = () => {
                 )}
               </div>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {pages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setSearchParams({ page: String(page - 1), status: verificationFilter })}
-          >
-            Previous
-          </Button>
-          <div className="flex items-center gap-2">
-            {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => setSearchParams({ page: String(pageNum), status: verificationFilter })}
-                className={`w-8 h-8 rounded ${
-                  page === pageNum
-                    ? 'bg-primary-600 text-[#8904aa]'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-sm text-gray-600">
+            Showing {students.length > 0 ? (page - 1) * 20 + 1 : 0} to{' '}
+            {Math.min(page * 20, total)} of {total} students
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === pages}
-            onClick={() => setSearchParams({ page: String(page + 1), status: verificationFilter })}
-          >
-            Next
-          </Button>
+          <div className="flex justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => {
+                const params = { page: String(page - 1) };
+                if (verificationFilter) params.status = verificationFilter;
+                setSearchParams(params);
+              }}
+            >
+              Previous
+            </Button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: Math.min(pages, 10) }, (_, i) => {
+                let pageNum;
+                if (pages <= 10) {
+                  pageNum = i + 1;
+                } else if (page <= 5) {
+                  pageNum = i + 1;
+                } else if (page >= pages - 4) {
+                  pageNum = pages - 9 + i;
+                } else {
+                  pageNum = page - 5 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      const params = { page: String(pageNum) };
+                      if (verificationFilter) params.status = verificationFilter;
+                      setSearchParams(params);
+                    }}
+                    className={`w-8 h-8 rounded text-sm ${
+                      page === pageNum
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === pages}
+              onClick={() => {
+                const params = { page: String(page + 1) };
+                if (verificationFilter) params.status = verificationFilter;
+                setSearchParams(params);
+              }}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
 

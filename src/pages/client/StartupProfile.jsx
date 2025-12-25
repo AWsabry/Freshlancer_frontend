@@ -358,18 +358,18 @@ const StartupProfile = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Rocket className="w-8 h-8" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Rocket className="w-6 h-6 sm:w-8 sm:h-8" />
             {t.myStartups}
           </h1>
-          <p className="text-gray-600 mt-1">{t.manageProfiles}</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">{t.manageProfiles}</p>
         </div>
         {!isCreating && !editingId && (
-          <Button variant="primary" onClick={() => setIsCreating(true)}>
+          <Button variant="primary" onClick={() => setIsCreating(true)} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             {t.addStartup}
           </Button>
@@ -388,7 +388,7 @@ const StartupProfile = () => {
       {(isCreating || editingId) && (
         <Card title={editingId ? t.editStartup : t.createNewStartup}>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Input
                   label={t.startupName}
@@ -605,7 +605,7 @@ const StartupProfile = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
               <Button
                 type="submit"
                 variant="primary"
@@ -637,7 +637,7 @@ const StartupProfile = () => {
             <p className="text-gray-600 mb-4">{t.noStartupsYet}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {startups.map((startup) => (
               <div
                 key={startup._id}

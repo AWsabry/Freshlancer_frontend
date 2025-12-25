@@ -196,9 +196,9 @@ const Transactions = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       <Card title={t.paymentOverview}>
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <div className="p-4 rounded-xl bg-primary-50 border border-primary-100">
             <p className="text-sm text-primary-600 font-medium">{t.totalSpent}</p>
             <p className="text-3xl font-semibold mt-2">
@@ -244,8 +244,10 @@ const Transactions = () => {
             message={t.noTransactionsMessage}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -321,6 +323,8 @@ const Transactions = () => {
                 ))}
               </tbody>
             </table>
+              </div>
+            </div>
           </div>
         )}
       </Card>

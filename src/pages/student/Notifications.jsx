@@ -226,34 +226,35 @@ const Notifications = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.notifications}</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.notifications}</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             {total} {total !== 1 ? t.notificationsPlural : t.notification}
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={() => markAllAsReadMutation.mutate()}
             disabled={markAllAsReadMutation.isLoading || filter === 'read'}
+            className="flex-1 sm:flex-initial text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
           >
-            <CheckCheck className="w-4 h-4 mr-2" />
+            <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             {t.markAllRead}
           </Button>
         </div>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-1 sm:gap-2 border-b border-gray-200 overflow-x-auto">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
             filter === 'all'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-900'
@@ -263,7 +264,7 @@ const Notifications = () => {
         </button>
         <button
           onClick={() => setFilter('unread')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
             filter === 'unread'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-900'
@@ -273,7 +274,7 @@ const Notifications = () => {
         </button>
         <button
           onClick={() => setFilter('read')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
             filter === 'read'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-900'
@@ -287,12 +288,12 @@ const Notifications = () => {
       <div className="space-y-2">
         {notifications.length === 0 ? (
           <Card>
-            <div className="text-center py-12">
-              <BellOff className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="text-center py-8 sm:py-12 px-4">
+              <BellOff className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
                 {t.noNotifications}
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 {filter === 'all'
                   ? t.noNotificationsYet
                   : filter === 'unread'
@@ -311,30 +312,30 @@ const Notifications = () => {
               <div key={notification._id} className="space-y-2">
                 {/* Collapsed View - Title Only */}
                 <div
-                  className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                  className={`flex items-center justify-between p-3 sm:p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
                     notification.isRead
                       ? 'bg-white border-gray-200'
                       : 'bg-blue-50 border-blue-200'
                   } ${isExpanded ? 'shadow-md' : ''}`}
                   onClick={() => handleNotificationClick(notification)}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     {/* Icon */}
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${iconColorClass}`}>
-                      <IconComponent className="w-5 h-5" />
+                    <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${iconColorClass}`}>
+                      <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
 
                     {/* Title and timestamp */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className={`font-semibold truncate ${notification.isRead ? 'text-gray-700' : 'text-gray-900'}`}>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <h3 className={`text-sm sm:text-base font-semibold truncate ${notification.isRead ? 'text-gray-700' : 'text-gray-900'}`}>
                           {notification.title}
                         </h3>
                         {!notification.isRead && (
-                          <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-600 rounded-full flex-shrink-0"></div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
                         {formatDate(notification.createdAt)}
                       </p>
                     </div>
@@ -350,6 +351,7 @@ const Notifications = () => {
                           ? 'warning'
                           : 'info'
                       }
+                      className="text-xs flex-shrink-0"
                     >
                       {notification.priority === 'urgent' ? t.urgent : notification.priority === 'high' ? t.high : notification.priority}
                     </Badge>
@@ -358,20 +360,20 @@ const Notifications = () => {
 
                 {/* Expanded View - Full Card */}
                 {isExpanded && (
-                  <Card className="ml-12 border-l-4 border-l-primary-500">
-                    <div className="space-y-4">
+                  <Card className="ml-0 sm:ml-12 border-l-4 border-l-primary-500">
+                    <div className="space-y-3 sm:space-y-4">
                       {/* Message */}
-                      <p className="text-gray-700">{notification.message}</p>
+                      <p className="text-sm sm:text-base text-gray-700">{notification.message}</p>
 
                       {/* Action button */}
                       {notification.actionUrl && (
                         <div>
                           <button
                             onClick={() => navigate(notification.actionUrl)}
-                            className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
+                            className="text-sm sm:text-base text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
                           >
                             {notification.actionText || t.viewDetails}
-                            <ArrowRight className="w-4 h-4" />
+                            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       )}
@@ -386,9 +388,9 @@ const Notifications = () => {
                               setExpandedNotification(null);
                             }
                           }}
-                          className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center gap-2"
+                          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center gap-1.5 sm:gap-2"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                           {t.delete}
                         </button>
                       </div>
@@ -403,23 +405,24 @@ const Notifications = () => {
 
       {/* Pagination */}
       {pages > 1 && (
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-1.5 sm:gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
+            className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
           >
             {t.previous}
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
               <button
                 key={pageNum}
                 onClick={() => setPage(pageNum)}
-                className={`w-8 h-8 rounded ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded text-xs sm:text-sm ${
                   page === pageNum
-                    ? 'bg-primary-600 text-[#8904aa]'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -432,6 +435,7 @@ const Notifications = () => {
             size="sm"
             disabled={page === pages}
             onClick={() => setPage(page + 1)}
+            className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
           >
             {t.next}
           </Button>

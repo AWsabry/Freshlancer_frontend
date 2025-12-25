@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '../../services/profileService';
@@ -125,6 +125,37 @@ const StudentProfileView = () => {
 
   const t = translations[language] || translations.en;
 
+  // Helper function to get photo URL
+  const getPhotoUrl = useCallback((photo) => {
+    if (!photo) return null;
+    
+    // If it's already a full URL (starts with http), return as is
+    if (photo.startsWith('http://') || photo.startsWith('https://')) {
+      return photo;
+    }
+    
+    // If it's a relative path (starts with /), prepend API_BASE_URL
+    if (photo.startsWith('/')) {
+      return `${API_BASE_URL}${photo}`;
+    }
+    
+    // Otherwise, prepend API_BASE_URL with a slash
+    return `${API_BASE_URL}/${photo}`;
+  }, []);
+
+  // Check if photo exists and is valid (not default Firebase image)
+  const hasValidPhoto = useCallback((photo) => {
+    if (!photo || typeof photo !== 'string') {
+      return false;
+    }
+    // Check if it's the default Firebase image
+    const isDefaultPhoto = photo.includes('firebasestorage') && photo.includes('default.jpg');
+    return !isDefaultPhoto;
+  }, []);
+
+  // State for image error
+  const [photoLoadError, setPhotoLoadError] = useState(false);
+
   // Fetch student profile
   const { data: profileData, isLoading, error } = useQuery({
     queryKey: ['studentProfile', studentId],
@@ -159,10 +190,10 @@ const StudentProfileView = () => {
   const profile = student.studentProfile || {};
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Button variant="secondary" onClick={() => navigate('/client/applications')}>
+        <Button variant="secondary" onClick={() => navigate('/client/applications')} className="w-full sm:w-auto">
           <ArrowLeft className="w-4 h-4 mr-2" />
           {t.backToApplications}
         </Button>
@@ -170,31 +201,35 @@ const StudentProfileView = () => {
 
       {/* Basic Information Card */}
       <Card>
-        <div className="flex items-start gap-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           {/* Profile Photo */}
           <div className="flex-shrink-0">
-            {student.photo ? (
+            {student.photo && hasValidPhoto(student.photo) && !photoLoadError ? (
               <img
-                src={student.photo}
+                src={getPhotoUrl(student.photo)}
                 alt={student.name}
-                className="w-32 h-32 rounded-full object-cover border-4 border-primary-100"
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary-100"
+                onError={() => setPhotoLoadError(true)}
+                onLoad={() => setPhotoLoadError(false)}
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-primary-100 flex items-center justify-center border-4 border-primary-200">
-                <User className="w-16 h-16 text-primary-600" />
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary-100 flex items-center justify-center border-4 border-primary-200">
+                <span className="text-primary-600 font-bold text-3xl sm:text-4xl">
+                  {student?.name?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
             )}
           </div>
 
           {/* Basic Info */}
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{student.name}</h1>
+          <div className="flex-1 w-full text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{student.name}</h1>
 
             {profile.bio && (
               <p className="text-gray-600 mb-4">{profile.bio}</p>
             )}
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
               <div className="flex items-center gap-2 text-gray-700">
                 <Mail className="w-5 h-5 text-primary-600" />
                 <span>{student.email}</span>
@@ -221,12 +256,11 @@ const StudentProfileView = () => {
                 </div>
               )}
 
-              {student.location?.city && (
+              {(student.location?.city || student.country) && (
                 <div className="flex items-center gap-2 text-gray-700">
                   <MapPin className="w-5 h-5 text-primary-600" />
                   <span>
-                    {student.location.city}
-                    {student.location.country && `, ${student.location.country}`}
+                    {[student.location?.city, student.country].filter(Boolean).join(', ')}
                   </span>
                 </div>
               )}
@@ -415,7 +449,7 @@ const StudentProfileView = () => {
             <Briefcase className="w-6 h-6 text-primary-600" />
             {t.experienceRate}
           </h3>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {profile.experienceLevel && (
               <div>
                 <p className="text-sm text-gray-600 mb-1">{t.experienceLevel}</p>
@@ -611,7 +645,7 @@ const StudentProfileView = () => {
             <Globe className="w-6 h-6 text-primary-600" />
             {t.languages}
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {profile.languages.map((lang, index) => (
               <div key={index} className="bg-gray-50 rounded-lg p-3">
                 <p className="font-semibold text-gray-900">{lang.language}</p>

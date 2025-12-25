@@ -98,6 +98,16 @@ export const authService = {
     return api.post('/users/forgotPassword', { email });
   },
 
+  // Verify email with token
+  verifyEmail: async (token) => {
+    const response = await api.get(`/users/verifyEmail/${token}`);
+    // Update user in localStorage if email is verified
+    if (response.data?.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response;
+  },
+
   // Resend verification email
   resendVerificationEmail: async (data) => {
     return api.post('/users/resendVerificationEmail', data);
@@ -198,6 +208,29 @@ export const authService = {
     if (user && user.studentProfile && user.studentProfile.additionalDocuments) {
       user.studentProfile.additionalDocuments.splice(documentIndex, 1);
       localStorage.setItem('user', JSON.stringify(user));
+    }
+
+    return response;
+  },
+
+  // Upload profile photo
+  uploadPhoto: async (file) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    const response = await api.post('/users/uploadPhoto', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // Update user in localStorage with new photo
+    // Backend returns: { status: 'success', data: { user: {...}, photo: '...' } }
+    if (response.data?.data?.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    } else if (response.data?.user) {
+      // Fallback for different response structure
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
 
     return response;
