@@ -218,21 +218,28 @@ export const authService = {
     const formData = new FormData();
     formData.append('photo', file);
 
-    const response = await api.post('/users/uploadPhoto', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    try {
+      // Note: api.post already unwraps response.data, so response is the data object
+      const response = await api.post('/users/uploadPhoto', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-    // Update user in localStorage with new photo
-    // Backend returns: { status: 'success', data: { user: {...}, photo: '...' } }
-    if (response.data?.data?.user) {
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
-    } else if (response.data?.user) {
-      // Fallback for different response structure
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Update user in localStorage with new photo
+      // Backend returns: { status: 'success', data: { user: {...}, photo: '...' } }
+      // But api interceptor unwraps it, so response is already the data object
+      if (response?.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      } else if (response?.user) {
+        // Fallback for different response structure
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Upload photo error in authService:', error);
+      throw error;
     }
-
-    return response;
   },
 };

@@ -877,7 +877,8 @@ const Profile = () => {
       
       // Update preview with the new photo URL from response
       // Backend returns: { status: 'success', data: { user: {...}, photo: '...' } }
-      const photo = response.data?.data?.photo || response.data?.data?.user?.photo;
+      // But api interceptor unwraps it, so response is already the data object
+      const photo = response?.data?.photo || response?.data?.user?.photo || response?.photo;
       if (photo) {
         const photoUrl = photo.startsWith('/uploads/') 
           ? `${API_BASE_URL}${photo}` 
@@ -909,7 +910,20 @@ const Profile = () => {
       setUploadingPhoto(false);
       setPhotoPreview(null);
       console.error('Photo upload error:', error);
-      alert(error.response?.data?.message || t.photoUploadFailed);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error message:', error.message);
+      
+      // Show more detailed error message
+      // Error structure: api interceptor returns error.response?.data || error
+      // So error might already be the data object, or it might have error.response.data
+      const errorMessage = error?.message 
+        || error?.response?.data?.message
+        || error?.response?.message
+        || error?.error?.message
+        || t.photoUploadFailed;
+      
+      alert(`Upload failed: ${errorMessage}`);
     },
   });
 
@@ -1021,10 +1035,28 @@ const Profile = () => {
       setUploadingPhoto(true);
       const croppedBlob = await getCroppedImg(imageToCrop, croppedAreaPixels);
       
+      // Validate blob was created
+      if (!croppedBlob || croppedBlob.size === 0) {
+        throw new Error('Failed to create image blob');
+      }
+
+      // Check file size (5MB limit)
+      if (croppedBlob.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB. Please try cropping a smaller area.');
+        setUploadingPhoto(false);
+        return;
+      }
+      
       // Create a File object from the blob
       const croppedFile = new File([croppedBlob], 'profile-photo.jpg', {
         type: 'image/jpeg',
         lastModified: Date.now(),
+      });
+
+      console.log('Uploading file:', {
+        name: croppedFile.name,
+        size: croppedFile.size,
+        type: croppedFile.type,
       });
 
       // Upload the cropped image
@@ -1035,7 +1067,8 @@ const Profile = () => {
       setImageToCrop(null);
       setPhotoPreview(imageToCrop); // Show preview while uploading
     } catch (error) {
-      alert(t.photoUploadFailed);
+      console.error('Error in handleCropAndUpload:', error);
+      alert(error.message || t.photoUploadFailed);
       setUploadingPhoto(false);
     }
   };
@@ -1960,17 +1993,17 @@ const Profile = () => {
 
           {/* Resume */}
           <Card title={t.resumeCv}>
-            {!isVerified || verificationStatus !== 'verified' ? (
+            {!user?.emailVerified ? (
               <div className="text-center py-6 sm:py-8 px-4">
                 <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                <p className="text-sm sm:text-base text-gray-600 mb-2">{t.verificationRequired}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mb-4">{t.verificationRequiredMessage}</p>
+                <p className="text-sm sm:text-base text-gray-600 mb-2">Email Verification Required</p>
+                <p className="text-xs sm:text-sm text-gray-500 mb-4">Please verify your email to upload documents.</p>
                 <Button
                   variant="primary"
-                  onClick={() => navigate('/student/verification')}
+                  onClick={() => navigate('/verify-email-required')}
                   className="text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
                 >
-                  {t.completeVerification}
+                  Verify Email
                 </Button>
               </div>
             ) : studentProfile?.resume && studentProfile.resume.url ? (
@@ -2059,17 +2092,17 @@ const Profile = () => {
 
           {/* Additional Documents */}
           <Card title={t.additionalDocuments}>
-            {!isVerified || verificationStatus !== 'verified' ? (
+            {!user?.emailVerified ? (
               <div className="text-center py-6 sm:py-8 px-4">
                 <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                <p className="text-sm sm:text-base text-gray-600 mb-2">{t.verificationRequired}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mb-4">{t.verificationRequiredMessage}</p>
+                <p className="text-sm sm:text-base text-gray-600 mb-2">Email Verification Required</p>
+                <p className="text-xs sm:text-sm text-gray-500 mb-4">Please verify your email to upload documents.</p>
                 <Button
                   variant="primary"
-                  onClick={() => navigate('/student/verification')}
+                  onClick={() => navigate('/verify-email-required')}
                   className="text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
                 >
-                  {t.completeVerification}
+                  Verify Email
                 </Button>
               </div>
             ) : (
