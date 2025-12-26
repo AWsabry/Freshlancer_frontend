@@ -138,7 +138,7 @@ const translations = {
         tagline: 'Launch your career',
         intro: 'Gain experience and earn money while studying',
         list: [
-          'Apply to 100+ freelance jobs per month with Premium membership',
+          'Apply to many freelance jobs per month with Premium membership',
           'Get verified student badge to increase profile visibility',
           'Build professional portfolio with real client testimonials',
           'Flexible remote working hours that fit your study schedule',
@@ -178,7 +178,7 @@ const translations = {
           name: 'Mohammed Ahmed',
           role: 'Computer Science Student',
           company: 'University Graduate',
-          text: 'Earned over $5,000 in my first semester while building a professional portfolio. This platform changed my life!',
+          text: 'Earneing money in my first semester while building a professional portfolio!',
           rating: 5,
           avatar: 'MA'
         }
@@ -408,7 +408,7 @@ const translations = {
           name: 'Mohammed Ahmed',
           role: 'Studente di Informatica',
           company: 'University Graduate',
-          text: 'Ho guadagnato oltre 5.000 $ nel primo semestre mentre costruivo un portfolio professionale. Questa piattaforma mi ha cambiato la vita!',
+          text: 'Ho guadagnato soldi nel primo semestre mentre costruivo un portfolio professionale. Questa piattaforma mi ha cambiato la vita!',
           rating: 5,
           avatar: 'MA'
         }
@@ -633,12 +633,101 @@ const Landing = () => {
       ogDescription.content = seo.ogDescription;
     }
 
+    // Open Graph Image - Required for Facebook and WhatsApp previews
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    const baseUrl = window.location.origin;
+    const imageUrl = `${baseUrl}/og-image.png`;
+    if (!ogImage) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image');
+      meta.content = imageUrl;
+      document.head.appendChild(meta);
+    } else {
+      ogImage.content = imageUrl;
+    }
+
+    // Open Graph Image dimensions - Recommended for better previews
+    const ogImageWidth = document.querySelector('meta[property="og:image:width"]');
+    if (!ogImageWidth) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image:width');
+      meta.content = '1200';
+      document.head.appendChild(meta);
+    }
+
+    const ogImageHeight = document.querySelector('meta[property="og:image:height"]');
+    if (!ogImageHeight) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image:height');
+      meta.content = '630';
+      document.head.appendChild(meta);
+    }
+
+    // Open Graph Image type - Important for WhatsApp
+    const ogImageType = document.querySelector('meta[property="og:image:type"]');
+    if (!ogImageType) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image:type');
+      meta.content = 'image/png';
+      document.head.appendChild(meta);
+    }
+
+    // Open Graph Image alt text
+    const ogImageAlt = document.querySelector('meta[property="og:image:alt"]');
+    if (!ogImageAlt) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image:alt');
+      meta.content = 'Freshlancer - Student Freelance Platform';
+      document.head.appendChild(meta);
+    }
+
+    // Open Graph URL - Important for proper link sharing
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (!ogUrl) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:url');
+      meta.content = baseUrl;
+      document.head.appendChild(meta);
+    } else {
+      ogUrl.content = baseUrl;
+    }
+
+    // Open Graph Type
+    const ogType = document.querySelector('meta[property="og:type"]');
+    if (!ogType) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:type');
+      meta.content = 'website';
+      document.head.appendChild(meta);
+    }
+
+    // Open Graph Site Name
+    const ogSiteName = document.querySelector('meta[property="og:site_name"]');
+    if (!ogSiteName) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:site_name');
+      meta.content = 'Freshlancer';
+      document.head.appendChild(meta);
+    }
+
+    // Twitter Card
     const twitterCard = document.querySelector('meta[name="twitter:card"]');
     if (!twitterCard) {
       const meta = document.createElement('meta');
       meta.name = 'twitter:card';
       meta.content = 'summary_large_image';
       document.head.appendChild(meta);
+    }
+
+    // Twitter Image - Also needed for better previews
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    if (!twitterImage) {
+      const meta = document.createElement('meta');
+      meta.name = 'twitter:image';
+      meta.content = imageUrl;
+      document.head.appendChild(meta);
+    } else {
+      twitterImage.content = imageUrl;
     }
 
     const canonical = document.querySelector('link[rel="canonical"]');
@@ -755,6 +844,16 @@ const Landing = () => {
                 </>
               ) : (
                 <>
+                  <select
+                    id="language-select"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#065084] bg-white"
+                    aria-label={t.languageLabel}
+                  >
+                    <option value="en">{t.languageOptions.en}</option>
+                    <option value="it">{t.languageOptions.it}</option>
+                  </select>
                   <Button
                     variant="outline"
                     onClick={() => navigate('/login')}
@@ -865,7 +964,7 @@ const Landing = () => {
           </div>
 
           {/* Stats Section - Modern Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-12 sm:mt-16 md:mt-20">
+          {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-12 sm:mt-16 md:mt-20">
             {stats.map((stat, index) => (
               <div
                 key={index}
@@ -880,7 +979,7 @@ const Landing = () => {
                 <div className="text-xs sm:text-sm text-gray-600 leading-tight">{stat.label}</div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
       </header>
 
@@ -1152,13 +1251,10 @@ const Landing = () => {
                 </p>
               ))}
               <div className="flex gap-4 mt-8">
-                <a href="https://facebook.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
+                <a href="https://www.facebook.com/people/Freshlancer/61585812083274/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Facebook className="w-6 h-6" />
                 </a>
-                <a href="https://twitter.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
-                  <Twitter className="w-6 h-6" />
-                </a>
-                <a href="https://linkedin.com/company/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
+                <a href="https://www.linkedin.com/company/110654958/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Linkedin className="w-6 h-6" />
                 </a>
                 <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
@@ -1211,36 +1307,21 @@ const Landing = () => {
                     <Phone className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.phone}</h4>
-                    <a href="tel:+1234567890" className="text-gray-600 hover:text-[#065084] transition-colors">
-                      +1 (234) 567-890
+                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.phone} & Telegram</h4>
+                    <a href="https://wa.me/1234567890" className="text-gray-600 hover:text-[#065084] transition-colors">
+                      + (20) 155 335 9431
                     </a>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                    <MapPin className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.address}</h4>
-                    <p className="text-gray-600">
-                      {t.contact.methods.addressLines[0]}<br />
-                      {t.contact.methods.addressLines[1]}<br />
-                      {t.contact.methods.addressLines[2]}
-                    </p>
+                 
                   </div>
                 </div>
               </div>
               <div className="mt-8">
                 <h4 className="font-bold text-gray-900 mb-4">{t.contact.followUs}</h4>
                 <div className="flex gap-4">
-                  <a href="https://facebook.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
+                  <a href="https://www.facebook.com/people/Freshlancer/61585812083274/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Facebook className="w-5 h-5" />
                   </a>
-                  <a href="https://twitter.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
-                    <Twitter className="w-5 h-5" />
-                  </a>
-                  <a href="https://linkedin.com/company/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
+                  <a href="https://www.linkedin.com/company/110654958/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Linkedin className="w-5 h-5" />
                   </a>
                   <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
@@ -1439,55 +1520,7 @@ const Landing = () => {
       {/* Modern Footer */}
       <footer className="bg-gray-900 text-gray-300 py-16" role="contentinfo">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            {/* Brand Column */}
-            <div className="md:col-span-2">
-              <div className="flex items-center mb-6">
-                {/* Logo Space - 180x50px */}
-                <div className="w-[180px] h-[50px] bg-[#065084] rounded-lg flex items-center justify-center">
-                  <Briefcase className="w-6 h-6 text-white" aria-hidden="true" />
-                  <span className="ml-2 text-xl font-bold text-white">Freshlancer</span>
-                </div>
-              </div>
-              <p className="text-gray-400 mb-6 leading-relaxed">
-                {t.footer.brandCopy}
-              </p>
-              <div className="flex gap-4">
-                <a href="https://facebook.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#25aaad] transition-colors">
-                  <Facebook className="w-5 h-5" />
-                </a>
-                <a href="https://twitter.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#25aaad] transition-colors">
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a href="https://linkedin.com/company/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#065084] transition-colors">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#25aaad] transition-colors">
-                  <Instagram className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-
-            {/* For Students */}
-            <div>
-              <h3 className="text-white font-bold mb-4 text-lg">{t.footer.studentsTitle}</h3>
-              <ul className="space-y-3">
-                {t.footer.studentsLinks.map((link) => (
-                  <li key={link}><a href="/register" className="text-gray-400 hover:text-[#25aaad] transition-colors">{link}</a></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* For Clients */}
-            <div>
-              <h3 className="text-white font-bold mb-4 text-lg">{t.footer.clientsTitle}</h3>
-              <ul className="space-y-3">
-                {t.footer.clientsLinks.map((link) => (
-                  <li key={link}><a href="/register" className="text-gray-400 hover:text-[#065084] transition-colors">{link}</a></li>
-                ))}
-              </ul>
-            </div>
-          </div>
+         
 
           <div className="border-t border-gray-800 pt-8">
             <p className="text-center text-gray-500 text-sm">
