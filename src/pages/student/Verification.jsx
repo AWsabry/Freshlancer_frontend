@@ -285,6 +285,7 @@ const Verification = () => {
               {...register('expectedGraduationYear', {
                 required: t.graduationYearRequired,
                 min: { value: new Date().getFullYear(), message: t.graduationYearInvalid },
+                max: { value: 2034, message: t.graduationYearInvalid || 'Expected graduation year must not exceed 2034' },
               })}
             />
 

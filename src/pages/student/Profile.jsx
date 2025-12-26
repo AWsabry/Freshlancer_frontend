@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import Cropper from 'react-easy-crop';
@@ -170,6 +171,7 @@ const translations = {
     submitted: 'Submitted:',
     verificationRequired: 'Verification Required',
     verificationRequiredMessage: 'Please submit your student verification documents to start applying for jobs.',
+    completeVerification: 'Complete Verification',
     documentType: 'Document Type',
     documentTypeRequired: 'Document type is required',
     studentIdCard: 'Student ID Card',
@@ -362,6 +364,7 @@ const translations = {
     submitted: 'Inviato il:',
     verificationRequired: 'Verifica Richiesta',
     verificationRequiredMessage: 'Invia i tuoi documenti di verifica studente per iniziare a candidarti per i lavori.',
+    completeVerification: 'Completa Verifica',
     documentType: 'Tipo di Documento',
     documentTypeRequired: 'Il tipo di documento è obbligatorio',
     studentIdCard: 'Carta d\'Identità Studente',
@@ -602,6 +605,7 @@ const COUNTRY_CURRENCY_MAP = {
 };
 
 const Profile = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -653,9 +657,13 @@ const Profile = () => {
   const { register: registerVerification, handleSubmit: handleSubmitVerification, formState: { errors: verificationErrors }, reset: resetVerification } = useForm();
 
   // Fetch user profile
-  const { data: userData, isLoading } = useQuery({
+  const { data: userData, isLoading, error: profileError } = useQuery({
     queryKey: ['userProfile'],
     queryFn: () => authService.getMe(),
+    retry: 1,
+    onError: (error) => {
+      console.error('Error fetching user profile:', error);
+    },
   });
 
   const user = userData?.data?.user;
@@ -1137,9 +1145,14 @@ const Profile = () => {
     return <Loading text={t.loading} />;
   }
 
-  if (!user) {
+  if (profileError || !user) {
     return (
-      <Alert type="error" message={t.failedToLoad} />
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-4">
+        <Alert 
+          type="error" 
+          message={profileError?.response?.data?.message || profileError?.message || t.failedToLoad} 
+        />
+      </div>
     );
   }
 
@@ -1835,6 +1848,7 @@ const Profile = () => {
                     {...registerVerification('expectedGraduationYear', {
                       required: t.graduationYearRequired,
                       min: { value: new Date().getFullYear(), message: t.validFutureYear },
+                      max: { value: 2034, message: t.validFutureYear || 'Expected graduation year must not exceed 2034' },
                     })}
                   />
 
@@ -1934,7 +1948,20 @@ const Profile = () => {
 
           {/* Resume */}
           <Card title={t.resumeCv}>
-            {studentProfile?.resume && studentProfile.resume.url ? (
+            {!isVerified || verificationStatus !== 'verified' ? (
+              <div className="text-center py-6 sm:py-8 px-4">
+                <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base text-gray-600 mb-2">{t.verificationRequired}</p>
+                <p className="text-xs sm:text-sm text-gray-500 mb-4">{t.verificationRequiredMessage}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/student/verification')}
+                  className="text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
+                >
+                  {t.completeVerification}
+                </Button>
+              </div>
+            ) : studentProfile?.resume && studentProfile.resume.url ? (
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -2020,9 +2047,23 @@ const Profile = () => {
 
           {/* Additional Documents */}
           <Card title={t.additionalDocuments}>
-            <div className="space-y-3 sm:space-y-4">
-              {/* Upload Form */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-gray-50">
+            {!isVerified || verificationStatus !== 'verified' ? (
+              <div className="text-center py-6 sm:py-8 px-4">
+                <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base text-gray-600 mb-2">{t.verificationRequired}</p>
+                <p className="text-xs sm:text-sm text-gray-500 mb-4">{t.verificationRequiredMessage}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/student/verification')}
+                  className="text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
+                >
+                  {t.completeVerification}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3 sm:space-y-4">
+                {/* Upload Form */}
+                <div className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-gray-50">
                 <div className="space-y-2 sm:space-y-3">
                   <Input
                     label={t.documentDescription}
@@ -2106,7 +2147,8 @@ const Profile = () => {
                   <p className="text-xs sm:text-sm">{t.noAdditionalDocuments}</p>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </Card>
         </div>
       </div>

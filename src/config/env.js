@@ -11,3 +11,8 @@ if (!apiBaseUrl && import.meta.env.MODE === 'production') {
 // For development, this may be empty (proxy handles /api routes)
 export const API_BASE_URL = apiBaseUrl ? apiBaseUrl.replace(/\/$/, '') : '';
 
+// Open Graph Image URL for Facebook and WhatsApp link previews
+// Set VITE_OG_IMAGE_URL in your environment or .env file
+// Falls back to local path if not set
+export const OG_IMAGE_URL = import.meta.env?.VITE_OG_IMAGE_URL || '/og-image.png';
+

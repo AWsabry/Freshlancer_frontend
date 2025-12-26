@@ -712,7 +712,7 @@ const Register = () => {
         }
         
         // Remove graduationYear if it's invalid
-        if (isNaN(userData.studentProfile.graduationYear) || userData.studentProfile.graduationYear < 1900 || userData.studentProfile.graduationYear > 2100) {
+        if (isNaN(userData.studentProfile.graduationYear) || userData.studentProfile.graduationYear < 1900 || userData.studentProfile.graduationYear > 2034) {
           delete userData.studentProfile.graduationYear;
         }
       } else if (data.role === 'client') {
@@ -1003,6 +1003,10 @@ const Register = () => {
                     min: {
                       value: new Date().getFullYear(),
                       message: t.invalidGraduationYear,
+                    },
+                    max: {
+                      value: 2034,
+                      message: t.invalidGraduationYear || 'Graduation year must not exceed 2034',
                     },
                   })}
               />

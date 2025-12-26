@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import Button from '../components/common/Button';
 import { contactService } from '../services/contactService';
 import Alert from '../components/common/Alert';
+import { OG_IMAGE_URL } from '../config/env';
 import Studentimage from '../assets/images/student.png';
 import Clientimage from '../assets/images/client.png';
 import logo from '../assets/logos/01.png';
@@ -636,7 +637,10 @@ const Landing = () => {
     // Open Graph Image - Required for Facebook and WhatsApp previews
     const ogImage = document.querySelector('meta[property="og:image"]');
     const baseUrl = window.location.origin;
-    const imageUrl = `${baseUrl}/og-image.png`;
+    // Use network image URL from environment if available, otherwise use local path
+    const imageUrl = OG_IMAGE_URL.startsWith('http') 
+      ? OG_IMAGE_URL 
+      : `${baseUrl}${OG_IMAGE_URL.startsWith('/') ? OG_IMAGE_URL : '/' + OG_IMAGE_URL}`;
     if (!ogImage) {
       const meta = document.createElement('meta');
       meta.setAttribute('property', 'og:image');
