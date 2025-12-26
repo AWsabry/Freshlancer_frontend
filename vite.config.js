@@ -4,12 +4,8 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  // Use ngrok URL if provided, otherwise fall back to localhost
-  const apiBaseUrl = env.VITE_API_BASE_URL || env.VITE_NGROK_URL || "http://localhost:8080";
-
-  if (!apiBaseUrl) {
-    throw new Error('VITE_API_BASE_URL or VITE_NGROK_URL is not defined. Please set it in your environment.');
-  }
+  // Use ngrok URL if provided, otherwise fall back to localhost (for development only)
+  const apiBaseUrl = env.VITE_API_BASE_URL || "https://backend.freshlancer.online" || "http://localhost:8080";
 
   return {
     plugins: [react()],
@@ -18,6 +14,7 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    // Server configuration (only used in development)
     server: {
       port: 3000,
       allowedHosts: [
@@ -42,6 +39,25 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+    },
+    // Build configuration for production
+    build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
+      sourcemap: false, // Disable sourcemaps in production for security and smaller bundle
+      minify: 'esbuild',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            router: ['react-router-dom'],
+            query: ['@tanstack/react-query'],
+            utils: ['axios', 'crypto-js', 'js-cookie'],
+          },
+        },
+      },
+      // Ensure index.html is in the root of dist folder
+      emptyOutDir: true,
     },
   };
 });

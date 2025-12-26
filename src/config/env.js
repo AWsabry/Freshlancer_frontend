@@ -1,8 +1,13 @@
+// Get API base URL from environment variable
+// In production, this must be set via VITE_API_BASE_URL
+// In development, it can fall back to localhost or use proxy
 const apiBaseUrl = import.meta.env?.VITE_API_BASE_URL;
 
-if (!apiBaseUrl) {
-  throw new Error('VITE_API_BASE_URL is not defined. Please set it in your environment.');
+if (!apiBaseUrl && import.meta.env.MODE === 'production') {
+  throw new Error('VITE_API_BASE_URL is not defined. Please set it in your environment for production builds.');
 }
 
-export const API_BASE_URL = apiBaseUrl.replace(/\/$/, '');
+// For production, use the environment variable (without trailing slash)
+// For development, this may be empty (proxy handles /api routes)
+export const API_BASE_URL = apiBaseUrl ? apiBaseUrl.replace(/\/$/, '') : '';
 

@@ -704,13 +704,13 @@ const Landing = () => {
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
-            {/* Logo Space - Recommended size: 150px width × 50px height */}
+            {/* Logo Space - Recommended size: 200px width × 60px height */}
             <div className="flex items-center flex-shrink-0">
               <Link to="/" className="flex items-center">
                 <img
                   src={logo}
                   alt="Freshlancer logo"
-                  className="h-8 sm:h-10 md:h-[50px] w-auto max-w-[120px] sm:max-w-[150px] object-contain"
+                  className="h-10 sm:h-12 md:h-[60px] w-auto max-w-[180px] sm:max-w-[220px] md:max-w-[250px] object-contain"
                 />
               </Link>
             </div>

@@ -410,7 +410,7 @@ const translations = {
     scale: 'Scale',
     back: 'Back',
     continue: 'Continue',
-    createAccount: 'Create Account',
+    createAccountButton: 'Create Account',
     alreadyHaveAccount: 'Already have an account?',
     signIn: 'Sign in',
     couldNotCreateAccount: 'We couldn\'t create your account. Please check your information and try again.',
@@ -551,7 +551,7 @@ const translations = {
     scale: 'Scala',
     back: 'Indietro',
     continue: 'Continua',
-    createAccount: 'Crea Account',
+    createAccountButton: 'Crea Account',
     alreadyHaveAccount: 'Hai già un account?',
     signIn: 'Accedi',
     couldNotCreateAccount: 'Impossibile creare il tuo account. Controlla le tue informazioni e riprova.',
@@ -1276,7 +1276,7 @@ const Register = () => {
               loading={loading}
               disabled={loading}
             >
-              {step === 1 ? t.continue : t.createAccount}
+              {step === 1 ? t.continue : t.createAccountButton}
             </Button>
           </div>
 
