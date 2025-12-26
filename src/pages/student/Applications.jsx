@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '../../services/applicationService';
 import { authService } from '../../services/authService';
+import { subscriptionService } from '../../services/subscriptionService';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -119,6 +120,17 @@ const Applications = () => {
     refetchOnWindowFocus: true, // Refetch when user returns to the tab
     refetchOnMount: true, // Refetch when component mounts
     refetchInterval: 30000, // Refetch every 30 seconds to check for status updates
+  });
+
+  // Fetch subscription (this will trigger backend check for expired subscriptions)
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => subscriptionService.getMySubscription(),
+    retry: 1,
+    staleTime: 30000, // Keep data fresh for 30 seconds
+    onError: (error) => {
+      console.error('Error fetching subscription:', error);
+    },
   });
 
   // Fetch current user to check premium status

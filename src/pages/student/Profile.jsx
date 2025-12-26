@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import Cropper from 'react-easy-crop';
 import { authService } from '../../services/authService';
 import { verificationService } from '../../services/verificationService';
+import { subscriptionService } from '../../services/subscriptionService';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
 import Badge from '../../components/common/Badge';
@@ -701,6 +702,17 @@ const Profile = () => {
   useEffect(() => {
     setPhotoLoadError(false);
   }, [user?.photo, photoPreview]);
+
+  // Fetch subscription (this will trigger backend check for expired subscriptions)
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => subscriptionService.getMySubscription(),
+    retry: 1,
+    staleTime: 30000, // Keep data fresh for 30 seconds
+    onError: (error) => {
+      console.error('Error fetching subscription:', error);
+    },
+  });
 
   // Fetch verification status and history
   const { data: verificationData, isLoading: loadingVerification, error: verificationQueryError } = useQuery({
