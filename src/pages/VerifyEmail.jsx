@@ -76,21 +76,44 @@ const VerifyEmail = () => {
         const responseStatus = response?.status || response?.data?.status;
         const responseMessage = response?.message || response?.data?.message;
         
-        // Debug logging (remove in production)
-        console.log('Verification response:', { response, userData, responseStatus, responseMessage });
-        
         // Check if response indicates success
         if (responseStatus === 'success' || userData) {
-          if (userData) {
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
+          // Get the verified user data
+          let verifiedUser = userData;
+          
+          if (verifiedUser) {
+            // Ensure emailVerified is set to true
+            verifiedUser = { ...verifiedUser, emailVerified: true };
+            setUser(verifiedUser);
+            localStorage.setItem('user', JSON.stringify(verifiedUser));
           } else if (user) {
             // Update existing user's emailVerified status
             const updatedUser = { ...user, emailVerified: true };
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
+            verifiedUser = updatedUser;
           }
 
+          // Determine dashboard path based on user role
+          const getDashboardPath = () => {
+            if (!verifiedUser) return '/login';
+            switch (verifiedUser.role) {
+              case 'student':
+                return '/student/dashboard';
+              case 'client':
+                return '/client/dashboard';
+              case 'admin':
+                return '/admin/dashboard';
+              default:
+                return '/login';
+            }
+          };
+
+          // Automatically redirect to dashboard after a brief delay
+          setTimeout(() => {
+            navigate(getDashboardPath(), { replace: true });
+          }, 1500);
+          
           setStatus('success');
           setMessage(responseMessage || t.successMessage);
         } else {
@@ -98,6 +121,30 @@ const VerifyEmail = () => {
           // Sometimes the backend might return success in a different format
           if (response && typeof response === 'object' && !response.status) {
             // Response might be the data itself
+            let verifiedUser = userData || user;
+            if (verifiedUser) {
+              verifiedUser = { ...verifiedUser, emailVerified: true };
+              setUser(verifiedUser);
+              localStorage.setItem('user', JSON.stringify(verifiedUser));
+              
+              const getDashboardPath = () => {
+                if (!verifiedUser) return '/login';
+                switch (verifiedUser.role) {
+                  case 'student':
+                    return '/student/dashboard';
+                  case 'client':
+                    return '/client/dashboard';
+                  case 'admin':
+                    return '/admin/dashboard';
+                  default:
+                    return '/login';
+                }
+              };
+
+              setTimeout(() => {
+                navigate(getDashboardPath(), { replace: true });
+              }, 1500);
+            }
             setStatus('success');
             setMessage(responseMessage || t.successMessage);
           } else {
@@ -106,9 +153,6 @@ const VerifyEmail = () => {
           }
         }
       } catch (error) {
-        // Debug logging (remove in production)
-        console.log('Verification error:', error);
-        
         // Check if error message indicates email is already verified (which is actually a success)
         const errorMessage = error?.message || error?.response?.data?.message || '';
         const isAlreadyVerified = errorMessage.toLowerCase().includes('already verified') || 
@@ -117,13 +161,32 @@ const VerifyEmail = () => {
         
         if (isAlreadyVerified) {
           // Email is already verified - treat as success
-          if (user) {
-            const updatedUser = { ...user, emailVerified: true };
-            setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+          let verifiedUser = user;
+          if (verifiedUser) {
+            verifiedUser = { ...verifiedUser, emailVerified: true };
+            setUser(verifiedUser);
+            localStorage.setItem('user', JSON.stringify(verifiedUser));
+            
+            const getDashboardPath = () => {
+              if (!verifiedUser) return '/login';
+              switch (verifiedUser.role) {
+                case 'student':
+                  return '/student/dashboard';
+                case 'client':
+                  return '/client/dashboard';
+                case 'admin':
+                  return '/admin/dashboard';
+                default:
+                  return '/login';
+              }
+            };
+
+            setTimeout(() => {
+              navigate(getDashboardPath(), { replace: true });
+            }, 1500);
           }
           setStatus('success');
-          setMessage('Your email is already verified. You can now log in to your account.');
+          setMessage('Your email is already verified. Redirecting to dashboard...');
         } else {
           setStatus('error');
           setMessage(errorMessage || t.errorMessage);
@@ -132,7 +195,8 @@ const VerifyEmail = () => {
     };
 
     verifyEmailToken();
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]); // Only re-run when token changes
 
   const handleGoToLogin = () => {
     navigate('/login');
@@ -167,9 +231,9 @@ const VerifyEmail = () => {
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.success}</h1>
               <p className="text-gray-600 mb-6">{message || t.successMessage}</p>
-              <Button onClick={handleGoToLogin} className="w-full">
-                {t.goToLogin}
-              </Button>
+              <div className="text-sm text-gray-500">
+                Redirecting to dashboard...
+              </div>
             </>
           ) : (
             <>

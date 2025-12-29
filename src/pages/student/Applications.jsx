@@ -113,13 +113,17 @@ const Applications = () => {
 
   const t = translations[language] || translations.en;
 
-  // Fetch student's applications
+  // Fetch student's applications - optimized polling
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['myApplications'],
     queryFn: () => applicationService.getMyApplications(),
     refetchOnWindowFocus: true, // Refetch when user returns to the tab
     refetchOnMount: true, // Refetch when component mounts
-    refetchInterval: 30000, // Refetch every 30 seconds to check for status updates
+    refetchInterval: (query) => {
+      // Only poll when tab is visible
+      if (document.hidden) return false;
+      return 180000; // Refetch every 3 minutes (reduced from 30 seconds)
+    },
   });
 
   // Fetch subscription (this will trigger backend check for expired subscriptions)

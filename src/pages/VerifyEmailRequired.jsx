@@ -88,11 +88,29 @@ const VerifyEmailRequired = () => {
 
   const t = translations[language] || translations.en;
 
+  const { setUser } = useAuthStore();
+
   // Fetch current user to check verification status
   const { data: userData, isLoading, refetch } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => authService.getMe(),
-    refetchInterval: 5000, // Check every 5 seconds if email is verified
+    queryFn: async () => {
+      const response = await authService.getMe();
+      // Update auth store with fresh user data
+      if (response?.data?.user) {
+        setUser(response.data.user);
+      }
+      return response;
+    },
+    refetchInterval: (query) => {
+      // Only continue polling if email is not verified and tab is visible
+      if (document.hidden) return false;
+      const latestUser = query.state.data?.data?.user;
+      // Stop polling if email is verified
+      if (latestUser?.emailVerified) return false;
+      // Poll every 2 minutes instead of 1 minute to reduce requests
+      return 120000;
+    },
+    enabled: true, // Always enabled
   });
 
   const currentUser = userData?.data?.user || user;
@@ -128,22 +146,38 @@ const VerifyEmailRequired = () => {
   };
 
   // If verified, redirect to dashboard
+  useEffect(() => {
+    if (isVerified && currentUser) {
+      const getDashboardPath = () => {
+        if (!currentUser) return '/login';
+        switch (currentUser.role) {
+          case 'student':
+            return '/student/dashboard';
+          case 'client':
+            return '/client/dashboard';
+          case 'admin':
+            return '/admin/dashboard';
+          default:
+            return '/login';
+        }
+      };
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        navigate(getDashboardPath(), { replace: true });
+      }, 500);
+    }
+  }, [isVerified, currentUser, navigate]);
+
   if (isVerified) {
-    const getDashboardPath = () => {
-      if (!currentUser) return '/login';
-      switch (currentUser.role) {
-        case 'student':
-          return '/student/dashboard';
-        case 'client':
-          return '/client/dashboard';
-        case 'admin':
-          return '/admin/dashboard';
-        default:
-          return '/login';
-      }
-    };
-    navigate(getDashboardPath(), { replace: true });
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <Card className="max-w-md w-full">
+          <div className="text-center py-8">
+            <Loading text="Email verified! Redirecting to dashboard..." />
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   if (isLoading) {

@@ -114,19 +114,31 @@ const DashboardLayout = () => {
 
   const t = translations[language] || translations.en;
 
-  // Get unread notification count
+  // Get unread notification count - optimized polling
   const { data: unreadCount } = useQuery({
     queryKey: ['unreadNotifications'],
     queryFn: () => notificationService.getUnreadCount(),
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: (query) => {
+      // Only poll when tab is visible and user is authenticated
+      if (document.hidden || !isAuthenticated) return false;
+      return 120000; // Refetch every 2 minutes (reduced from 30 seconds)
+    },
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true,
   });
 
-  // Get user data (including points for clients and applications for students)
+  // Get user data (including points for clients and applications for students) - optimized polling
   const { data: userData } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => authService.getMe(),
     enabled: user?.role === 'client' || user?.role === 'student',
-    refetchInterval: 60000, // Refetch every 60 seconds
+    refetchInterval: (query) => {
+      // Only poll when tab is visible and user is authenticated
+      if (document.hidden || !isAuthenticated) return false;
+      return 300000; // Refetch every 5 minutes (reduced from 60 seconds)
+    },
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true,
   });
 
   const handleLogout = async () => {
