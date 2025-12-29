@@ -28,6 +28,8 @@ import {
   Globe,
   Heart,
   Info,
+  AlertCircle,
+  Activity,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 import Modal from '../components/common/Modal';
@@ -56,6 +58,7 @@ const translations = {
     startups: 'Startups',
     contactUs: 'Contact Us',
     grantings: 'Support & Donations',
+    logs: 'Audit Logs',
     logout: 'Logout',
     welcomeBack: 'Welcome back, {name}!',
     points: 'Points',
@@ -96,6 +99,7 @@ const translations = {
     startups: 'Startup',
     contactUs: 'Contattaci',
     grantings: 'Supporto e Donazioni',
+    logs: 'Log di Audit',
     logout: 'Esci',
     welcomeBack: 'Bentornato, {name}!',
     points: 'Punti',
@@ -255,6 +259,7 @@ const DashboardLayout = () => {
         { name: t.startups, icon: Star, path: '/admin/startups' },
         { name: t.contactUs, icon: Mail, path: '/admin/contact-us' },
         { name: t.grantings, icon: Heart, path: '/admin/grantings' },
+        { name: t.logs, icon: AlertCircle, path: '/admin/logs' },
         ...baseItems.slice(1),
       ];
     }

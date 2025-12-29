@@ -8,7 +8,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import { CheckCircle, Star, Zap, CreditCard } from 'lucide-react';
+import { CheckCircle, Star, Zap, CreditCard, Crown } from 'lucide-react';
 
 const translations = {
   en: {
@@ -35,6 +35,20 @@ const translations = {
     priorityInSearch: 'Priority in search results',
     featuredProfileBadge: 'Featured profile badge',
     prioritySupport: 'Priority customer support',
+    premiumBenefits: 'Your Premium Benefits',
+    premiumBenefitsDescription: 'As a Premium member, you enjoy exclusive advantages:',
+    unlimitedApplications: '100 job applications per month',
+    unlimitedApplicationsDesc: 'Apply to up to 100 jobs every month',
+    accessToAllListingsPremium: 'Access to all job listings',
+    accessToAllListingsPremiumDesc: 'Browse and apply to all available opportunities',
+    priorityInSearchResults: 'Priority placement in search results',
+    priorityInSearchResultsDesc: 'Your profile appears first in client searches',
+    featuredProfileBadgePremium: 'Featured profile badge for increased visibility',
+    featuredProfileBadgePremiumDesc: 'Stand out with a premium badge on your profile',
+    priorityCustomerSupport: 'Priority customer support',
+    priorityCustomerSupportDesc: 'Get faster response times and dedicated support',
+    advancedAnalytics: 'Advanced analytics and insights',
+    advancedAnalyticsDesc: 'Track your performance with detailed insights',
     upgradeToPremium: 'Upgrade to Premium',
     upgradeSuccess: 'Successfully upgraded to Premium!',
     upgradeFailed: 'Upgrade failed',
@@ -69,6 +83,20 @@ const translations = {
     priorityInSearch: 'Priorità nei risultati di ricerca',
     featuredProfileBadge: 'Badge profilo in evidenza',
     prioritySupport: 'Supporto clienti prioritario',
+    premiumBenefits: 'I Tuoi Vantaggi Premium',
+    premiumBenefitsDescription: 'Come membro Premium, godi di vantaggi esclusivi:',
+    unlimitedApplications: '100 candidature di lavoro al mese',
+    unlimitedApplicationsDesc: 'Candidati fino a 100 lavori ogni mese',
+    accessToAllListingsPremium: 'Accesso a tutti gli annunci di lavoro',
+    accessToAllListingsPremiumDesc: 'Sfoglia e candidati a tutte le opportunità disponibili',
+    priorityInSearchResults: 'Posizionamento prioritario nei risultati di ricerca',
+    priorityInSearchResultsDesc: 'Il tuo profilo appare per primo nelle ricerche dei clienti',
+    featuredProfileBadgePremium: 'Badge profilo in evidenza per maggiore visibilità',
+    featuredProfileBadgePremiumDesc: 'Distinguiti con un badge premium sul tuo profilo',
+    priorityCustomerSupport: 'Supporto clienti prioritario',
+    priorityCustomerSupportDesc: 'Ottieni tempi di risposta più rapidi e supporto dedicato',
+    advancedAnalytics: 'Analisi e approfondimenti avanzati',
+    advancedAnalyticsDesc: 'Monitora le tue prestazioni con approfondimenti dettagliati',
     upgradeToPremium: 'Passa a Premium',
     upgradeSuccess: 'Passaggio a Premium completato con successo!',
     upgradeFailed: 'Passaggio a Premium fallito',
@@ -202,7 +230,8 @@ const Subscription = () => {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-2xl font-bold">
+              <h3 className="text-2xl font-bold flex items-center gap-2">
+                {isPremium && <Crown className="w-6 h-6 text-yellow-500" />}
                 {isPremium ? t.premiumPlan : t.freePlan}
               </h3>
               <Badge variant={isPremium ? 'success' : 'info'}>
@@ -226,7 +255,56 @@ const Subscription = () => {
         </div>
       </Card>
 
-
+      {/* Premium Benefits Section - Only shown for premium users */}
+      {isPremium && (
+        <Card title={t.premiumBenefits}>
+          <p className="text-gray-600 mb-6">{t.premiumBenefitsDescription}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
+              <Star className="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">{t.unlimitedApplications}</h4>
+                <p className="text-sm text-gray-600">{t.unlimitedApplicationsDesc}</p>
+              </div>
+            </div>
+            <div className="flex items-start p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+              <CheckCircle className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">{t.accessToAllListingsPremium}</h4>
+                <p className="text-sm text-gray-600">{t.accessToAllListingsPremiumDesc}</p>
+              </div>
+            </div>
+            <div className="flex items-start p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+              <Zap className="w-6 h-6 text-purple-600 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">{t.priorityInSearchResults}</h4>
+                <p className="text-sm text-gray-600">{t.priorityInSearchResultsDesc}</p>
+              </div>
+            </div>
+            <div className="flex items-start p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+              <Star className="w-6 h-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">{t.featuredProfileBadgePremium}</h4>
+                <p className="text-sm text-gray-600">{t.featuredProfileBadgePremiumDesc}</p>
+              </div>
+            </div>
+            <div className="flex items-start p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200">
+              <CheckCircle className="w-6 h-6 text-indigo-600 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">{t.priorityCustomerSupport}</h4>
+                <p className="text-sm text-gray-600">{t.priorityCustomerSupportDesc}</p>
+              </div>
+            </div>
+            <div className="flex items-start p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg border border-pink-200">
+              <Zap className="w-6 h-6 text-pink-600 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">{t.advancedAnalytics}</h4>
+                <p className="text-sm text-gray-600">{t.advancedAnalyticsDesc}</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Pricing Plans */}
       {!isPremium && (
@@ -299,7 +377,10 @@ const Subscription = () => {
             <div className="absolute top-4 right-4">
               <Badge variant="success">{t.recommended}</Badge>
             </div>
-            <h3 className="text-2xl font-bold mb-2 text-primary-600">{t.premium}</h3>
+            <h3 className="text-2xl font-bold mb-2 text-primary-600 flex items-center gap-2">
+              <Crown className="w-6 h-6 text-yellow-500" />
+              {t.premium}
+            </h3>
             <p className="text-4xl font-bold mb-4">
               {currency} {monthlyPrice.toFixed(2)}
               <span className="text-lg text-gray-500">{t.perMonth}</span>
@@ -307,24 +388,28 @@ const Subscription = () => {
             <ul className="space-y-3 mb-6">
               <li className="flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 font-semibold">{t.jobApplicationsPerMonth.replace('{count}', '100')}</span>
+                <span className="text-gray-700 font-semibold">{t.unlimitedApplications}</span>
               </li>
               <li className="flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">{t.priorityInSearch}</span>
+                <span className="text-gray-700">{t.accessToAllListingsPremium}</span>
               </li>
               <li className="flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">{t.featuredProfileBadge}</span>
+                <span className="text-gray-700">{t.priorityInSearchResults}</span>
               </li>
               <li className="flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">{t.prioritySupport}</span>
+                <span className="text-gray-700">{t.featuredProfileBadgePremium}</span>
               </li>
-              {/* <li className="flex items-start">
+              <li className="flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Advanced analytics</span>
-              </li> */}
+                <span className="text-gray-700">{t.priorityCustomerSupport}</span>
+              </li>
+              <li className="flex items-start">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">{t.advancedAnalytics}</span>
+              </li>
             </ul>
             <Button
               variant="primary"

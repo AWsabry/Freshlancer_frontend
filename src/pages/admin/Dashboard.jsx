@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
@@ -7,6 +7,8 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
+import { logger } from '../../utils/logger';
+import { useAuthStore } from '../../stores/authStore';
 import {
   Users,
   Briefcase,
@@ -17,6 +19,7 @@ import {
   Crown,
   CreditCard,
   Download,
+  AlertCircle,
 } from 'lucide-react';
 import { exportToCSV, formatDate } from '../../utils/exportUtils';
 import {
@@ -32,10 +35,22 @@ import {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+
+  // Log dashboard view
+  useEffect(() => {
+    logger.info('Admin dashboard viewed', { action: 'dashboard_view', role: 'admin', userId: user?._id });
+  }, []);
 
   const { data: statsData, isLoading, error } = useQuery({
     queryKey: ['adminStats'],
     queryFn: () => adminService.getDashboardStats(),
+  });
+
+  // Fetch log statistics for error count
+  const { data: logStatsData } = useQuery({
+    queryKey: ['adminLogStats'],
+    queryFn: () => adminService.getLogStats(),
   });
 
   if (isLoading) {
@@ -205,6 +220,14 @@ const Dashboard = () => {
       color: 'bg-gray-500',
       onClick: () => navigate('/admin/student-packages'),
     },
+    {
+      title: 'Audit Logs',
+      value: logStatsData?.data?.totalEntries || 0,
+      icon: AlertCircle,
+      color: 'bg-red-500',
+      onClick: () => navigate('/admin/logs'),
+      subtitle: `${logStatsData?.data?.totalFiles || 0} log file(s)`,
+    },
   ];
 
   return (
@@ -249,6 +272,9 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                {stat.subtitle && (
+                  <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+                )}
               </div>
               <div className={`${stat.color} p-3 rounded-lg`}>
                 <stat.icon className="w-6 h-6 text-white" />

@@ -8,6 +8,7 @@ import api from '../services/api';
 import paymobService from '../services/paymobService';
 import { packageService } from '../services/packageService';
 import couponService from '../services/couponService';
+import { logger } from '../utils/logger';
 
 const translations = {
   en: {
@@ -102,11 +103,10 @@ const getCookie = (name) => {
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
     const cookieValue = parts.pop().split(';').shift();
-    console.log(`Cookie '${name}' found:`, cookieValue);
-    console.log(`Cookie '${name}' value:`, cookieValue);
+    logger.debug(`Cookie '${name}' found`);
     return cookieValue;
   }
-  console.log(`Cookie '${name}' not found`);
+  logger.debug(`Cookie '${name}' not found`);
   return null;
 };
 
@@ -158,19 +158,20 @@ const PaymentSuccess = () => {
         packageInfo = JSON.parse(storedPackage);
       }
     } catch (error) {
-      console.error('Error parsing stored package info:', error);
+      logger.error('Error parsing stored package info:', error);
     }
   }
 
   const { points: packagePoints, packageName } = packageInfo;
 
-  console.log('PaymentSuccess - Intention ID resolution:');
-  console.log('- From query:', queryIntentionId || 'N/A');
-  console.log('- From cookie:', cookieIntentionId || 'N/A');
-  console.log('- From sessionStorage:', sessionIntentionId || 'N/A');
-  console.log('- Using:', intentionId || 'N/A');
-  console.log('- Package points:', packagePoints || 'N/A');
-  console.log('- Package name:', packageName || 'N/A');
+  logger.debug('PaymentSuccess - Intention ID resolution', {
+    fromQuery: queryIntentionId || 'N/A',
+    fromCookie: cookieIntentionId || 'N/A',
+    fromSessionStorage: sessionIntentionId || 'N/A',
+    using: intentionId || 'N/A',
+    packagePoints: packagePoints || 'N/A',
+    packageName: packageName || 'N/A',
+  });
 
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState(null);
@@ -192,16 +193,16 @@ const PaymentSuccess = () => {
   }, [intentionId]);
 
   const completePaymentSuccess = async () => {
-    console.log('Starting payment completion for intention ID:', intentionId);
+    logger.debug('Starting payment completion for intention ID:', intentionId);
     const payMobResponse = await paymobService.checkPaymentStatus(intentionId);
-    console.log('Payment status checked:', payMobResponse);
+    logger.debug('Payment status checked');
     try {
       setIsProcessing(true);
-      console.log('Completing payment success for intention:', intentionId);
+      logger.debug('Completing payment success for intention:', intentionId);
       // Call the complete-success endpoint to upgrade subscription
       const response = await api.get(`/paymob/complete-success?id=${intentionId}`);
 
-      console.log('Payment completed successfully:', response);
+      logger.debug('Payment completed successfully');
 
       // Record coupon usage if a coupon was applied
       try {
@@ -209,13 +210,13 @@ const PaymentSuccess = () => {
         if (appliedCouponStr) {
           const appliedCoupon = JSON.parse(appliedCouponStr);
           if (appliedCoupon.couponId) {
-            console.log('Recording coupon usage for coupon:', appliedCoupon.couponId);
+            logger.debug('Recording coupon usage for coupon:', appliedCoupon.couponId);
             await couponService.recordCouponUsage(appliedCoupon.couponId);
-            console.log('Coupon usage recorded successfully');
+            logger.debug('Coupon usage recorded successfully');
           }
         }
       } catch (couponErr) {
-        console.error('Error recording coupon usage:', couponErr);
+        logger.error('Error recording coupon usage:', couponErr);
         // Don't fail the whole flow if coupon recording fails
       }
 
@@ -223,10 +224,10 @@ const PaymentSuccess = () => {
       if (user?.role === 'client') {
         try {
           const pointsResponse = await packageService.getPointsBalance();
-          console.log('Points balance fetched:', pointsResponse);
+          logger.debug('Points balance fetched');
           setPointsData(pointsResponse.data);
         } catch (pointsErr) {
-          console.error('Error fetching points balance:', pointsErr);
+          logger.error('Error fetching points balance:', pointsErr);
           // Don't fail the whole flow if points fetch fails
         }
       }

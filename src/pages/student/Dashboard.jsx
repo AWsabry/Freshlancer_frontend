@@ -11,6 +11,8 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import { Briefcase, FileText, DollarSign, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
+import { logger } from '../../utils/logger';
+import { useAuthStore } from '../../stores/authStore';
 
 const translations = {
   en: {
@@ -69,9 +71,15 @@ const translations = {
 
 const StudentDashboard = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
+
+  // Log dashboard view
+  useEffect(() => {
+    logger.info('Student dashboard viewed', { action: 'dashboard_view', role: 'student', userId: user?._id });
+  }, []);
 
   // Listen for language changes from DashboardLayout
   useEffect(() => {

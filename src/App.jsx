@@ -75,6 +75,7 @@ import AdminClientTransactions from './pages/admin/ClientTransactions';
 import AdminReviews from './pages/admin/Reviews';
 import AdminNotifications from './pages/admin/Notifications';
 import AdminGrantings from './pages/admin/Grantings';
+import AdminLogs from './pages/admin/Logs';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -206,6 +207,7 @@ function App() {
         <Route path="client-transactions" element={<AdminClientTransactions />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="logs" element={<AdminLogs />} />
       </Route>
 
       {/* Catch all - redirect to home */}

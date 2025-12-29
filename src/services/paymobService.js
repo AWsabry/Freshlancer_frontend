@@ -1,4 +1,5 @@
 import api from './api';
+import { logger } from '../utils/logger';
 
 export const paymobService = {
   /**
@@ -11,12 +12,12 @@ export const paymobService = {
   
   checkPaymentStatus: async (intentionId) => {
     try {
-      console.log('Checking payment status for intention ID:', intentionId);
+      logger.debug('Checking payment status for intention ID:', intentionId);
       const response = await api.get(`/paymob/payment-status?id=${intentionId}`);
-      console.log('Payment status response:', response);
+      logger.debug('Payment status checked');
       return response; // api.js interceptor already unwraps response.data
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      logger.error('Error checking payment status:', error);
       throw error;
     }
   },

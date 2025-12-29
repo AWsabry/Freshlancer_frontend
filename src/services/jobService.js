@@ -1,4 +1,5 @@
 import api from './api';
+import { logger } from '../utils/logger';
 
 export const jobService = {
   // Get all jobs
@@ -13,7 +14,7 @@ export const jobService = {
 
   // Create job (client only)
   createJob: async (jobData) => {
-    console.log('Creating Job with Data:', jobData);
+    logger.debug('Creating Job');
     return api.post('/jobs', jobData);
   },
 

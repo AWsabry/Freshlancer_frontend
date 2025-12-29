@@ -1,4 +1,5 @@
 import api from './api';
+import { logger } from '../utils/logger';
 
 const couponService = {
   // Get all coupons (with optional filters)
@@ -22,7 +23,7 @@ const couponService = {
   // Get coupon by coupon code
   getCouponByCode: async (code) => {
     const url = `/coupons/code/${code}`;
-    console.log('Calling coupon endpoint:', url);
+    logger.debug('Calling coupon endpoint:', url);
     const response = await api.get(url);
     return response;
   },

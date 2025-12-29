@@ -84,4 +84,21 @@ export const adminService = {
   getAllTransactions: async (params = {}) => {
     return api.get('/transactions', { params });
   },
+
+  // Log management
+  getLogFiles: async () => {
+    return api.get('/admin/logs/files');
+  },
+
+  getLogStats: async () => {
+    return api.get('/admin/logs/stats');
+  },
+
+  getLogFileContent: async (date, params = {}) => {
+    return api.get(`/admin/logs/${date}`, { params });
+  },
+
+  deleteLogFile: async (date) => {
+    return api.delete(`/admin/logs/${date}`);
+  },
 };

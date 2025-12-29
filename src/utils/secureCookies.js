@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import { encryptCookie, decryptCookie } from './encryption';
+import { logger } from './logger';
 
 /**
  * Set an encrypted cookie
@@ -20,7 +21,7 @@ export const setSecureCookie = (name, value, options = {}) => {
 
     return true;
   } catch (error) {
-    console.error('Failed to set secure cookie:', error);
+    logger.error('Failed to set secure cookie:', error);
     return false;
   }
 };
@@ -40,7 +41,7 @@ export const getSecureCookie = (name) => {
     const decryptedValue = decryptCookie(encryptedValue);
     return decryptedValue;
   } catch (error) {
-    console.error('Failed to get secure cookie:', error);
+    logger.error('Failed to get secure cookie:', error);
     return null;
   }
 };
@@ -55,7 +56,7 @@ export const removeSecureCookie = (name, options = {}) => {
     Cookies.remove(name, options);
     return true;
   } catch (error) {
-    console.error('Failed to remove secure cookie:', error);
+    logger.error('Failed to remove secure cookie:', error);
     return false;
   }
 };

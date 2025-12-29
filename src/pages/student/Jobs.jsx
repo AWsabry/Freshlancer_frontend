@@ -5,6 +5,7 @@ import { jobService } from '../../services/jobService';
 import { subscriptionService } from '../../services/subscriptionService';
 import { authService } from '../../services/authService';
 import { categoryService } from '../../services/categoryService';
+import { logger } from '../../utils/logger';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -350,12 +351,8 @@ const Jobs = () => {
   });
 
   const categories = useMemo(() => {
-    // Debug: log the response structure
-    if (categoriesData) {
-      console.log('Categories Data:', categoriesData);
-    }
     if (categoriesError) {
-      console.error('Categories Error:', categoriesError);
+      logger.error('Categories Error:', categoriesError);
     }
     
     // The API interceptor returns response.data, so categoriesData is already the unwrapped response
@@ -364,7 +361,7 @@ const Jobs = () => {
     const categoriesList = categoriesData?.data?.categories || categoriesData?.categories || [];
     
     if (categoriesList.length === 0 && categoriesData) {
-      console.warn('No categories found in response:', categoriesData);
+      logger.warn('No categories found in response');
     }
     
     return categoriesList.map((cat) => ({
@@ -372,8 +369,6 @@ const Jobs = () => {
       label: cat.name,
     }));
   }, [categoriesData, categoriesError]);
-
-    console.log('Jobs Data:', subscription);
 
   if (isLoading) {
     return <Loading text={t.loading} />;

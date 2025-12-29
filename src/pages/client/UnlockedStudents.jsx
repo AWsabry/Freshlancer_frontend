@@ -8,6 +8,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import { logger } from '../../utils/logger';
 import {
   User,
   Mail,
@@ -18,6 +19,7 @@ import {
   Calendar,
   LayoutGrid,
   List,
+  Crown,
 } from 'lucide-react';
 
 const translations = {
@@ -174,7 +176,7 @@ const UnlockedStudents = () => {
 
   const students = data?.data?.students || [];
 
-  console.log(students);
+  logger.debug('Unlocked students loaded:', students.length);
 
   return (
     <div className="space-y-6 px-4 sm:px-0">
@@ -272,7 +274,15 @@ const UnlockedStudents = () => {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-medium text-gray-900 truncate">{student.name}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="font-medium text-gray-900 truncate">{student.name}</div>
+                                {student.subscriptionTier === 'premium' && (
+                                  <Badge variant="success" className="flex items-center gap-1 text-xs bg-yellow-100 text-yellow-800 border-yellow-300 flex-shrink-0">
+                                    <Crown className="w-3 h-3" />
+                                    Premium
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="text-xs text-gray-500 truncate">{student.email}</div>
                             </div>
                           </div>
@@ -347,9 +357,17 @@ const UnlockedStudents = () => {
                 <div className="flex-1 min-w-0 w-full text-center sm:text-left">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-2">
                     <div className="flex-1">
-                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                        {student.name}
-                      </h2>
+                      <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                          {student.name}
+                        </h2>
+                        {student.subscriptionTier === 'premium' && (
+                          <Badge variant="success" className="flex items-center gap-1 text-xs sm:text-sm bg-yellow-100 text-yellow-800 border-yellow-300">
+                            <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
+                            Premium
+                          </Badge>
+                        )}
+                      </div>
                       {student.studentProfile?.bio && (
                         <p className="text-gray-600 text-sm line-clamp-2">
                           {student.studentProfile.bio}

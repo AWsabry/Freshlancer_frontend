@@ -27,6 +27,7 @@ import {
   DollarSign,
   ArrowLeft,
   ExternalLink,
+  Crown,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
@@ -223,7 +224,15 @@ const StudentProfileView = () => {
 
           {/* Basic Info */}
           <div className="flex-1 w-full text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{student.name}</h1>
+            <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{student.name}</h1>
+              {student.subscriptionTier === 'premium' && (
+                <Badge variant="success" className="flex items-center gap-1 text-xs sm:text-sm bg-yellow-100 text-yellow-800 border-yellow-300">
+                  <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
+                  Premium
+                </Badge>
+              )}
+            </div>
 
             {profile.bio && (
               <p className="text-gray-600 mb-4">{profile.bio}</p>

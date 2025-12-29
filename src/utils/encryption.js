@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import { logger } from './logger';
 
 // IMPORTANT: In production, this key should be stored in environment variables
 // and rotated regularly. Never commit the actual key to version control.
@@ -35,7 +36,7 @@ export const encryptData = (data) => {
     // Return in format: iv:encryptedData (same as backend)
     return iv.toString(CryptoJS.enc.Hex) + ':' + encrypted.ciphertext.toString(CryptoJS.enc.Hex);
   } catch (error) {
-    console.error('Encryption error:', error);
+    logger.error('Encryption error:', error);
     throw new Error('Failed to encrypt data');
   }
 };
@@ -76,7 +77,7 @@ export const decryptData = (encryptedData, parseJSON = true) => {
 
     return parseJSON ? JSON.parse(decryptedString) : decryptedString;
   } catch (error) {
-    console.error('Decryption error:', error);
+    logger.error('Decryption error:', error);
     throw new Error('Failed to decrypt data');
   }
 };
@@ -96,7 +97,7 @@ export const encryptCookie = (data, expiryHours = 24) => {
     };
     return encryptData(payload);
   } catch (error) {
-    console.error('Cookie encryption error:', error);
+    logger.error('Cookie encryption error:', error);
     throw new Error('Failed to encrypt cookie data');
   }
 };
@@ -112,13 +113,13 @@ export const decryptCookie = (encryptedData) => {
 
     // Check if expired
     if (payload.expiry && Date.now() > payload.expiry) {
-      console.warn('Cookie data has expired');
+      logger.warn('Cookie data has expired');
       return null;
     }
 
     return payload.data;
   } catch (error) {
-    console.error('Cookie decryption error:', error);
+    logger.error('Cookie decryption error:', error);
     return null;
   }
 };
@@ -133,7 +134,7 @@ export const hashData = (data) => {
   try {
     return CryptoJS.SHA256(data).toString();
   } catch (error) {
-    console.error('Hashing error:', error);
+    logger.error('Hashing error:', error);
     throw new Error('Failed to hash data');
   }
 };
@@ -148,7 +149,7 @@ export const generateToken = (length = 32) => {
     const randomBytes = CryptoJS.lib.WordArray.random(length);
     return CryptoJS.enc.Hex.stringify(randomBytes);
   } catch (error) {
-    console.error('Token generation error:', error);
+    logger.error('Token generation error:', error);
     throw new Error('Failed to generate token');
   }
 };

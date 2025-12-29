@@ -43,8 +43,10 @@ import {
   RefreshCw,
   Check,
   X,
+  Crown,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
+import { logger } from '../../utils/logger';
 
 const translations = {
   en: {
@@ -663,12 +665,13 @@ const Profile = () => {
     queryFn: () => authService.getMe(),
     retry: 1,
     onError: (error) => {
-      console.error('Error fetching user profile:', error);
+      logger.error('Error fetching user profile:', error);
     },
   });
 
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
+  const isPremium = studentProfile?.subscriptionTier === 'premium';
 
   // Helper function to get photo URL
   const getPhotoUrl = useCallback((photo) => {
@@ -710,7 +713,7 @@ const Profile = () => {
     retry: 1,
     staleTime: 30000, // Keep data fresh for 30 seconds
     onError: (error) => {
-      console.error('Error fetching subscription:', error);
+      logger.error('Error fetching subscription:', error);
     },
   });
 
@@ -720,7 +723,7 @@ const Profile = () => {
     queryFn: () => verificationService.getMyVerifications(),
     retry: 1,
     onError: (error) => {
-      console.error('Error fetching verifications:', error);
+      logger.error('Error fetching verifications:', error);
     },
   });
 
@@ -760,7 +763,7 @@ const Profile = () => {
                           error.message || 
                           t.updateFailed;
       setFormError(errorMessage);
-      console.error('Profile update error:', error);
+      logger.error('Profile update error:', error);
       // Scroll to top of form to show error
       const modalContent = document.querySelector('.modal-content');
       if (modalContent) {
@@ -909,10 +912,10 @@ const Profile = () => {
     onError: (error) => {
       setUploadingPhoto(false);
       setPhotoPreview(null);
-      console.error('Photo upload error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
-      console.error('Error message:', error.message);
+      logger.error('Photo upload error:', error);
+      logger.error('Error response:', error.response);
+      logger.error('Error response data:', error.response?.data);
+      logger.error('Error message:', error.message);
       
       // Show more detailed error message
       // Error structure: api interceptor returns error.response?.data || error
@@ -1053,7 +1056,7 @@ const Profile = () => {
         lastModified: Date.now(),
       });
 
-      console.log('Uploading file:', {
+      logger.debug('Uploading file:', {
         name: croppedFile.name,
         size: croppedFile.size,
         type: croppedFile.type,
@@ -1067,7 +1070,7 @@ const Profile = () => {
       setImageToCrop(null);
       setPhotoPreview(imageToCrop); // Show preview while uploading
     } catch (error) {
-      console.error('Error in handleCropAndUpload:', error);
+      logger.error('Error in handleCropAndUpload:', error);
       alert(error.message || t.photoUploadFailed);
       setUploadingPhoto(false);
     }
@@ -1103,7 +1106,7 @@ const Profile = () => {
                           error.message || 
                           t.verificationFailed;
       setVerificationError(errorMessage);
-      console.error('Verification upload error:', error);
+      logger.error('Verification upload error:', error);
     },
   });
 
@@ -1272,7 +1275,13 @@ const Profile = () => {
             <div className="flex-1 min-w-0 text-center sm:text-left">
               <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 mb-2">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{user.name}</h1>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                  {isPremium && (
+                    <Badge variant="success" className="flex items-center gap-1 text-xs sm:text-sm bg-yellow-100 text-yellow-800 border-yellow-300">
+                      <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
+                      Premium
+                    </Badge>
+                  )}
                   {isVerified ? (
                     <Badge variant="success" className="flex items-center gap-1 text-xs sm:text-sm">
                       <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1311,7 +1320,7 @@ const Profile = () => {
               )}
             </div>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
@@ -1321,6 +1330,12 @@ const Profile = () => {
               <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
               {t.editProfile}
             </Button>
+            {isPremium && (
+              <Badge variant="success" className="flex items-center justify-center gap-1 text-xs sm:text-sm bg-yellow-100 text-yellow-800 border-yellow-300 w-full sm:w-auto">
+                <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
+                Premium
+              </Badge>
+            )}
           </div>
         </div>
       </Card>
@@ -1518,7 +1533,7 @@ const Profile = () => {
                       })
                       .filter(skill => skill && skill.length > 0); // Remove empty skills
 
-                    console.log('Updating skills:', formattedSkills);
+                    logger.debug('Updating skills:', formattedSkills);
 
                     // Build update payload - only include skills to avoid validation issues
                     const updatePayload = {
@@ -1529,7 +1544,7 @@ const Profile = () => {
 
                     await updateProfileMutation.mutateAsync(updatePayload);
                   } catch (error) {
-                    console.error('Failed to update skills:', error);
+                    logger.error('Failed to update skills:', error);
                     const errorMessage = error.response?.data?.message || 
                                         error.response?.data?.error ||
                                         error.message || 

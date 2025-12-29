@@ -1,4 +1,5 @@
 import api from './api';
+import { logger } from '../utils/logger';
 
 const clearAllCookies = () => {
   if (typeof document === 'undefined') return;
@@ -20,26 +21,42 @@ const clearAllCookies = () => {
 export const authService = {
   // Register
   register: async (userData) => {
-    const response = await api.post('/users/signup', userData);
-    if (response.token) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      const response = await api.post('/users/signup', userData);
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        await logger.success(`User registered successfully: ${userData.email}`, { action: 'user_registration', role: userData.role });
+      }
+      return response;
+    } catch (error) {
+      await logger.error('User registration failed', error, { action: 'user_registration_failed', email: userData.email });
+      throw error;
     }
-    return response;
   },
 
   // Login
   login: async (email, password) => {
-    const response = await api.post('/users/login', { email, password });
-    if (response.token) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      const response = await api.post('/users/login', { email, password });
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        await logger.success(`User logged in: ${email}`, { action: 'user_login', role: response.data.user?.role });
+      }
+      return response;
+    } catch (error) {
+      await logger.error('User login failed', error, { action: 'user_login_failed', email });
+      throw error;
     }
-    return response;
   },
 
   // Logout - clear all storage and sessions
   logout: async () => {
+    const user = this.getCurrentUser();
+    const userEmail = user?.email || 'unknown';
+    const userRole = user?.role || 'unknown';
+
     // Clear all localStorage items
     localStorage.clear();
 
@@ -54,9 +71,10 @@ export const authService = {
     // Call backend logout endpoint to clear server-side session
     try {
       await api.get('/users/logout');
+      await logger.info(`User logged out: ${userEmail}`, { action: 'user_logout', role: userRole });
     } catch (error) {
-      // Ignore errors - we still want to clear client-side state
-      console.warn('Backend logout call failed, but continuing with client-side cleanup');
+      // Still log logout even if backend call fails
+      await logger.info(`User logged out (client-side): ${userEmail}`, { action: 'user_logout', role: userRole });
     }
   },
 
@@ -86,11 +104,18 @@ export const authService = {
 
   // Change password
   changePassword: async (currentPassword, newPassword) => {
-    return api.patch('/users/updatePassword', {
-      passwordCurrent: currentPassword,
-      password: newPassword,
-      passwordConfirm: newPassword,
-    });
+    try {
+      const response = await api.patch('/users/updatePassword', {
+        passwordCurrent: currentPassword,
+        password: newPassword,
+        passwordConfirm: newPassword,
+      });
+      await logger.success('Password changed successfully', { action: 'password_change' });
+      return response;
+    } catch (error) {
+      await logger.error('Password change failed', error, { action: 'password_change_failed' });
+      throw error;
+    }
   },
 
   // Forgot password
