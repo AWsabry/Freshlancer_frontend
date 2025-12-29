@@ -177,9 +177,14 @@ const ApplicationDetails = () => {
   const withdrawMutation = useMutation({
     mutationFn: () => applicationService.withdrawApplication(id),
     onSuccess: () => {
+      // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries(['application', id]);
       queryClient.invalidateQueries(['myApplications']);
       queryClient.invalidateQueries(['jobs']);
+      queryClient.invalidateQueries(['user']); // Refresh user data to update appliedJobs
+      queryClient.invalidateQueries(['currentUser']); // Refresh current user data to update appliedJobs
+      queryClient.invalidateQueries(['applicationStatus']); // Refresh application status check
+      queryClient.invalidateQueries(['appliedJobs']); // Refresh applied jobs list
       alert(t.applicationWithdrawnSuccess);
       navigate('/student/applications');
     },

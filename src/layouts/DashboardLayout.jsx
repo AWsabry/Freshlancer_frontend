@@ -26,8 +26,11 @@ import {
   Folder,
   BarChart3,
   Globe,
+  Heart,
+  Info,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
+import Modal from '../components/common/Modal';
 
 const translations = {
   en: {
@@ -52,9 +55,18 @@ const translations = {
     coupons: 'Coupons',
     startups: 'Startups',
     contactUs: 'Contact Us',
+    grantings: 'Support & Donations',
     logout: 'Logout',
     welcomeBack: 'Welcome back, {name}!',
     points: 'Points',
+    applicationCountInfo: 'How Applications Are Counted',
+    applicationCountInfoDesc: 'Understanding your application limit',
+    applicationCountRule1: 'All applications you submit count toward your monthly limit.',
+    applicationCountRule2: 'Withdrawn applications still count toward your limit.',
+    applicationCountRule3: 'Your limit resets on the first day of each month.',
+    applicationCountRule4: 'Free plan: 10 applications per month',
+    applicationCountRule5: 'Premium plan: 100 applications per month',
+    applicationCountNote: 'Note: Even if you withdraw an application, it still counts because you used one of your monthly application slots.',
     role: {
       student: 'student',
       client: 'client',
@@ -83,9 +95,18 @@ const translations = {
     coupons: 'Coupon',
     startups: 'Startup',
     contactUs: 'Contattaci',
+    grantings: 'Supporto e Donazioni',
     logout: 'Esci',
     welcomeBack: 'Bentornato, {name}!',
     points: 'Punti',
+    applicationCountInfo: 'Come Vengono Contate le Candidature',
+    applicationCountInfoDesc: 'Comprendere il tuo limite di candidature',
+    applicationCountRule1: 'Tutte le candidature che invii contano verso il tuo limite mensile.',
+    applicationCountRule2: 'Le candidature ritirate contano ancora verso il tuo limite.',
+    applicationCountRule3: 'Il tuo limite si resetta il primo giorno di ogni mese.',
+    applicationCountRule4: 'Piano gratuito: 10 candidature al mese',
+    applicationCountRule5: 'Piano premium: 100 candidature al mese',
+    applicationCountNote: 'Nota: Anche se ritiri una candidatura, conta ancora perché hai usato uno dei tuoi slot mensili di candidatura.',
     role: {
       student: 'studente',
       client: 'cliente',
@@ -99,6 +120,7 @@ const DashboardLayout = () => {
   const { user, logout, isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showApplicationInfo, setShowApplicationInfo] = useState(false);
   const [language, setLanguage] = useState(() => {
     // Get language from localStorage or default to 'en'
     return localStorage.getItem('dashboardLanguage') || 'en';
@@ -232,6 +254,7 @@ const DashboardLayout = () => {
         { name: t.coupons, icon: Tag, path: '/admin/coupons' },
         { name: t.startups, icon: Star, path: '/admin/startups' },
         { name: t.contactUs, icon: Mail, path: '/admin/contact-us' },
+        { name: t.grantings, icon: Heart, path: '/admin/grantings' },
         ...baseItems.slice(1),
       ];
     }
@@ -405,6 +428,14 @@ const DashboardLayout = () => {
                     }
                   </p>
                 </div>
+                <button
+                  onClick={() => setShowApplicationInfo(true)}
+                  className="text-green-600 hover:text-green-700 transition-colors ml-1"
+                  aria-label="Application count information"
+                  title={t.applicationCountInfo}
+                >
+                  <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
               </div>
             )}
           </div>
@@ -415,6 +446,59 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Application Count Info Modal */}
+      <Modal
+        isOpen={showApplicationInfo}
+        onClose={() => setShowApplicationInfo(false)}
+        title={t.applicationCountInfo}
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600 text-sm mb-4">{t.applicationCountInfoDesc}</p>
+          
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 font-semibold text-xs">1</span>
+              </div>
+              <p className="text-gray-700 text-sm">{t.applicationCountRule1}</p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 font-semibold text-xs">2</span>
+              </div>
+              <p className="text-gray-700 text-sm">{t.applicationCountRule2}</p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <span className="text-green-600 font-semibold text-xs">3</span>
+              </div>
+              <p className="text-gray-700 text-sm">{t.applicationCountRule3}</p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                <span className="text-blue-600 font-semibold text-xs">•</span>
+              </div>
+              <p className="text-gray-700 text-sm font-medium">{t.applicationCountRule4}</p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                <span className="text-blue-600 font-semibold text-xs">•</span>
+              </div>
+              <p className="text-gray-700 text-sm font-medium">{t.applicationCountRule5}</p>
+            </div>
+          </div>
+          
+          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-800 text-sm font-medium">{t.applicationCountNote}</p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

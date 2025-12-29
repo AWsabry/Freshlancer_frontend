@@ -36,6 +36,8 @@ import StudentProfile from './pages/student/Profile';
 import StudentReviews from './pages/student/Reviews';
 import StudentTransactions from './pages/student/Transactions';
 import ContactUs from './pages/ContactUs';
+import WhySupport from './pages/WhySupport';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 // Client pages
 import ClientDashboard from './pages/client/Dashboard';
@@ -72,6 +74,7 @@ import AdminTransactions from './pages/admin/Transactions';
 import AdminClientTransactions from './pages/admin/ClientTransactions';
 import AdminReviews from './pages/admin/Reviews';
 import AdminNotifications from './pages/admin/Notifications';
+import AdminGrantings from './pages/admin/Grantings';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -116,6 +119,9 @@ function App() {
       <Route path="/payment/success" element={<PaymentSuccess />} />
       <Route path="/payment/failed" element={<PaymentFailed />} />
 
+      {/* Public legal pages */}
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
       {/* Student routes */}
       <Route
         path="/student"
@@ -139,6 +145,8 @@ function App() {
         <Route path="reviews" element={<StudentReviews />} />
         <Route path="transactions" element={<StudentTransactions />} />
         <Route path="contact-us" element={<ContactUs />} />
+        <Route path="why-support" element={<WhySupport />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
       </Route>
 
       {/* Client routes */}
@@ -168,6 +176,8 @@ function App() {
         <Route path="reviews" element={<ClientReviews />} />
         <Route path="transactions" element={<ClientTransactions />} />
         <Route path="contact-us" element={<ContactUs />} />
+        <Route path="why-support" element={<WhySupport />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
       </Route>
 
       {/* Admin routes */}
@@ -191,6 +201,7 @@ function App() {
         <Route path="coupons" element={<AdminCoupons />} />
         <Route path="categories" element={<AdminCategories />} />
         <Route path="contact-us" element={<AdminContactUs />} />
+        <Route path="grantings" element={<AdminGrantings />} />
         <Route path="transactions" element={<AdminTransactions />} />
         <Route path="client-transactions" element={<AdminClientTransactions />} />
         <Route path="reviews" element={<AdminReviews />} />

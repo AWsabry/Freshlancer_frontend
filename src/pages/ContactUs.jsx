@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { contactService } from '../services/contactService';
+import { grantingService } from '../services/grantingService';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
+import Select from '../components/common/Select';
 import Alert from '../components/common/Alert';
 import {
   Mail,
@@ -11,6 +14,10 @@ import {
   Send,
   MessageCircle,
   ExternalLink,
+  Heart,
+  DollarSign,
+  Info,
+  ArrowRight,
 } from 'lucide-react';
 
 const translations = {
@@ -33,6 +40,22 @@ const translations = {
     openWhatsApp: 'Open WhatsApp',
     openTelegram: 'Open Telegram',
     sendEmail: 'Send Email',
+    supportUs: 'Support Us',
+    supportStudents: 'Support Us in Supporting Students',
+    supportDescription: 'Your contribution helps us support students and grow the Freshlancer platform. Every donation makes a difference!',
+    amount: 'Amount',
+    currency: 'Currency',
+    optionalMessage: 'Optional Message',
+    supportNow: 'Support Now',
+    processing: 'Processing...',
+    supportSuccess: 'Thank you for your support! Redirecting to payment in 3 seconds...',
+    supportError: 'Failed to create support request. Please try again.',
+    invalidPaymentUrl: 'Invalid payment URL. Please contact support.',
+    minAmount: 'Minimum amount is 1',
+    minAmountEGP: 'Minimum amount for EGP is 100 EGP',
+    enterAmount: 'Please enter an amount',
+    learnMore: 'Learn more about why we need your support',
+    whySupport: 'Why We Need Your Support',
   },
   it: {
     heading: 'Contattaci',
@@ -53,10 +76,27 @@ const translations = {
     openWhatsApp: 'Apri WhatsApp',
     openTelegram: 'Apri Telegram',
     sendEmail: 'Invia Email',
+    supportUs: 'Supportaci',
+    supportStudents: 'Supportaci nel Supportare gli Studenti',
+    supportDescription: 'Il tuo contributo ci aiuta a supportare gli studenti e far crescere la piattaforma Freshlancer. Ogni donazione fa la differenza!',
+    amount: 'Importo',
+    currency: 'Valuta',
+    optionalMessage: 'Messaggio Opzionale',
+    supportNow: 'Supporta Ora',
+    processing: 'Elaborazione...',
+    supportSuccess: 'Grazie per il tuo supporto! Reindirizzamento al pagamento tra 3 secondi...',
+    supportError: 'Creazione della richiesta di supporto fallita. Riprova.',
+    invalidPaymentUrl: 'URL di pagamento non valido. Contatta il supporto.',
+    minAmount: 'L\'importo minimo è 1',
+    minAmountEGP: 'L\'importo minimo per EGP è 100 EGP',
+    enterAmount: 'Inserisci un importo',
+    learnMore: 'Scopri di più sul perché abbiamo bisogno del tuo supporto',
+    whySupport: 'Perché Abbiamo Bisogno del Tuo Supporto',
   },
 };
 
 const ContactUs = () => {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
@@ -69,9 +109,18 @@ const ContactUs = () => {
     message: '',
   });
 
+  const [supportData, setSupportData] = useState({
+    amount: '',
+    currency: 'EGP',
+    message: '',
+  });
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [supportError, setSupportError] = useState('');
+  const [supportSuccess, setSupportSuccess] = useState('');
+  const [isProcessingSupport, setIsProcessingSupport] = useState(false);
 
   // Listen for language changes
   useEffect(() => {
@@ -113,6 +162,98 @@ const ContactUs = () => {
       setError(err.response?.data?.message || t.error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Validate Paymob payment URL
+  const isValidPaymobUrl = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    
+    try {
+      const urlObj = new URL(url);
+      // Check if it's a Paymob domain
+      const isValidDomain = urlObj.hostname === 'accept.paymob.com' || 
+                           urlObj.hostname.includes('paymob.com');
+      
+      // Check if it has the required parameters for unified checkout
+      const hasPublicKey = urlObj.searchParams.has('publicKey');
+      const hasClientSecret = urlObj.searchParams.has('clientSecret');
+      
+      // Valid Paymob URL should have either:
+      // 1. Both publicKey and clientSecret (unified checkout)
+      // 2. Or be a valid Paymob payment page URL
+      return isValidDomain && (hasPublicKey || hasClientSecret || urlObj.pathname.includes('/payment') || urlObj.pathname.includes('/unifiedcheckout'));
+    } catch (error) {
+      // Invalid URL format
+      return false;
+    }
+  };
+
+  const handleSupportSubmit = async (e) => {
+    e.preventDefault();
+    setSupportError('');
+    setSupportSuccess('');
+    setIsProcessingSupport(true);
+
+    try {
+      const amount = parseFloat(supportData.amount);
+      
+      if (!supportData.amount || isNaN(amount)) {
+        setSupportError(t.enterAmount);
+        setIsProcessingSupport(false);
+        return;
+      }
+
+      // Validate minimum amount based on currency
+      if (supportData.currency === 'EGP' && amount < 100) {
+        setSupportError(t.minAmountEGP);
+        setIsProcessingSupport(false);
+        return;
+      } else if (supportData.currency === 'USD' && amount < 1) {
+        setSupportError(t.minAmount);
+        setIsProcessingSupport(false);
+        return;
+      }
+
+      // Create granting
+      const response = await grantingService.createGranting({
+        amount,
+        currency: supportData.currency,
+        message: supportData.message || '',
+      });
+
+      // Check for paymentUrl or construct from clientSecret
+      // API interceptor returns response.data, so structure is: { status, data: { granting: {...} } }
+      const granting = response?.data?.granting || response?.granting;
+      let paymentUrl = granting?.paymentUrl;
+      const clientSecret = granting?.clientSecret;
+
+      // If no paymentUrl but we have clientSecret, construct it
+      if (!paymentUrl && clientSecret) {
+        const publicKey = import.meta.env.VITE_PAYMOB_PUBLIC_KEY || 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
+        paymentUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
+      }
+
+      // Validate the payment URL before proceeding
+      if (!paymentUrl || !isValidPaymobUrl(paymentUrl)) {
+        console.error('Invalid or missing Paymob payment URL:', paymentUrl);
+        setSupportError(t.invalidPaymentUrl || 'Invalid payment URL. Please contact support.');
+        setIsProcessingSupport(false);
+        return;
+      }
+
+      // Show success message
+      setSupportSuccess(t.supportSuccess);
+      
+      // Wait 3 seconds, then redirect to payment
+      setTimeout(() => {
+        window.location.href = paymentUrl;
+      }, 3000);
+
+    } catch (err) {
+      console.error('Error creating granting:', err.response?.data || err);
+      setSupportError(err.response?.data?.message || t.supportError);
+      setIsProcessingSupport(false);
     }
   };
 
@@ -282,6 +423,119 @@ const ContactUs = () => {
             >
               <Send className="w-4 h-4 mr-2" />
               {isSubmitting ? t.sending : t.submit}
+            </Button>
+          </form>
+        </Card>
+      </div>
+
+      {/* Support Us Section */}
+      <div className="mt-8 sm:mt-12">
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Heart className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                {t.supportUs}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {t.supportStudents}
+              </p>
+            </div>
+          </div>
+          
+          <p className="text-gray-700 mb-4">
+            {t.supportDescription}
+          </p>
+          
+          <Link
+            to={user?.role === 'student' ? '/student/why-support' : '/client/why-support'}
+            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium text-sm sm:text-base mb-6 transition-colors"
+          >
+            <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+            {t.learnMore}
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          </Link>
+
+          {supportError && (
+            <Alert
+              type="error"
+              message={supportError}
+              className="mb-4"
+              onClose={() => setSupportError('')}
+            />
+          )}
+          {supportSuccess && (
+            <Alert
+              type="success"
+              message={supportSuccess}
+              className="mb-4"
+              onClose={() => setSupportSuccess('')}
+            />
+          )}
+
+          <form onSubmit={handleSupportSubmit} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.amount} <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="number"
+                  id="amount"
+                  name="amount"
+                  required
+                  min={supportData.currency === 'EGP' ? '100' : '1'}
+                  step="0.01"
+                  value={supportData.amount}
+                  onChange={(e) => setSupportData({ ...supportData, amount: e.target.value })}
+                  placeholder={supportData.currency === 'EGP' ? '100.00' : '1.00'}
+                />
+                {supportData.currency === 'EGP' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Minimum: 100 EGP
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.currency} <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  id="currency"
+                  name="currency"
+                  value={supportData.currency}
+                  onChange={(e) => setSupportData({ ...supportData, currency: e.target.value })}
+                  options={[
+                    { value: 'EGP', label: 'EGP (Egyptian Pound)' },
+                    { value: 'USD', label: 'USD (US Dollar)' },
+                  ]}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="supportMessage" className="block text-sm font-medium text-gray-700 mb-2">
+                {t.optionalMessage}
+              </label>
+              <textarea
+                id="supportMessage"
+                name="supportMessage"
+                rows={4}
+                value={supportData.message}
+                onChange={(e) => setSupportData({ ...supportData, message: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#065084] focus:border-transparent resize-none"
+                placeholder={t.optionalMessage}
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isProcessingSupport}
+              className="w-full"
+            >
+              <Heart className="w-4 h-4 mr-2" />
+              {isProcessingSupport ? t.processing : t.supportNow}
             </Button>
           </form>
         </Card>

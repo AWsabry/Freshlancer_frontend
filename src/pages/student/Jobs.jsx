@@ -177,9 +177,12 @@ const Jobs = () => {
   });
 
   // Fetch current user with appliedJobs from profile
+  // This is the source of truth for applied jobs
   const { data: userData } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => authService.getMe(),
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0, // Always consider data stale to ensure fresh data
   });
 
   // Get applied jobs from user profile
@@ -279,14 +282,21 @@ const Jobs = () => {
   }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium, currency]);
 
   // Build applied jobs array with application metadata
+  // ONLY show jobs that are in studentProfile.appliedJobs (source of truth)
   const appliedJobs = useMemo(() => {
+    // Create a set of applied job IDs from user profile (source of truth)
+    const appliedJobIdsSet = new Set(
+      userAppliedJobs.map(job => job.jobId?.toString()).filter(Boolean)
+    );
+
     // Create a map of applied jobs metadata from user profile
     const appliedJobMetadata = new Map(
       userAppliedJobs.map(job => [job.jobId?.toString(), job])
     );
 
-    // Map full job data with application status
+    // Only map jobs that are in userAppliedJobs (source of truth)
     let jobs = appliedJobsFromAPI
+      .filter((job) => appliedJobIdsSet.has(job._id)) // Only include jobs in appliedJobs
       .map((job) => {
         const metadata = appliedJobMetadata.get(job._id);
         if (metadata) {
