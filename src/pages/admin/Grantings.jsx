@@ -438,6 +438,11 @@ const Grantings = () => {
                       <div className="text-sm font-semibold text-green-600">
                         {formatCurrency(granting.amount, granting.currency)}
                       </div>
+                      {granting.currency === 'EGP' && granting.transaction && (
+                        <p className="text-xs text-gray-400 mt-0.5 italic">
+                          *3% fee included
+                        </p>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="info" className="text-xs">{granting.currency}</Badge>
@@ -504,6 +509,11 @@ const Grantings = () => {
                         <p className="text-lg font-bold text-green-600">
                           {formatCurrency(granting.amount, granting.currency)}
                         </p>
+                        {granting.currency === 'EGP' && granting.transaction && (
+                          <p className="text-xs text-gray-400 mt-1 italic">
+                            *Processing fee (3%) included in transaction
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Currency</p>
@@ -627,9 +637,16 @@ const Grantings = () => {
               <div className="bg-gray-50 p-3 rounded-lg space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm"><strong>Amount:</strong></span>
-                  <span className="text-lg font-bold text-green-600">
-                    {formatCurrency(selectedGranting.amount, selectedGranting.currency)}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-green-600">
+                      {formatCurrency(selectedGranting.amount, selectedGranting.currency)}
+                    </span>
+                    {selectedGranting.currency === 'EGP' && selectedGranting.transaction && (
+                      <p className="text-xs text-gray-400 mt-1 italic">
+                        *Processing fee (3%) included in transaction
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm"><strong>Currency:</strong></span>

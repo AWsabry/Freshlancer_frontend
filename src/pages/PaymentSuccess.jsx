@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { CheckCircle, ArrowRight, Loader2, TrendingUp, Gift } from 'lucide-react';
+import { CheckCircle, ArrowRight, Loader2, TrendingUp, Gift, Heart } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { useAuthStore } from '../stores/authStore';
@@ -38,6 +38,19 @@ const translations = {
     goToPackages: 'Go to Packages',
     redirectingAutomatically: 'Redirecting automatically in 5 seconds...',
     failedToCompletePayment: 'Failed to complete payment',
+    // Donation/Support messages
+    donationSuccessful: 'Thank You for Your Support!',
+    donationConfirmed: 'Your donation has been confirmed successfully.',
+    thankYouMessage: 'Thank you for supporting Freshlancer! Your contribution helps us support students and make a difference.',
+    donationImpact: 'Your Impact:',
+    supportingStudents: 'Supporting talented students worldwide',
+    helpingPlatform: 'Helping us maintain and improve the platform',
+    makingDifference: 'Making a real difference in students\' lives',
+    youWillReceive: 'You\'ll receive:',
+    confirmationEmail: 'A confirmation email with your donation receipt',
+    thankYouNotification: 'A thank you notification in your account',
+    goToDashboard: 'Go to Dashboard',
+    goToHome: 'Go to Home',
   },
   it: {
     processingPayment: 'Elaborazione Pagamento...',
@@ -67,6 +80,19 @@ const translations = {
     goToPackages: 'Vai ai Pacchetti',
     redirectingAutomatically: 'Reindirizzamento automatico tra 5 secondi...',
     failedToCompletePayment: 'Impossibile completare il pagamento',
+    // Donation/Support messages
+    donationSuccessful: 'Grazie per il Tuo Supporto!',
+    donationConfirmed: 'La tua donazione è stata confermata con successo.',
+    thankYouMessage: 'Grazie per supportare Freshlancer! Il tuo contributo ci aiuta a supportare gli studenti e fare la differenza.',
+    donationImpact: 'Il Tuo Impatto:',
+    supportingStudents: 'Supportare studenti talentuosi in tutto il mondo',
+    helpingPlatform: 'Aiutarci a mantenere e migliorare la piattaforma',
+    makingDifference: 'Fare una vera differenza nella vita degli studenti',
+    youWillReceive: 'Riceverai:',
+    confirmationEmail: 'Un\'email di conferma con la ricevuta della tua donazione',
+    thankYouNotification: 'Una notifica di ringraziamento nel tuo account',
+    goToDashboard: 'Vai alla Dashboard',
+    goToHome: 'Vai alla Home',
   },
 };
 
@@ -111,6 +137,9 @@ const PaymentSuccess = () => {
   }, []);
 
   const t = translations[language] || translations.en;
+
+  // Get payment type from query parameter
+  const paymentType = searchParams.get('type'); // 'supporter', 'subscription', or 'package'
 
   // Try to get intentionId from multiple sources
   const queryIntentionId = searchParams.get('id');
@@ -228,12 +257,31 @@ const PaymentSuccess = () => {
   };
 
   const handleContinue = () => {
-    if (user?.role === 'student') {
+    // Handle redirect based on payment type
+    if (paymentType === 'supporter') {
+      // For donations, redirect to dashboard or home
+      if (user?.role === 'student') {
+        navigate('/student/dashboard');
+      } else if (user?.role === 'client') {
+        navigate('/client/dashboard');
+      } else {
+        navigate('/');
+      }
+    } else if (paymentType === 'subscription') {
+      // For subscriptions, redirect to subscription page
       navigate('/student/subscription');
-    } else if (user?.role === 'client') {
+    } else if (paymentType === 'package') {
+      // For packages, redirect to packages page
       navigate('/client/packages');
     } else {
-      navigate('/');
+      // Fallback to role-based redirect
+      if (user?.role === 'student') {
+        navigate('/student/subscription');
+      } else if (user?.role === 'client') {
+        navigate('/client/packages');
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -261,13 +309,28 @@ const PaymentSuccess = () => {
           {/* Message */}
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-gray-900">
-              {isProcessing ? t.processingPayment : error ? t.paymentError : t.paymentSuccessful}
+              {isProcessing 
+                ? t.processingPayment 
+                : error 
+                ? t.paymentError 
+                : paymentType === 'supporter'
+                ? t.donationSuccessful
+                : t.paymentSuccessful
+              }
             </h1>
             <p className="text-gray-600">
               {isProcessing ? (
-                t.waitActivateSubscription
+                paymentType === 'supporter' 
+                  ? 'Processing your donation...'
+                  : t.waitActivateSubscription
               ) : error ? (
                 error
+              ) : paymentType === 'supporter' ? (
+                t.donationConfirmed
+              ) : paymentType === 'subscription' ? (
+                t.premiumSubscriptionActivated
+              ) : paymentType === 'package' ? (
+                t.pointsPackageAdded
               ) : (
                 user?.role === 'student'
                   ? t.premiumSubscriptionActivated
@@ -279,7 +342,74 @@ const PaymentSuccess = () => {
           {/* Details - Only show when not processing and no error */}
           {!isProcessing && !error && (
             <>
-              {user?.role === 'client' ? (
+              {paymentType === 'supporter' ? (
+                // Donation/Support Success Card
+                <div className="space-y-4">
+                  {/* Donation Success Alert */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-rose-50 to-red-50 border-2 border-pink-300 rounded-xl p-6 shadow-lg">
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-pink-200 rounded-full -mr-16 -mt-16 opacity-20"></div>
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-rose-200 rounded-full -ml-12 -mb-12 opacity-20"></div>
+
+                    <div className="relative">
+                      {/* Icon and Title */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <Heart className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {t.donationSuccessful}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {t.donationConfirmed}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Thank You Message */}
+                      <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-pink-200/50 shadow-sm">
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {t.thankYouMessage}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Impact Card */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-left">
+                        <p className="font-medium text-gray-900 mb-1">
+                          {t.donationImpact}
+                        </p>
+                        <ul className="space-y-1 text-gray-600">
+                          <li>• {t.supportingStudents}</li>
+                          <li>• {t.helpingPlatform}</li>
+                          <li>• {t.makingDifference}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* What You'll Receive Card */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Gift className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-left">
+                        <p className="font-medium text-gray-900 mb-1">
+                          {t.youWillReceive}
+                        </p>
+                        <ul className="space-y-1 text-gray-600">
+                          <li>• {t.confirmationEmail}</li>
+                          <li>• {t.thankYouNotification}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : user?.role === 'client' ? (
                 // Beautiful Points Alert for Clients
                 <div className="space-y-4">
                   {/* Points Increase Alert */}
@@ -387,7 +517,14 @@ const PaymentSuccess = () => {
                 className="w-full"
                 onClick={handleContinue}
               >
-                {user?.role === 'student' ? t.goToSubscription : t.goToPackages}
+                {paymentType === 'supporter' 
+                  ? (user?.role ? t.goToDashboard : t.goToHome)
+                  : paymentType === 'subscription'
+                  ? t.goToSubscription
+                  : paymentType === 'package'
+                  ? t.goToPackages
+                  : (user?.role === 'student' ? t.goToSubscription : t.goToPackages)
+                }
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
 

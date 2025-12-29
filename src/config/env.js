@@ -12,7 +12,6 @@ if (!apiBaseUrl && import.meta.env.MODE === 'production') {
 export const API_BASE_URL = apiBaseUrl ? apiBaseUrl.replace(/\/$/, '') : '';
 
 // Open Graph Image URL for Facebook and WhatsApp link previews
-// Set VITE_OG_IMAGE_URL in your environment or .env file
-// Falls back to local path if not set
-export const OG_IMAGE_URL = import.meta.env?.VITE_OG_IMAGE_URL || '/og-image.png';
+// Hardcoded to production URL
+export const OG_IMAGE_URL = 'https://freshlancer.online/og-image.png';
 
