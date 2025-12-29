@@ -83,14 +83,13 @@ const Login = () => {
 
   const t = translations[language] || translations.en;
 
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    // Keep form values after submission failure
+    shouldUnregister: false,
+  });
 
-  // Clear error when user starts typing in input fields
-  const handleInputChange = () => {
-    if (error) {
-      setError('');
-    }
-  };
+  // Don't clear error when user starts typing - let it persist
+  // Removed handleInputChange to keep error visible
 
   const onSubmit = async (data) => {
     try {
@@ -99,6 +98,9 @@ const Login = () => {
       
       const response = await login(data.email, data.password);
 
+      // Clear error on successful login
+      setError('');
+      
       // Small delay to ensure error state is cleared before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -111,6 +113,9 @@ const Login = () => {
       } else {
         navigate('/student/dashboard');
       }
+      
+      // Only reset form on successful login
+      reset();
     } catch (err) {
       // Extract user-friendly error message
       let errorMessage = t.unableToSignIn;
@@ -143,12 +148,29 @@ const Login = () => {
       }
 
       // Set error and ensure it stays visible
+      // DO NOT reset form - keep email and password fields filled
       setError(errorMessage);
       setLoading(false);
       
-      // Don't clear error automatically - let user dismiss it manually
+      // Don't reset form - keep the email and password values
+      // Auto-dismiss timer is handled in useEffect above
     }
   };
+
+  // Handle auto-dismiss of error messages
+  useEffect(() => {
+    // If error exists, set up auto-dismiss after 10 seconds
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 10000);
+      
+      // Cleanup timer on unmount or if error changes
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -170,7 +192,11 @@ const Login = () => {
           />
         )}
 
-        <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form 
+          className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" 
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div className="space-y-3 sm:space-y-4">
             <Input
               label={t.emailAddress}
@@ -183,7 +209,7 @@ const Login = () => {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: t.invalidEmail,
                 },
-                onChange: handleInputChange,
+                // Removed onChange handler - don't clear error on input change
               })}
             />
 
@@ -198,7 +224,7 @@ const Login = () => {
                   value: 8,
                   message: t.passwordMinLength,
                 },
-                onChange: handleInputChange,
+                // Removed onChange handler - don't clear error on input change
               })}
             />
           </div>

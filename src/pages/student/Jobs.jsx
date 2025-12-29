@@ -11,6 +11,7 @@ import Select from '../../components/common/Select';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Card from '../../components/common/Card';
 import {
   Search,
   MapPin,
@@ -689,25 +690,107 @@ const Jobs = () => {
       </div>
 
       {/* Job Feed */}
-      <div className="space-y-3 sm:space-y-4">
-        {jobs.length === 0 ? (
-          <div className="text-center py-8 sm:py-12 bg-white rounded-lg shadow-md px-4">
+      {jobs.length === 0 ? (
+        <Card>
+          <div className="text-center py-8 sm:py-12 px-4">
             <Briefcase className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
             <p className="text-gray-600 text-base sm:text-lg">{t.noJobsFound}</p>
             <p className="text-gray-500 text-xs sm:text-sm mt-2">
               {t.tryAdjusting}
             </p>
           </div>
-        ) : (
-          <div className={viewMode === 'compact' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'space-y-3 sm:space-y-4'}>
-            {jobs.map((job) => (
-              <div
-                key={job._id}
-                className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer ${
-                  viewMode === 'compact' ? 'p-3 sm:p-4' : ''
-                }`}
-                onClick={() => navigate(`/student/jobs/${job._id}`)}
-              >
+        </Card>
+      ) : viewMode === 'compact' ? (
+        /* Compact Table View */
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Job Title</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Category</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Budget</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Location</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Posted</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Applicants</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job, idx) => (
+                  <tr
+                    key={job._id}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                    onClick={() => navigate(`/student/jobs/${job._id}`)}
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                          {job.title}
+                        </div>
+                        {job.urgent && (
+                          <Badge variant="error" className="text-xs flex-shrink-0">{t.urgent}</Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge variant="info" className="text-xs">{job.category || 'N/A'}</Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      {isPremium && job.budget && !job.budget.message ? (
+                        <div className="text-xs font-semibold text-green-600">
+                          {job.budget.currency} {job.budget.min} - {job.budget.max}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">
+                          {job.budget?.message || t.premiumMembersOnly}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs text-gray-500 truncate max-w-[120px]">
+                        {job.location || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-gray-500">
+                        {new Date(job.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-gray-600">
+                        {job.applicationsCount || 0} {job.applicationsCount !== 1 ? t.applicantsPlural : t.applicants}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/student/jobs/${job._id}`);
+                        }}
+                        className="flex items-center gap-1.5 text-xs px-2 sm:px-3 py-1 sm:py-1.5"
+                      >
+                        {t.viewDetails}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-3 sm:space-y-4">
+          {jobs.map((job) => (
+            <div
+              key={job._id}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+              onClick={() => navigate(`/student/jobs/${job._id}`)}
+            >
                 <div className={viewMode === 'compact' ? 'p-0' : 'p-4 sm:p-6'}>
                 {/* Job Header */}
                 <div className={`flex flex-col ${viewMode === 'compact' ? 'gap-2' : 'sm:flex-row items-start sm:items-start justify-between mb-3 sm:mb-4 gap-3 sm:gap-4'}`}>
@@ -854,27 +937,26 @@ const Jobs = () => {
         )}
 
         {/* Load More Button */}
-        {hasNextPage && (
-          <div className="text-center py-4 sm:py-6">
-            <Button
-              variant="outline"
-              onClick={() => fetchNextPage()}
-              loading={isFetchingNextPage}
-              disabled={isFetchingNextPage}
-              className="flex items-center gap-2 mx-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
-            >
-              {isFetchingNextPage ? t.loadingMore : t.loadMore}
-              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-          </div>
-        )}
+      {hasNextPage && (
+        <div className="text-center py-4 sm:py-6 mt-4">
+          <Button
+            variant="outline"
+            onClick={() => fetchNextPage()}
+            loading={isFetchingNextPage}
+            disabled={isFetchingNextPage}
+            className="flex items-center gap-2 mx-auto text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
+          >
+            {isFetchingNextPage ? t.loadingMore : t.loadMore}
+            <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+          </Button>
+        </div>
+      )}
 
-        {!hasNextPage && jobs.length > 0 && (
-          <div className="text-center py-4 sm:py-6 text-xs sm:text-sm text-gray-500">
-            {t.endOfList}
-          </div>
-        )}
-      </div>
+      {!hasNextPage && jobs.length > 0 && (
+        <div className="text-center py-4 sm:py-6 text-xs sm:text-sm text-gray-500">
+          {t.endOfList}
+        </div>
+      )}
     </div>
   );
 };

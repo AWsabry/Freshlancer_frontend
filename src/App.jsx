@@ -35,6 +35,7 @@ import StudentNotifications from './pages/student/Notifications';
 import StudentProfile from './pages/student/Profile';
 import StudentReviews from './pages/student/Reviews';
 import StudentTransactions from './pages/student/Transactions';
+import ContactUs from './pages/ContactUs';
 
 // Client pages
 import ClientDashboard from './pages/client/Dashboard';
@@ -137,6 +138,7 @@ function App() {
         <Route path="profile" element={<StudentProfile />} />
         <Route path="reviews" element={<StudentReviews />} />
         <Route path="transactions" element={<StudentTransactions />} />
+        <Route path="contact-us" element={<ContactUs />} />
       </Route>
 
       {/* Client routes */}
@@ -165,6 +167,7 @@ function App() {
         <Route path="unlocked-students" element={<UnlockedStudents />} />
         <Route path="reviews" element={<ClientReviews />} />
         <Route path="transactions" element={<ClientTransactions />} />
+        <Route path="contact-us" element={<ContactUs />} />
       </Route>
 
       {/* Admin routes */}

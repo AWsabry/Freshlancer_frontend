@@ -216,6 +216,8 @@ const translations = {
       methods: {
         email: 'Email',
         phone: 'Phone',
+        whatsapp: 'WhatsApp',
+        telegram: 'Telegram',
         address: 'Address',
         addressLines: ['123 Business Street', 'City, State 12345', 'Country']
       },
@@ -446,6 +448,8 @@ const translations = {
       methods: {
         email: 'Email',
         phone: 'Telefono',
+        whatsapp: 'WhatsApp',
+        telegram: 'Telegram',
         address: 'Indirizzo',
         addressLines: ['123 Business Street', 'Città, Provincia 12345', 'Paese']
       },
@@ -1332,21 +1336,31 @@ const Landing = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.email}</h4>
-                    <a href="mailto:support@freshlancer.com" className="text-gray-600 hover:text-[#065084] transition-colors">
-                      support@freshlancer.com
+                    <a href="mailto:support@freshlancer.online" className="text-gray-600 hover:text-[#065084] transition-colors flex items-center gap-2">
+                      support@freshlancer.online
                     </a>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                    <Phone className="w-6 h-6" />
+                  <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                    <MessageCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.phone} & Telegram</h4>
-                    <a href="https://wa.me/1234567890" className="text-gray-600 hover:text-[#065084] transition-colors">
-                      + (20) 155 335 9431
+                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.whatsapp}</h4>
+                    <a href="https://wa.me/201553359431" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#065084] transition-colors flex items-center gap-2">
+                      +20 155 335 9431
                     </a>
-                 
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                    <Send className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-1">{t.contact.methods.telegram}</h4>
+                    <a href="https://t.me/freshlancer" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#065084] transition-colors flex items-center gap-2">
+                      @freshlancer
+                    </a>
                   </div>
                 </div>
               </div>

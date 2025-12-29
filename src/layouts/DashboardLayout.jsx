@@ -190,6 +190,7 @@ const DashboardLayout = () => {
         { name: t.subscription, icon: CreditCard, path: '/student/subscription' },
         { name: t.transactions, icon: DollarSign, path: '/student/transactions' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
+        { name: t.contactUs, icon: Mail, path: '/student/contact-us' },
         // { name: 'Reviews', icon: Star, path: '/student/reviews' },
         ...baseItems.slice(1),
       ];
@@ -203,6 +204,7 @@ const DashboardLayout = () => {
         { name: t.packages, icon: CreditCard, path: '/client/packages' },
         { name: t.transactions, icon: DollarSign, path: '/client/transactions' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
+        { name: t.contactUs, icon: Mail, path: '/client/contact-us' },
         ...baseItems.slice(1),
       ];
       

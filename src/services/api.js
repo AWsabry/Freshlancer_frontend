@@ -26,7 +26,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only redirect on 401 if it's NOT a login/signup endpoint
+    // Login/signup 401 errors should be handled by the component, not the interceptor
+    const isAuthEndpoint = error.response?.config?.url?.includes('/users/login') || 
+                          error.response?.config?.url?.includes('/users/signup') ||
+                          error.response?.config?.url?.includes('/users/forgotPassword') ||
+                          error.response?.config?.url?.includes('/users/resetPassword');
+    
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       // Clear all storage on unauthorized access
       localStorage.clear();
       if (typeof sessionStorage !== 'undefined') {

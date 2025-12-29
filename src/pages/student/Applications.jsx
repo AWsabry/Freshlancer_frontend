@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from '../../stores/authStore';
 import { applicationService } from '../../services/applicationService';
 import { authService } from '../../services/authService';
 import { subscriptionService } from '../../services/subscriptionService';
@@ -122,15 +123,19 @@ const Applications = () => {
 
   const t = translations[language] || translations.en;
 
+  // Get user from auth store to check authentication
+  const { user } = useAuthStore();
+
   // Fetch student's applications - optimized polling
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['myApplications'],
     queryFn: () => applicationService.getMyApplications(),
+    enabled: !!user && user.role === 'student', // Only fetch if user is authenticated and is a student
     refetchOnWindowFocus: true, // Refetch when user returns to the tab
     refetchOnMount: true, // Refetch when component mounts
     refetchInterval: (query) => {
-      // Only poll when tab is visible
-      if (document.hidden) return false;
+      // Only poll when tab is visible and user is authenticated
+      if (document.hidden || !user || user.role !== 'student') return false;
       return 180000; // Refetch every 3 minutes (reduced from 30 seconds)
     },
   });
@@ -152,7 +157,21 @@ const Applications = () => {
     queryFn: () => authService.getMe(),
   });
 
+  // API interceptor unwraps response.data, so data is already the unwrapped response
+  // Backend returns: { status: 'success', data: { applications: [...] } }
+  // After interceptor: { status: 'success', data: { applications: [...] } }
   const allApplications = data?.data?.applications || [];
+  
+  // Debug logging (remove in production)
+  useEffect(() => {
+    if (error) {
+      console.error('Applications fetch error:', error);
+    }
+    if (data) {
+      console.log('Applications data received:', data);
+      console.log('Applications array:', allApplications);
+    }
+  }, [data, error, allApplications]);
 
   // Check if user is premium
   const studentProfile = userData?.data?.user?.studentProfile;
@@ -556,11 +575,78 @@ const Applications = () => {
                     ? t.noApplications
                     : t.noStatusApplications.replace('{status}', t[statusFilter] || statusFilter)}
                 </p>
-  
+              </div>
+            </Card>
+          ) : viewMode === 'compact' ? (
+            /* Compact Table View */
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Job Title</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Category</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Your Bid</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Applied</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {applications.map((application, idx) => (
+                      <tr
+                        key={application._id}
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                          idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                        }`}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                            {application.jobPost?.title || t.jobTitle}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-xs text-gray-500">
+                            {application.jobPost?.category || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {application.proposedBudget ? (
+                            <div className="text-xs font-semibold text-green-600">
+                              {application.proposedBudget.currency} {application.proposedBudget.amount}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">N/A</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          {getStatusBadge(application.status || 'pending')}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xs text-gray-500">
+                            {new Date(application.createdAt).toLocaleDateString()}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => navigate(`/student/applications/${application._id}`)}
+                            className="flex items-center gap-1.5 text-xs px-2 sm:px-3 py-1 sm:py-1.5"
+                          >
+                            <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">{t.viewApplication}</span>
+                            <span className="sm:hidden">View</span>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </Card>
           ) : (
-            <div className={viewMode === 'compact' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'space-y-3 sm:space-y-4'}>
+            <div className="space-y-3 sm:space-y-4">
               {applications.map((application) => renderApplicationCard(application))}
             </div>
           )}
