@@ -96,7 +96,7 @@ const translations = {
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [language, setLanguage] = useState(() => {
@@ -120,7 +120,7 @@ const DashboardLayout = () => {
     queryFn: () => notificationService.getUnreadCount(),
     refetchInterval: (query) => {
       // Only poll when tab is visible and user is authenticated
-      if (document.hidden || !isAuthenticated) return false;
+      if (document.hidden || !user) return false;
       return 120000; // Refetch every 2 minutes (reduced from 30 seconds)
     },
     refetchOnWindowFocus: true, // Refetch when user returns to tab
@@ -134,7 +134,7 @@ const DashboardLayout = () => {
     enabled: user?.role === 'client' || user?.role === 'student',
     refetchInterval: (query) => {
       // Only poll when tab is visible and user is authenticated
-      if (document.hidden || !isAuthenticated) return false;
+      if (document.hidden || !user) return false;
       return 300000; // Refetch every 5 minutes (reduced from 60 seconds)
     },
     refetchOnWindowFocus: true, // Refetch when user returns to tab

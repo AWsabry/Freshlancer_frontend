@@ -20,6 +20,8 @@ import {
   Unlock,
   AlertCircle,
   Eye,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 
 const translations = {
@@ -51,6 +53,8 @@ const translations = {
     withdrawn: 'Withdrawn',
     noApplications: 'No applications',
     noStatusApplications: 'No {status} applications',
+    compactView: 'Compact View',
+    detailedView: 'Detailed View',
   },
   it: {
     loading: 'Caricamento delle tue candidature...',
@@ -80,12 +84,17 @@ const translations = {
     withdrawn: 'Ritirato',
     noApplications: 'Nessuna candidatura',
     noStatusApplications: 'Nessuna candidatura {status}',
+    compactView: 'Vista Compatta',
+    detailedView: 'Vista Dettagliata',
   },
 };
 
 const Applications = () => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'accepted', 'rejected', 'withdrawn'
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('applicationsViewMode') || 'detailed'; // 'compact' or 'detailed'
+  });
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -184,6 +193,12 @@ const Applications = () => {
     }
   }, [allApplications]);
 
+  const toggleViewMode = () => {
+    const newMode = viewMode === 'compact' ? 'detailed' : 'compact';
+    setViewMode(newMode);
+    localStorage.setItem('applicationsViewMode', newMode);
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { variant: 'info', label: t.pending, icon: Clock },
@@ -230,15 +245,15 @@ const Applications = () => {
     }
 
     return (
-      <Card key={application._id}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
+      <Card key={application._id} className={viewMode === 'compact' ? 'p-3 sm:p-4' : ''}>
+        <div className={`flex flex-col ${viewMode === 'compact' ? 'gap-2' : 'sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4'}`}>
           <div className="flex-1 min-w-0 w-full">
             {/* Job Title and Status */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-start gap-2 sm:gap-3 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 line-clamp-2">
+            <div className={`flex flex-col ${viewMode === 'compact' ? 'gap-2' : 'sm:flex-row items-start sm:items-start gap-2 sm:gap-3 mb-3'}`}>
+              <h3 className={`${viewMode === 'compact' ? 'text-sm sm:text-base' : 'text-lg sm:text-xl'} font-bold text-gray-900 flex-1 line-clamp-2`}>
                 {application.jobPost?.title || t.jobTitle}
               </h3>
-              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <div className={`flex flex-wrap items-center gap-2 ${viewMode === 'compact' ? '' : 'self-start sm:self-auto'}`}>
                 {getStatusBadge(application.status || 'pending')}
                 {/* Contact Unlocked Badge - Show if contactUnlockedByClient is true (premium users only) */}
                 {application.contactUnlockedByClient === true && (
@@ -256,7 +271,7 @@ const Applications = () => {
             </div>
 
             {/* Withdrawal Notice - Show if withdrawn by client */}
-            {application.status === 'withdrawn' &&
+            {viewMode === 'detailed' && application.status === 'withdrawn' &&
              application.withdrawalReason === 'Job was withdrawn by client' && (
               <div className="mb-3 p-2 sm:p-3 bg-orange-50 border border-orange-200 rounded-lg">
                 <p className="text-xs sm:text-sm text-orange-800 flex items-center gap-1.5 sm:gap-2">
@@ -267,7 +282,7 @@ const Applications = () => {
             )}
 
           {/* Company Info - Only for Premium Users */}
-          {isPremium && application.jobPost?.client && !application.jobPost.client.message && (
+          {viewMode === 'detailed' && isPremium && application.jobPost?.client && !application.jobPost.client.message && (
             <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2">
               <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="truncate">
@@ -280,7 +295,7 @@ const Applications = () => {
           )}
 
           {/* Premium Upgrade Message for Free Users */}
-          {(!isPremium || (application.jobPost?.client && application.jobPost.client.message)) && (
+          {viewMode === 'detailed' && (!isPremium || (application.jobPost?.client && application.jobPost.client.message)) && (
             <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2">
               <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-500 italic">
@@ -290,7 +305,7 @@ const Applications = () => {
           )}
 
           {/* Contact Unlocked Status - Show message for non-premium users */}
-          {application.contactUnlockedByClient === 'premium members only' && (
+          {viewMode === 'detailed' && application.contactUnlockedByClient === 'premium members only' && (
             <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2">
               <Unlock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-500 italic">
@@ -300,7 +315,7 @@ const Applications = () => {
           )}
 
           {/* Application Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <div className={`grid ${viewMode === 'compact' ? 'grid-cols-2 gap-2 mb-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4'}`}>
             {/* Proposed Budget */}
             {application.proposedBudget && (
               <div className="flex items-center gap-2 text-gray-600">
@@ -360,7 +375,7 @@ const Applications = () => {
           </div>
 
           {/* Proposal Type */}
-          {application.proposalType && (
+          {viewMode === 'detailed' && application.proposalType && (
             <div className="mb-2 sm:mb-3">
               <span className="inline-block px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-50 text-primary-700 rounded-full text-xs sm:text-sm font-medium">
                 {application.proposalType.charAt(0).toUpperCase() +
@@ -370,7 +385,7 @@ const Applications = () => {
           )}
 
           {/* Client Feedback */}
-          {application.clientFeedback && (
+          {viewMode === 'detailed' && application.clientFeedback && (
             <div className="p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg mb-2 sm:mb-3">
               <p className="text-xs sm:text-sm font-semibold text-blue-900 mb-1">
                 {t.clientFeedback}
@@ -386,12 +401,12 @@ const Applications = () => {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 pt-3 sm:pt-4 border-t">
+      <div className={`flex gap-2 ${viewMode === 'compact' ? 'pt-2 border-t' : 'pt-3 sm:pt-4 border-t'}`}>
         <Button
           variant="primary"
           size="sm"
           onClick={() => navigate(`/student/applications/${application._id}`)}
-          className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto"
+          className={`flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${viewMode === 'compact' ? 'px-2 sm:px-3 py-1 sm:py-1.5' : 'px-3 sm:px-4 py-1.5 sm:py-2'} w-full sm:w-auto`}
         >
           <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
           {t.viewApplication}
@@ -409,14 +424,35 @@ const Applications = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.myApplications}</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">{t.trackApplications}</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => navigate('/student/jobs')}
-          className="flex items-center gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 w-full sm:w-auto"
-        >
-          <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
-          {t.browseJobs}
-        </Button>
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={toggleViewMode}
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5"
+            title={viewMode === 'compact' ? t.detailedView : t.compactView}
+          >
+            {viewMode === 'compact' ? (
+              <>
+                <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">{t.detailedView}</span>
+              </>
+            ) : (
+              <>
+                <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">{t.compactView}</span>
+              </>
+            )}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/student/jobs')}
+            className="flex items-center gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 w-full sm:w-auto"
+          >
+            <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+            {t.browseJobs}
+          </Button>
+        </div>
       </div>
 
       {/* No Applications */}
@@ -524,7 +560,7 @@ const Applications = () => {
               </div>
             </Card>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
+            <div className={viewMode === 'compact' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'space-y-3 sm:space-y-4'}>
               {applications.map((application) => renderApplicationCard(application))}
             </div>
           )}

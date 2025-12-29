@@ -24,6 +24,8 @@ import {
   Lock,
   Sparkles,
   Rocket,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 
 const translations = {
@@ -73,6 +75,8 @@ const translations = {
     rejected: 'rejected',
     shortlisted: 'shortlisted',
     pending: 'pending',
+    compactView: 'Compact View',
+    detailedView: 'Detailed View',
   },
   it: {
     loading: 'Caricamento lavori...',
@@ -120,6 +124,8 @@ const translations = {
     rejected: 'rifiutato',
     shortlisted: 'in lista',
     pending: 'in attesa',
+    compactView: 'Vista Compatta',
+    detailedView: 'Vista Dettagliata',
   },
 };
 
@@ -133,6 +139,9 @@ const Jobs = () => {
   const [activeTab, setActiveTab] = useState('available'); // 'available' or 'applied'
   const [startupsOnly, setStartupsOnly] = useState(false); // Filter for startup jobs only
   const [currency, setCurrency] = useState(''); // Filter by currency (premium only)
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('jobsViewMode') || 'detailed'; // 'compact' or 'detailed'
+  });
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -317,6 +326,12 @@ const Jobs = () => {
     setSearchQuery('');
   };
 
+  const toggleViewMode = () => {
+    const newMode = viewMode === 'compact' ? 'detailed' : 'compact';
+    setViewMode(newMode);
+    localStorage.setItem('jobsViewMode', newMode);
+  };
+
   // Fetch categories from API
   const { data: categoriesData, isLoading: loadingCategories, error: categoriesError } = useQuery({
     queryKey: ['categories'],
@@ -455,6 +470,25 @@ const Jobs = () => {
                 <span className="ml-1 text-[10px] sm:text-xs bg-yellow-100 text-yellow-800 px-1.5 sm:px-2 py-0.5 rounded-full">
                   {t.soon}
                 </span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={toggleViewMode}
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5"
+                title={viewMode === 'compact' ? t.detailedView : t.compactView}
+              >
+                {viewMode === 'compact' ? (
+                  <>
+                    <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">{t.detailedView}</span>
+                  </>
+                ) : (
+                  <>
+                    <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">{t.compactView}</span>
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -665,41 +699,52 @@ const Jobs = () => {
             </p>
           </div>
         ) : (
-          jobs.map((job) => (
-            <div
-              key={job._id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-              onClick={() => navigate(`/student/jobs/${job._id}`)}
-            >
-              <div className="p-4 sm:p-6">
+          <div className={viewMode === 'compact' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'space-y-3 sm:space-y-4'}>
+            {jobs.map((job) => (
+              <div
+                key={job._id}
+                className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer ${
+                  viewMode === 'compact' ? 'p-3 sm:p-4' : ''
+                }`}
+                onClick={() => navigate(`/student/jobs/${job._id}`)}
+              >
+                <div className={viewMode === 'compact' ? 'p-0' : 'p-4 sm:p-6'}>
                 {/* Job Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between mb-3 sm:mb-4 gap-3 sm:gap-4">
+                <div className={`flex flex-col ${viewMode === 'compact' ? 'gap-2' : 'sm:flex-row items-start sm:items-start justify-between mb-3 sm:mb-4 gap-3 sm:gap-4'}`}>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 hover:text-primary-600 line-clamp-2">
+                    <h2 className={`${viewMode === 'compact' ? 'text-sm sm:text-base' : 'text-lg sm:text-xl'} font-bold text-gray-900 ${viewMode === 'compact' ? 'mb-1' : 'mb-2'} hover:text-primary-600 line-clamp-2`}>
                       {job.title}
                     </h2>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                      <span className="flex items-center gap-1 truncate">
-                        <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                        <span className="truncate">
-                          {isPremium && job.client && !job.client.message 
-                            ? (job.client?.clientProfile?.companyEmail || job.client?.email || job.client?.name || 'N/A')
-                            : (job.client?.message || t.premiumMembersOnly)}
-                        </span>
-                      </span>
-                      {job.location && (
+                    {viewMode === 'detailed' && (
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                         <span className="flex items-center gap-1 truncate">
-                          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                          <span className="truncate">{job.location}</span>
+                          <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                          <span className="truncate">
+                            {isPremium && job.client && !job.client.message 
+                              ? (job.client?.clientProfile?.companyEmail || job.client?.email || job.client?.name || 'N/A')
+                              : (job.client?.message || t.premiumMembersOnly)}
+                          </span>
                         </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                        {new Date(job.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
+                        {job.location && (
+                          <span className="flex items-center gap-1 truncate">
+                            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                            <span className="truncate">{job.location}</span>
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                          {new Date(job.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    {viewMode === 'compact' && (
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Clock className="w-3 h-3 flex-shrink-0" />
+                        <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex flex-wrap items-start gap-2 self-start sm:self-auto">
+                  <div className={`flex flex-wrap items-start gap-2 ${viewMode === 'compact' ? '' : 'self-start sm:self-auto'}`}>
                     <Badge variant="info" className="text-xs">{job.category}</Badge>
                     {job.urgent && <Badge variant="error" className="text-xs">{t.urgent}</Badge>}
                     {/* Show startup name tag if premium and startup exists */}
@@ -732,7 +777,7 @@ const Jobs = () => {
                 </div>
 
                 {/* Applied At (for applied jobs) */}
-                {activeTab === 'applied' && job.appliedAt && (
+                {viewMode === 'detailed' && activeTab === 'applied' && job.appliedAt && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 mb-2">
                     <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
                     <span>{t.appliedOn} {new Date(job.appliedAt).toLocaleDateString()}</span>
@@ -740,12 +785,14 @@ const Jobs = () => {
                 )}
 
                 {/* Description */}
-                <p className="text-sm sm:text-base text-gray-700 mb-3 sm:mb-4 line-clamp-2">
-                  {job.description}
-                </p>
+                {viewMode === 'detailed' && (
+                  <p className="text-sm sm:text-base text-gray-700 mb-3 sm:mb-4 line-clamp-2">
+                    {job.description}
+                  </p>
+                )}
 
                 {/* Skills */}
-                {job.skillsRequired && job.skillsRequired.length > 0 && (
+                {viewMode === 'detailed' && job.skillsRequired && job.skillsRequired.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                     {job.skillsRequired.slice(0, 5).map((skill, index) => (
                       <span
@@ -764,10 +811,10 @@ const Jobs = () => {
                 )}
 
                 {/* Footer */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 sm:pt-4 border-t gap-3 sm:gap-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                <div className={`flex ${viewMode === 'compact' ? 'flex-col gap-2' : 'flex-col sm:flex-row items-start sm:items-center justify-between pt-3 sm:pt-4 border-t gap-3 sm:gap-4'}`}>
+                  <div className={`flex ${viewMode === 'compact' ? 'flex-col gap-1' : 'flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto'}`}>
                     {isPremium && job.budget && !job.budget.message ? (
-                      <div className="flex items-center gap-1 text-base sm:text-lg font-semibold text-green-600">
+                      <div className={`flex items-center gap-1 ${viewMode === 'compact' ? 'text-sm' : 'text-base sm:text-lg'} font-semibold text-green-600`}>
                         {job.budget.currency} {job.budget.min} - {job.budget.max}
                       </div>
                     ) : (
@@ -775,16 +822,18 @@ const Jobs = () => {
                         {job.budget?.message || t.premiumMembersOnly}
                       </div>
                     )}
-                    {job.duration && (
+                    {viewMode === 'detailed' && job.duration && (
                       <span className="text-xs sm:text-sm text-gray-600">
                         {job.duration}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      {job.applicationsCount || 0} {job.applicationsCount !== 1 ? t.applicantsPlural : t.applicants}
-                    </span>
+                  <div className={`flex items-center ${viewMode === 'compact' ? 'justify-between w-full' : 'justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto'}`}>
+                    {viewMode === 'detailed' && (
+                      <span className="text-xs sm:text-sm text-gray-600">
+                        {job.applicationsCount || 0} {job.applicationsCount !== 1 ? t.applicantsPlural : t.applicants}
+                      </span>
+                    )}
                     <Button
                       variant="primary"
                       size="sm"
@@ -792,15 +841,16 @@ const Jobs = () => {
                         e.stopPropagation();
                         navigate(`/student/jobs/${job._id}`);
                       }}
-                      className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
+                      className={`text-xs sm:text-sm ${viewMode === 'compact' ? 'px-2 sm:px-3 py-1 sm:py-1.5' : 'px-3 sm:px-4 py-1.5 sm:py-2'}`}
                     >
-                      {t.viewDetails}
+                      {viewMode === 'compact' ? t.viewDetails : t.viewDetails}
                     </Button>
                   </div>
                 </div>
               </div>
             </div>
-          ))
+            ))}
+          </div>
         )}
 
         {/* Load More Button */}

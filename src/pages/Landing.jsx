@@ -38,7 +38,8 @@ import {
   Mail,
   Phone,
   MapPin,
-  Send
+  Send,
+  LogOut
 } from 'lucide-react';
 
 const translations = {
@@ -535,7 +536,7 @@ const categoryMeta = [
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [language, setLanguage] = useState('en');
   const [contactFormData, setContactFormData] = useState({
     name: '',
@@ -638,9 +639,16 @@ const Landing = () => {
     const ogImage = document.querySelector('meta[property="og:image"]');
     const baseUrl = window.location.origin;
     // Use network image URL from environment if available, otherwise use local path
-    const imageUrl = OG_IMAGE_URL.startsWith('http') 
+    // Ensure absolute HTTPS URL for WhatsApp and Facebook
+    let imageUrl = OG_IMAGE_URL.startsWith('http') 
       ? OG_IMAGE_URL 
       : `${baseUrl}${OG_IMAGE_URL.startsWith('/') ? OG_IMAGE_URL : '/' + OG_IMAGE_URL}`;
+    
+    // Force HTTPS for production
+    if (imageUrl.startsWith('http://') && window.location.protocol === 'https:') {
+      imageUrl = imageUrl.replace('http://', 'https://');
+    }
+    
     if (!ogImage) {
       const meta = document.createElement('meta');
       meta.setAttribute('property', 'og:image');
@@ -648,6 +656,17 @@ const Landing = () => {
       document.head.appendChild(meta);
     } else {
       ogImage.content = imageUrl;
+    }
+
+    // Open Graph Image Secure URL - Required for WhatsApp
+    const ogImageSecureUrl = document.querySelector('meta[property="og:image:secure_url"]');
+    if (!ogImageSecureUrl) {
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', 'og:image:secure_url');
+      meta.content = imageUrl;
+      document.head.appendChild(meta);
+    } else {
+      ogImageSecureUrl.content = imageUrl;
     }
 
     // Open Graph Image dimensions - Recommended for better previews
@@ -834,6 +853,18 @@ const Landing = () => {
                     <span className="hidden sm:inline">{t.nav.dashboard}</span>
                     <span className="sm:hidden">Dashboard</span>
                   </Button>
+
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      navigate('/');
+                    }}
+                    aria-label="Logout"
+                    className="p-1.5 sm:p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-all border border-transparent hover:border-red-200"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                  </button>
 
                   <select
                   id="language-select"

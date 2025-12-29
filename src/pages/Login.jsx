@@ -24,6 +24,11 @@ const translations = {
     unableToSignIn: 'Unable to sign in. Please try again.',
     unableToConnect: 'Unable to connect to the server. Please check your internet connection and try again.',
     invalidCredentials: 'Invalid email or password. Please check your credentials and try again.',
+    accountDeleted: 'This account has been deleted. Please contact support if you believe this is an error.',
+    accountSuspended: 'Your account has been suspended. Please contact support for assistance.',
+    emailNotVerified: 'Please verify your email address before logging in. Check your inbox for the verification email or request a new one.',
+    invalidEmailFormat: 'Please provide a valid email address. Login must be done using your email, not your name.',
+    missingCredentials: 'Please provide both email and password.',
   },
   it: {
     welcomeToFreshlancer: 'Benvenuto su Freshlancer',
@@ -42,6 +47,11 @@ const translations = {
     unableToSignIn: 'Impossibile accedere. Riprova.',
     unableToConnect: 'Impossibile connettersi al server. Controlla la tua connessione internet e riprova.',
     invalidCredentials: 'Email o password non valide. Controlla le tue credenziali e riprova.',
+    accountDeleted: 'Questo account è stato eliminato. Contatta il supporto se ritieni che sia un errore.',
+    accountSuspended: 'Il tuo account è stato sospeso. Contatta il supporto per assistenza.',
+    emailNotVerified: 'Verifica il tuo indirizzo email prima di accedere. Controlla la tua casella di posta per l\'email di verifica o richiedine una nuova.',
+    invalidEmailFormat: 'Fornisci un indirizzo email valido. L\'accesso deve essere effettuato utilizzando la tua email, non il tuo nome.',
+    missingCredentials: 'Fornisci sia email che password.',
   },
 };
 
@@ -75,11 +85,22 @@ const Login = () => {
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
+  // Clear error when user starts typing in input fields
+  const handleInputChange = () => {
+    if (error) {
+      setError('');
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      setError('');
+      setError(''); // Clear previous errors
+      
       const response = await login(data.email, data.password);
+
+      // Small delay to ensure error state is cleared before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Redirect based on role
       const user = response.data.user;
@@ -94,27 +115,38 @@ const Login = () => {
       // Extract user-friendly error message
       let errorMessage = t.unableToSignIn;
 
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
+      // Handle network errors first
+      if (!err.response && err.message === 'Network Error') {
+        errorMessage = t.unableToConnect;
+      } else if (err.response?.data?.message) {
+        const backendMessage = err.response.data.message.toLowerCase();
+        
+        // Map backend error messages to user-friendly translations
+        if (backendMessage.includes('deleted')) {
+          errorMessage = t.accountDeleted;
+        } else if (backendMessage.includes('suspended')) {
+          errorMessage = t.accountSuspended;
+        } else if (backendMessage.includes('verify') || backendMessage.includes('verification')) {
+          errorMessage = t.emailNotVerified;
+        } else if (backendMessage.includes('valid email') || backendMessage.includes('email address')) {
+          errorMessage = t.invalidEmailFormat;
+        } else if (backendMessage.includes('provide both') || backendMessage.includes('email and password')) {
+          errorMessage = t.missingCredentials;
+        } else if (backendMessage.includes('invalid email') || backendMessage.includes('invalid password') || backendMessage.includes('invalid email or password')) {
+          errorMessage = t.invalidCredentials;
+        } else {
+          // Use backend message if it's user-friendly
+          errorMessage = err.response.data.message;
+        }
       } else if (err.message) {
         errorMessage = err.message;
       }
 
-      // Handle network errors
-      if (!err.response && err.message === 'Network Error') {
-        errorMessage = t.unableToConnect;
-      }
-
-      // Handle 401/403 errors with generic message
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        if (!err.response.data?.message || err.response.data.message.includes('invalid') || err.response.data.message.includes('Invalid')) {
-          errorMessage = t.invalidCredentials;
-        }
-      }
-
+      // Set error and ensure it stays visible
       setError(errorMessage);
-    } finally {
       setLoading(false);
+      
+      // Don't clear error automatically - let user dismiss it manually
     }
   };
 
@@ -131,7 +163,11 @@ const Login = () => {
         </div>
 
         {error && (
-          <Alert type="error" message={error} />
+          <Alert 
+            type="error" 
+            message={error}
+            onClose={() => setError('')}
+          />
         )}
 
         <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -147,6 +183,7 @@ const Login = () => {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: t.invalidEmail,
                 },
+                onChange: handleInputChange,
               })}
             />
 
@@ -161,6 +198,7 @@ const Login = () => {
                   value: 8,
                   message: t.passwordMinLength,
                 },
+                onChange: handleInputChange,
               })}
             />
           </div>
