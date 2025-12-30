@@ -788,7 +788,11 @@ const Profile = () => {
       setValue('location.timezone', user.location?.timezone || '');
 
       if (studentProfile) {
-        setValue('studentProfile.university', studentProfile.university || '');
+        // Handle university - can be object (populated) or string (legacy)
+        const universityValue = typeof studentProfile.university === 'object' 
+          ? studentProfile.university.name || '' 
+          : studentProfile.university || '';
+        setValue('studentProfile.university', universityValue);
         setValue('studentProfile.universityLink', studentProfile.universityLink || '');
         setValue('studentProfile.bio', studentProfile.bio || '');
         setValue('studentProfile.experienceLevel', studentProfile.experienceLevel || '');
@@ -1442,7 +1446,19 @@ const Profile = () => {
                       <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {t.university}
                     </label>
-                    <p className="text-sm sm:text-base text-gray-900">{studentProfile.university}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {typeof studentProfile.university === 'object' 
+                          ? studentProfile.university.name 
+                          : studentProfile.university}
+                      </p>
+                      {typeof studentProfile.university === 'object' && 
+                       studentProfile.university.status === 'pending' && (
+                        <Badge variant="warning" className="text-xs">
+                          Pending for review
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1579,8 +1595,18 @@ const Profile = () => {
                   {studentProfile.university && (
                     <div className="mb-2">
                       <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.university}</p>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <p className="font-bold text-base sm:text-lg text-gray-900 truncate">{studentProfile.university}</p>
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <p className="font-bold text-base sm:text-lg text-gray-900 truncate">
+                          {typeof studentProfile.university === 'object' 
+                            ? studentProfile.university.name 
+                            : studentProfile.university}
+                        </p>
+                        {typeof studentProfile.university === 'object' && 
+                         studentProfile.university.status === 'pending' && (
+                          <Badge variant="warning" className="text-xs">
+                            Pending for review
+                          </Badge>
+                        )}
                         {studentProfile.universityLink && (
                           <a
                             href={studentProfile.universityLink}

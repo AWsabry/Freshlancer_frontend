@@ -77,6 +77,7 @@ import AdminReviews from './pages/admin/Reviews';
 import AdminNotifications from './pages/admin/Notifications';
 import AdminGrantings from './pages/admin/Grantings';
 import AdminLogs from './pages/admin/Logs';
+import AdminUniversities from './pages/admin/Universities';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -202,6 +203,7 @@ function App() {
         <Route path="student-packages" element={<AdminStudentPackages />} />
         <Route path="coupons" element={<AdminCoupons />} />
         <Route path="categories" element={<AdminCategories />} />
+        <Route path="universities" element={<AdminUniversities />} />
         <Route path="contact-us" element={<AdminContactUs />} />
         <Route path="grantings" element={<AdminGrantings />} />
         <Route path="transactions" element={<AdminTransactions />} />

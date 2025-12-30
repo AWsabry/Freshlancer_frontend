@@ -23,10 +23,16 @@ export const authService = {
   register: async (userData) => {
     try {
       const response = await api.post('/users/signup', userData);
+      // Response is already unwrapped by interceptor, so structure is:
+      // { status: 'success', token: '...', data: { user: {...} } }
       if (response.token) {
         localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        await logger.success(`User registered successfully: ${userData.email}`, { action: 'user_registration', role: userData.role });
+        // Access user from response.data.user (interceptor unwraps axios response.data)
+        const user = response.data?.user || response.user;
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+          await logger.success(`User registered successfully: ${userData.email}`, { action: 'user_registration', role: userData.role });
+        }
       }
       return response;
     } catch (error) {

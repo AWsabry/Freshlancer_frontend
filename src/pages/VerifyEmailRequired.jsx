@@ -300,13 +300,6 @@ const VerifyEmailRequired = () => {
             </Button>
           </div>
 
-          <div className="mt-6 pt-6 border-t text-center">
-            <p className="text-xs text-gray-500">
-              <strong>{t.note}</strong> {t.emailServiceNote}
-              <br />
-              {t.checkServerConsole}
-            </p>
-          </div>
         </Card>
       </div>
     </div>

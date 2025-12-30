@@ -171,4 +171,13 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
+
+  /* React Select styles */
+  .react-select__menu {
+    z-index: 9999 !important;
+  }
+
+  .react-select__menu-portal {
+    z-index: 9999 !important;
+  }
 }

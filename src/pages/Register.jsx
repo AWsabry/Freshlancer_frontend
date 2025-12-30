@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuthStore } from '../stores/authStore';
 import { generatePassword, validatePassword } from '../utils/passwordGenerator';
+import { universityService } from '../services/universityService';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
+import UniversitySelect from '../components/common/UniversitySelect';
 import Alert from '../components/common/Alert';
 import logo from '../assets/logos/01.png';
 import { RefreshCw, CheckCircle, XCircle, Eye, EyeOff, Briefcase, Users, Shield, Zap, Star, Globe } from 'lucide-react';
@@ -37,6 +39,28 @@ const COUNTRY_CURRENCY_MAP = {
   'Vietnam': 'USD', 'Thailand': 'USD', 'Malaysia': 'USD', 'Singapore': 'USD',
   // Oceania
   'Australia': 'USD', 'New Zealand': 'USD',
+};
+
+// Country name to ISO country code mapping (for university filtering)
+const COUNTRY_TO_ISO_CODE = {
+  'Afghanistan': 'AF', 'Albania': 'AL', 'Algeria': 'DZ', 'Argentina': 'AR',
+  'Australia': 'AU', 'Austria': 'AT', 'Bahrain': 'BH', 'Bangladesh': 'BD',
+  'Belgium': 'BE', 'Brazil': 'BR', 'Bulgaria': 'BG', 'Canada': 'CA',
+  'Chile': 'CL', 'China': 'CN', 'Colombia': 'CO', 'Croatia': 'HR',
+  'Czech Republic': 'CZ', 'Denmark': 'DK', 'Egypt': 'EG', 'Ethiopia': 'ET',
+  'Finland': 'FI', 'France': 'FR', 'Germany': 'DE', 'Ghana': 'GH',
+  'Greece': 'GR', 'Hungary': 'HU', 'India': 'IN', 'Indonesia': 'ID',
+  'Ireland': 'IE', 'Italy': 'IT', 'Japan': 'JP', 'Jordan': 'JO',
+  'Kenya': 'KE', 'Kuwait': 'KW', 'Lebanon': 'LB', 'Malaysia': 'MY',
+  'Mexico': 'MX', 'Morocco': 'MA', 'Netherlands': 'NL', 'New Zealand': 'NZ',
+  'Nigeria': 'NG', 'Norway': 'NO', 'Oman': 'OM', 'Pakistan': 'PK',
+  'Palestine': 'PS', 'Peru': 'PE', 'Philippines': 'PH', 'Poland': 'PL',
+  'Portugal': 'PT', 'Qatar': 'QA', 'Romania': 'RO', 'Russia': 'RU',
+  'Saudi Arabia': 'SA', 'Singapore': 'SG', 'Slovakia': 'SK', 'South Africa': 'ZA',
+  'South Korea': 'KR', 'Spain': 'ES', 'Sweden': 'SE', 'Switzerland': 'CH',
+  'Tanzania': 'TZ', 'Thailand': 'TH', 'Tunisia': 'TN', 'Turkey': 'TR',
+  'Uganda': 'UG', 'Ukraine': 'UA', 'United Arab Emirates': 'AE', 'United Kingdom': 'GB',
+  'United States': 'US', 'Vietnam': 'VN',
 };
 
 // Country to Phone Code mapping
@@ -338,6 +362,11 @@ const translations = {
     university: 'University',
     universityPlaceholder: 'University of...',
     universityRequired: 'Please enter your university name',
+    universityOther: 'Other (Please specify)',
+    customUniversity: 'Custom University Name',
+    customUniversityPlaceholder: 'Enter your university name',
+    customUniversityRequired: 'Please enter your university name',
+    universitySubmitted: 'Your university has been submitted for review. You can continue with registration.',
     major: 'Major',
     majorPlaceholder: 'Computer Science',
     majorRequired: 'Please enter your field of study or major',
@@ -502,6 +531,11 @@ const translations = {
     university: 'Università',
     universityPlaceholder: 'Università di...',
     universityRequired: 'Inserisci il nome della tua università',
+    universityOther: 'Altro (Specifica)',
+    customUniversity: 'Nome Università Personalizzato',
+    customUniversityPlaceholder: 'Inserisci il nome della tua università',
+    customUniversityRequired: 'Inserisci il nome della tua università',
+    universitySubmitted: 'La tua università è stata inviata per la revisione. Puoi continuare con la registrazione.',
     major: 'Corso di Laurea',
     majorPlaceholder: 'Informatica',
     majorRequired: 'Inserisci il tuo campo di studio o corso di laurea',
@@ -621,6 +655,9 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('');
   const [step, setStep] = useState(1); // Step 1: Basic info, Step 2: Role-specific info
+  const [isOtherUniversity, setIsOtherUniversity] = useState(false);
+  const [customUniversityName, setCustomUniversityName] = useState('');
+  const [universityAdded, setUniversityAdded] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValidation, setPasswordValidation] = useState({ isValid: false, errors: [] });
@@ -655,7 +692,7 @@ const Register = () => {
 
   const t = translations[language] || translations.en;
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue, trigger, control, formState: { errors } } = useForm({
     defaultValues: {
       role: ''
     }
@@ -775,8 +812,14 @@ const Register = () => {
           ? COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
           : 'USD'; // Default to USD if country not found
         
+        // Handle custom university - store the name for now, submit after registration
+        let universityName = data.university?.trim() || '';
+        if (isOtherUniversity && universityAdded && customUniversityName) {
+          universityName = customUniversityName.trim();
+        }
+
         userData.studentProfile = {
-          university: data.university?.trim() || '',
+          university: universityName,
           major: data.major?.trim() || '',
           graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
           experienceLevel: data.experienceLevel, // Required field - don't use empty string fallback
@@ -840,14 +883,102 @@ const Register = () => {
 
       const response = await registerUser(userData);
 
-      // Redirect to dashboard based on role
-      const user = response.data.user;
+      // Get the registered user - response is already unwrapped by interceptor
+      // So response structure is: { status: 'success', token: '...', data: { user: {...} } }
+      const user = response.data?.user || response.user;
+      
+      console.log('[Register] Registration successful, user:', user);
+      console.log('[Register] Email verified:', user?.emailVerified);
+      console.log('[Register] Full response:', response);
+      
+      // Submit custom university AFTER registration (user is now authenticated)
+      if (isOtherUniversity && universityAdded && customUniversityName) {
+        try {
+          // Get country code from selected country of study (from form data or userData)
+          const countryOfStudy = data.countryOfStudy || userData.country;
+          const countryCode = countryOfStudy ? COUNTRY_TO_ISO_CODE[countryOfStudy] : undefined;
+          
+          console.log('[Register] Submitting custom university:', {
+            name: customUniversityName.trim(),
+            countryOfStudy,
+            countryCode,
+          });
+          
+          if (!countryCode) {
+            console.error('[Register] Country code not available for custom university submission. Country of study:', countryOfStudy);
+            throw new Error('Country code is required. Please ensure country of study is selected.');
+          }
+          
+          if (!customUniversityName || !customUniversityName.trim()) {
+            console.error('[Register] Custom university name is empty');
+            throw new Error('University name is required.');
+          }
+          
+          // Submit the custom university to backend (will be pending)
+          // User is now authenticated, so this will work
+          const universityResponse = await universityService.createPendingUniversity({
+            name: customUniversityName.trim(),
+            countryCode: countryCode,
+          });
+          
+          // Verify the university was created and update user's university reference
+          if (universityResponse?.data?.university || universityResponse?.university) {
+            const university = universityResponse.data?.university || universityResponse.university;
+            const universityId = university._id || university.id;
+            
+            console.log('[Register] Custom university submitted successfully:', {
+              id: universityId,
+              name: university.name,
+              countryCode: university.countryCode,
+              status: university.status,
+            });
+            
+            // Update user's university reference to link with the created university
+            try {
+              await authService.updateProfile({
+                studentProfile: {
+                  university: universityId,
+                },
+              });
+              console.log('[Register] User university reference updated successfully');
+            } catch (updateErr) {
+              console.error('[Register] Error updating user university reference:', updateErr);
+              // Non-blocking error - university is created, reference can be updated later
+            }
+          } else {
+            console.warn('[Register] University response structure unexpected:', universityResponse);
+          }
+        } catch (err) {
+          // Log error but don't block registration - university name is already saved in user profile
+          console.error('[Register] Error submitting custom university (non-blocking):', err);
+          console.error('[Register] Error details:', {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status,
+          });
+          if (err.response?.data?.message) {
+            console.warn('[Register] University submission error:', err.response.data.message);
+          }
+        }
+      }
+      
+      // Check if email is verified - if not, redirect to email verification page
+      // Default to false if emailVerified is undefined (new registrations should not be verified)
+      if (!user?.emailVerified) {
+        console.log('[Register] Email not verified, redirecting to verify-email-required');
+        // Use replace to prevent back navigation
+        navigate('/verify-email-required', { replace: true });
+        return;
+      }
+
+      // If email is verified, redirect to dashboard based on role
+      console.log('[Register] Email verified, redirecting to dashboard');
       if (user.role === 'admin') {
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       } else if (user.role === 'client') {
-        navigate('/client/dashboard');
+        navigate('/client/dashboard', { replace: true });
       } else {
-        navigate('/student/dashboard');
+        navigate('/student/dashboard', { replace: true });
       }
     } catch (err) {
       // Extract user-friendly error message
@@ -1240,11 +1371,102 @@ const Register = () => {
               </div>
 
               <div className="md:col-span-2">
-                <Input
-                  label={t.university}
-                  placeholder={t.universityPlaceholder}
-                  error={errors.university?.message}
-                  {...register('university', { required: t.universityRequired })}
+                <Controller
+                  name="university"
+                  control={control}
+                  rules={{ 
+                    required: isOtherUniversity ? (universityAdded ? false : t.customUniversityRequired) : t.universityRequired 
+                  }}
+                  render={({ field }) => (
+                    <>
+                      <UniversitySelect
+                        label={t.university}
+                        placeholder={t.universityPlaceholder}
+                        error={errors.university?.message}
+                        name="university"
+                        value={field.value || ''}
+                        countryCode={countryOfStudy ? COUNTRY_TO_ISO_CODE[countryOfStudy] : undefined}
+                        onChange={(e) => {
+                          console.log('[Register] University onChange called:', e);
+                          console.log('[Register] Event target:', e.target);
+                          const value = e.target?.value || '';
+                          const isOther = e.target?.isOther || value === '__OTHER__';
+                          
+                          console.log('[Register] University value:', value, 'isOther:', isOther);
+                          
+                          setIsOtherUniversity(isOther);
+                          if (isOther) {
+                            field.onChange('__OTHER__');
+                            setCustomUniversityName('');
+                            setUniversityAdded(false);
+                          } else {
+                            field.onChange(value);
+                            setCustomUniversityName('');
+                            setUniversityAdded(false);
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                        required
+                      />
+                      {isOtherUniversity && (
+                        <div className="mt-2">
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <Input
+                                label={t.customUniversity}
+                                placeholder={t.customUniversityPlaceholder}
+                                error={errors.university?.message}
+                                value={customUniversityName}
+                                onChange={(e) => {
+                                  setCustomUniversityName(e.target.value);
+                                  setUniversityAdded(false);
+                                  field.onChange(e.target.value);
+                                }}
+                                onBlur={field.onBlur}
+                                required
+                                disabled={universityAdded}
+                              />
+                            </div>
+                            <div className="flex items-end pb-1">
+                              <Button
+                                type="button"
+                                onClick={async () => {
+                                  if (!customUniversityName || !customUniversityName.trim()) {
+                                    setError(t.customUniversityRequired);
+                                    return;
+                                  }
+                                  if (!countryOfStudy) {
+                                    setError(t.countryOfStudyRequired);
+                                    return;
+                                  }
+                                  
+                                  // Store the university name - it will be submitted after registration
+                                  setUniversityAdded(true);
+                                  field.onChange(customUniversityName.trim());
+                                  setError('');
+                                }}
+                                disabled={!customUniversityName?.trim() || !countryOfStudy || universityAdded}
+                                size="sm"
+                              >
+                                {universityAdded ? <CheckCircle className="w-4 h-4" /> : 'Add'}
+                              </Button>
+                            </div>
+                          </div>
+                          {universityAdded && (
+                            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              University "{customUniversityName}" will be added after registration
+                            </p>
+                          )}
+                          {!universityAdded && (
+                            <p className="mt-1 text-xs text-gray-500">
+                              Enter your university name and click "Add" to include it
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                 />
               </div>
 

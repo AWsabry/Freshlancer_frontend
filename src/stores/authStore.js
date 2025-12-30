@@ -15,7 +15,12 @@ export const useAuthStore = create((set) => ({
 
   register: async (userData) => {
     const response = await authService.register(userData);
-    set({ user: response.data.user, isAuthenticated: true });
+    // Response is already unwrapped by interceptor, so structure is:
+    // { status: 'success', token: '...', data: { user: {...} } }
+    const user = response.data?.user || response.user;
+    if (user) {
+      set({ user, isAuthenticated: true });
+    }
     return response;
   },
 
