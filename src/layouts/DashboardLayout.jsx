@@ -31,6 +31,8 @@ import {
   Info,
   AlertCircle,
   Activity,
+  GraduationCap,
+  Clock,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 import Modal from '../components/common/Modal';
@@ -71,6 +73,8 @@ const translations = {
     applicationCountRule4: 'Free plan: 10 applications per month',
     applicationCountRule5: 'Premium plan: 100 applications per month',
     applicationCountNote: 'Note: Even if you withdraw an application, it still counts because you used one of your monthly application slots.',
+    internship: 'Internships (coming soon)',
+    comingSoon: 'Coming Soon',
     role: {
       student: 'student',
       client: 'client',
@@ -112,6 +116,8 @@ const translations = {
     applicationCountRule4: 'Piano gratuito: 10 candidature al mese',
     applicationCountRule5: 'Piano premium: 100 candidature al mese',
     applicationCountNote: 'Nota: Anche se ritiri una candidatura, conta ancora perché hai usato uno dei tuoi slot mensili di candidatura.',
+    internship: 'Stage (in arrivo)',
+    comingSoon: 'In Arrivo',
     role: {
       student: 'studente',
       client: 'cliente',
@@ -218,6 +224,8 @@ const DashboardLayout = () => {
         { name: t.transactions, icon: DollarSign, path: '/student/transactions' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         { name: t.contactUs, icon: Mail, path: '/student/contact-us' },
+        { name: t.internship, icon: GraduationCap, path: '#', disabled: true, comingSoon: true },
+
         // { name: 'Reviews', icon: Star, path: '/student/reviews' },
         ...baseItems.slice(1),
       ];
@@ -357,6 +365,24 @@ const DashboardLayout = () => {
           <nav className="flex-1 px-2 sm:px-4 py-3 sm:py-4 space-y-1 overflow-y-auto">
             {navigationItems.map((item) => {
               const Icon = item.icon;
+              const isDisabled = item.disabled || item.comingSoon;
+              
+              if (isDisabled) {
+                return (
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-400 rounded-lg cursor-not-allowed opacity-60"
+                    title={item.comingSoon ? t.comingSoon : ''}
+                  >
+                    <div className="flex items-center min-w-0 flex-1">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 flex-shrink-0" />
+                      <span className="whitespace-nowrap">{item.name}</span>
+                    </div>
+               
+                  </div>
+                );
+              }
+              
               return (
                 <Link
                   key={item.name}

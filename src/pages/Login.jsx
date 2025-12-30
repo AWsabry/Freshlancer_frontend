@@ -6,7 +6,7 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
 import logo from '../assets/logos/01.png';
-import { Briefcase, Users, Shield, Zap, CheckCircle } from 'lucide-react';
+import { Briefcase, Users, Shield, Zap, CheckCircle, Globe } from 'lucide-react';
 
 const translations = {
   en: {
@@ -102,6 +102,14 @@ const Login = () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // Save language preference to localStorage and set HTML lang attribute
+  useEffect(() => {
+    localStorage.setItem('dashboardLanguage', language);
+    document.documentElement.lang = language;
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
+  }, [language]);
 
   const t = translations[language] || translations.en;
 
@@ -204,6 +212,22 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      {/* Language Selector - Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="flex items-center gap-2 bg-white rounded-lg shadow-md border border-gray-200 px-3 py-2">
+          <Globe className="w-4 h-4 text-gray-600" />
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="border-0 bg-transparent text-sm text-gray-700 focus:outline-none focus:ring-0 cursor-pointer"
+            aria-label="Select language"
+          >
+            <option value="en">EN</option>
+            <option value="it">IT</option>
+          </select>
+        </div>
+      </div>
+
       <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* Left Side - Features */}
         <div className="hidden lg:block space-y-8">
