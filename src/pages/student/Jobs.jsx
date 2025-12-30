@@ -37,7 +37,7 @@ const translations = {
     findOpportunity: 'Find your next opportunity via Freshlancer',
     availableJobs: 'Available Jobs',
     appliedJobs: 'Applied Jobs',
-    searchPlaceholder: 'Search by title, skills, or keywords... (Press Enter to search)',
+    searchPlaceholder: 'Search by title, skills, or keywords...',
     search: 'Search',
     clear: 'Clear',
     filters: 'Filters',
@@ -86,7 +86,7 @@ const translations = {
     findOpportunity: 'Trova la tua prossima opportunità tramite Freshlancer',
     availableJobs: 'Lavori Disponibili',
     appliedJobs: 'Lavori a cui hai fatto domanda',
-    searchPlaceholder: 'Cerca per titolo, competenze o parole chiave... (Premi Invio per cercare)',
+    searchPlaceholder: 'Cerca per titolo, competenze o parole chiave...',
     search: 'Cerca',
     clear: 'Cancella',
     filters: 'Filtri',
@@ -279,8 +279,23 @@ const Jobs = () => {
       jobs = jobs.filter((job) => job.budget && job.budget.currency === currency && !job.budget.message);
     }
     
+    // Filter by search query (client-side filtering for real-time search)
+    if (searchInput.trim()) {
+      const searchLower = searchInput.toLowerCase().trim();
+      jobs = jobs.filter((job) => {
+        const titleMatch = job.title?.toLowerCase().includes(searchLower);
+        const descriptionMatch = job.description?.toLowerCase().includes(searchLower);
+        const categoryMatch = job.category?.toLowerCase().includes(searchLower);
+        const skillsMatch = job.skillsRequired?.some(skill => 
+          skill?.toLowerCase().includes(searchLower)
+        );
+        const locationMatch = job.location?.toLowerCase().includes(searchLower);
+        return titleMatch || descriptionMatch || categoryMatch || skillsMatch || locationMatch;
+      });
+    }
+    
     return jobs;
-  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium, currency]);
+  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium, currency, searchInput]);
 
   // Build applied jobs array with application metadata
   // ONLY show jobs that are in studentProfile.appliedJobs (source of truth)
@@ -316,21 +331,31 @@ const Jobs = () => {
       jobs = jobs.filter((job) => job.startup && job.startup.startupName && !job.startup.message);
     }
 
+    // Filter by search query (client-side filtering for real-time search)
+    if (searchInput.trim()) {
+      const searchLower = searchInput.toLowerCase().trim();
+      jobs = jobs.filter((job) => {
+        const titleMatch = job.title?.toLowerCase().includes(searchLower);
+        const descriptionMatch = job.description?.toLowerCase().includes(searchLower);
+        const categoryMatch = job.category?.toLowerCase().includes(searchLower);
+        const skillsMatch = job.skillsRequired?.some(skill => 
+          skill?.toLowerCase().includes(searchLower)
+        );
+        const locationMatch = job.location?.toLowerCase().includes(searchLower);
+        const statusMatch = job.applicationStatus?.toLowerCase().includes(searchLower);
+        return titleMatch || descriptionMatch || categoryMatch || skillsMatch || locationMatch || statusMatch;
+      });
+    }
+
     return jobs;
-  }, [appliedJobsFromAPI, userAppliedJobs, startupsOnly, isPremium]);
+  }, [appliedJobsFromAPI, userAppliedJobs, startupsOnly, isPremium, searchInput]);
 
   const jobs = activeTab === 'available' ? availableJobs : appliedJobs;
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Search is now real-time, but we keep this for server-side search if needed
     setSearchQuery(searchInput);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setSearchQuery(searchInput);
-    }
   };
 
   const handleClearSearch = () => {
@@ -428,8 +453,10 @@ const Jobs = () => {
                 type="text"
                 placeholder={t.searchPlaceholder}
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  // Real-time search - no need to press Enter
+                }}
                 className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../stores/authStore';
 import { authService } from '../../services/authService';
 import { packageService } from '../../services/packageService';
+import PhotoUpload from '../../components/common/PhotoUpload';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -62,6 +64,7 @@ const translations = {
     viewAll: 'View All',
     loadingHistory: 'Loading package history...',
     noPackagesYet: "You haven't purchased any points packages yet. Purchase a package to start unlocking student profiles.",
+    profilePicture: 'Profile Picture',
   },
   it: {
     loadingProfile: 'Caricamento profilo...',
@@ -99,12 +102,14 @@ const translations = {
     viewAll: 'Visualizza Tutti',
     loadingHistory: 'Caricamento cronologia pacchetti...',
     noPackagesYet: 'Non hai ancora acquistato nessun pacchetto di punti. Acquista un pacchetto per iniziare a sbloccare i profili degli studenti.',
+    profilePicture: 'Foto del Profilo',
   },
 };
 
 const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { setUser } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
@@ -318,6 +323,27 @@ const Profile = () => {
 
       {/* Profile Information */}
       <Card title={t.personalInformation}>
+        {/* Photo Upload Section */}
+        <div className="mb-6 pb-6 border-b">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            {t.profilePicture}
+          </label>
+          <PhotoUpload
+            currentPhoto={user?.photo}
+            onPhotoUpdate={(photoUrl) => {
+              // Update local user data if needed
+              if (userData) {
+                const updatedUser = { ...userData, photo: photoUrl };
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                // Update auth store
+                setUser(updatedUser);
+              }
+            }}
+            language={language}
+            size="lg"
+          />
+        </div>
+
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

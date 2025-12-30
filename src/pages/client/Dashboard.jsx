@@ -21,7 +21,7 @@ const translations = {
     studentContactsUnlocked: 'Student contacts unlocked',
     quickActions: 'Quick Actions',
     postNewJob: 'Post New Job',
-    postNewJobDesc: 'Create a new job posting for students',
+    postNewJobDesc: 'Create a new job for students',
     myJobs: 'My Jobs',
     myJobsDesc: 'View and manage your job posts',
     applications: 'Applications',
@@ -51,7 +51,7 @@ const translations = {
     studentContactsUnlocked: 'Contatti studenti sbloccati',
     quickActions: 'Azioni Rapide',
     postNewJob: 'Pubblica Nuovo Lavoro',
-    postNewJobDesc: 'Crea un nuovo annuncio di lavoro per studenti',
+    postNewJobDesc: 'Crea un nuovo lavoro per studenti',
     myJobs: 'I Miei Lavori',
     myJobsDesc: 'Visualizza e gestisci i tuoi annunci di lavoro',
     applications: 'Candidature',
@@ -167,7 +167,10 @@ const Dashboard = () => {
       {/* Client Dashboard Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card>
-          <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/client/applications')}
+          >
             <div className="p-4 bg-blue-100 rounded-full">
               <FileText className="w-8 h-8 text-blue-600" />
             </div>
@@ -182,7 +185,10 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-          <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/client/jobs')}
+          >
             <div className="p-4 bg-green-100 rounded-full">
               <Briefcase className="w-8 h-8 text-green-600" />
             </div>
@@ -197,7 +203,10 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-          <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/client/unlocked-students')}
+          >
             <div className="p-4 bg-purple-100 rounded-full">
               <Unlock className="w-8 h-8 text-purple-600" />
             </div>

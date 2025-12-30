@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
+import { ToastProvider } from './contexts/ToastContext';
 
 // Public pages
 import Landing from './pages/Landing';

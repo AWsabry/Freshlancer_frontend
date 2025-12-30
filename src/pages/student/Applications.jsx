@@ -23,6 +23,8 @@ import {
   Eye,
   LayoutGrid,
   List,
+  Search,
+  X,
 } from 'lucide-react';
 
 const translations = {
@@ -56,6 +58,9 @@ const translations = {
     noStatusApplications: 'No {status} applications',
     compactView: 'Compact View',
     detailedView: 'Detailed View',
+    searchPlaceholder: 'Search by job title or client name...',
+    search: 'Search',
+    clear: 'Clear',
   },
   it: {
     loading: 'Caricamento delle tue candidature...',
@@ -87,12 +92,16 @@ const translations = {
     noStatusApplications: 'Nessuna candidatura {status}',
     compactView: 'Vista Compatta',
     detailedView: 'Vista Dettagliata',
+    searchPlaceholder: 'Cerca per titolo lavoro o nome cliente...',
+    search: 'Cerca',
+    clear: 'Cancella',
   },
 };
 
 const Applications = () => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'accepted', 'rejected', 'withdrawn'
+  const [searchInput, setSearchInput] = useState(''); // Search by job title or client name
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('applicationsViewMode') || 'detailed'; // 'compact' or 'detailed'
   });
@@ -177,20 +186,43 @@ const Applications = () => {
   const studentProfile = userData?.data?.user?.studentProfile;
   const isPremium = studentProfile?.subscriptionTier === 'premium';
 
-  // Apply status filter
+  // Apply status filter and search
   const applications = useMemo(() => {
     try {
-      if (statusFilter === 'all') {
-        return Array.isArray(allApplications) ? allApplications : [];
+      let filtered = Array.isArray(allApplications) ? allApplications : [];
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter((app) => app && app.status === statusFilter);
       }
-      return Array.isArray(allApplications)
-        ? allApplications.filter((app) => app && app.status === statusFilter)
-        : [];
+      
+      // Apply search filter
+      if (searchInput.trim()) {
+        const searchLower = searchInput.toLowerCase().trim();
+        filtered = filtered.filter((app) => {
+          if (!app) return false;
+          
+          // Search by job title
+          const jobTitleMatch = app.jobPost?.title?.toLowerCase().includes(searchLower);
+          
+          // Search by client name/company
+          const clientNameMatch = app.jobPost?.client?.name?.toLowerCase().includes(searchLower);
+          const companyNameMatch = app.jobPost?.client?.clientProfile?.companyName?.toLowerCase().includes(searchLower);
+          const clientEmailMatch = app.jobPost?.client?.email?.toLowerCase().includes(searchLower);
+          
+          // Search by job category
+          const categoryMatch = app.jobPost?.category?.toLowerCase().includes(searchLower);
+          
+          return jobTitleMatch || clientNameMatch || companyNameMatch || clientEmailMatch || categoryMatch;
+        });
+      }
+      
+      return filtered;
     } catch (err) {
-      console.error('Error filtering applications by status:', err);
+      console.error('Error filtering applications:', err);
       return [];
     }
-  }, [statusFilter, allApplications]);
+  }, [statusFilter, allApplications, searchInput]);
 
   // Count applications by status for filter badges
   const statusCounts = useMemo(() => {
@@ -484,6 +516,31 @@ const Applications = () => {
         </Card>
       ) : (
         <>
+          {/* Search Bar */}
+          <Card className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+                <input
+                  type="text"
+                  placeholder={t.searchPlaceholder}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                {searchInput && (
+                  <button
+                    onClick={() => setSearchInput('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={t.clear}
+                  >
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+
           {/* Status Filter */}
           <Card className="mb-4 sm:mb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">

@@ -273,7 +273,7 @@ const Users = () => {
           }
         },
         { 
-          key: 'createdAt', 
+          key: 'joinedAt', 
           label: 'Joined Date',
           formatter: formatDate
         },

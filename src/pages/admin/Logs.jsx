@@ -63,7 +63,7 @@ const Logs = () => {
         search: searchTerm || undefined,
         level: levelFilter !== 'all' ? levelFilter : undefined,
       }),
-    enabled: !!selectedDate && showLogModal,
+    enabled: !!selectedDate,
   });
 
   // Delete log file mutation
@@ -93,10 +93,14 @@ const Logs = () => {
 
   const handleViewLog = (date) => {
     setSelectedDate(date);
-    setShowLogModal(true);
     setSearchTerm('');
     setSearchInput('');
     setLevelFilter('all');
+    setCurrentPage(1);
+  };
+
+  const handleLevelFilterChange = (value) => {
+    setLevelFilter(value);
     setCurrentPage(1);
   };
 
@@ -279,11 +283,11 @@ const Logs = () => {
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           onClick={() => handleViewLog(file.date)}
-                          variant="outline"
+                          variant={selectedDate === file.date ? "primary" : "outline"}
                           size="sm"
                           icon={Eye}
                         >
-                          View
+                          {selectedDate === file.date ? 'Viewing' : 'View'}
                         </Button>
                         <Button
                           onClick={() => handleDelete(file.date)}
@@ -304,25 +308,192 @@ const Logs = () => {
         )}
       </Card>
 
-      {/* Recent Errors Preview */}
-      {stats.recentErrors && stats.recentErrors.length > 0 && (
+      {/* Detailed Log View - Shows when a file is selected */}
+      {selectedDate && (
         <Card>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Errors</h2>
-          <div className="space-y-3">
-            {stats.recentErrors.slice(0, 5).map((error, index) => (
-              <div key={index} className="border-l-4 border-red-500 pl-4 py-2 bg-red-50 rounded">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{error.message}</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {error.path} • {formatDate(error.timestamp)}
-                    </p>
-                  </div>
-                  <Badge variant="error">{error.level}</Badge>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Log Entries - {formatFileDate(selectedDate)}
+              </h2>
+              {logContentData?.data?.fileInfo && (
+                <p className="text-sm text-gray-600 mt-1">
+                  File Size: {logContentData.data.fileInfo.sizeFormatted} • 
+                  Last Modified: {formatDate(logContentData.data.fileInfo.lastModified)}
+                </p>
+              )}
+            </div>
+            <Button
+              onClick={() => {
+                setSelectedDate(null);
+                setSearchTerm('');
+                setSearchInput('');
+                setLevelFilter('all');
+                setCurrentPage(1);
+              }}
+              variant="outline"
+              size="sm"
+              icon={X}
+            >
+              Close
+            </Button>
           </div>
+
+          {/* Search and Filters */}
+          <div className="flex items-center gap-2 flex-wrap mb-4">
+            <Input
+              type="text"
+              placeholder="Search logs (message, URL, path, user agent)..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              icon={Search}
+              className="flex-1 min-w-[200px]"
+            />
+            <Select
+              value={levelFilter}
+              onChange={(e) => handleLevelFilterChange(e.target.value)}
+              className="w-[150px]"
+            >
+              <option value="all">All Levels</option>
+              <option value="info">Info</option>
+              <option value="success">Success</option>
+              <option value="warn">Warning</option>
+              <option value="error">Error</option>
+            </Select>
+            <Button onClick={handleSearch} icon={Search}>
+              Search
+            </Button>
+            {(searchTerm || levelFilter !== 'all') && (
+              <Button
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchTerm('');
+                  setLevelFilter('all');
+                  setCurrentPage(1);
+                }}
+                variant="outline"
+                icon={X}
+              >
+                Clear
+              </Button>
+            )}
+            <Button onClick={exportLogEntries} variant="outline" icon={Download}>
+              Export
+            </Button>
+          </div>
+
+          {/* Loading State */}
+          {loadingContent && (
+            <div className="text-center py-8">
+              <Loading text="Loading log entries..." />
+            </div>
+          )}
+
+          {/* Log Entries */}
+          {!loadingContent && logEntries.length === 0 && (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">
+                {searchTerm ? 'No log entries found matching your search' : 'No log entries found'}
+              </p>
+            </div>
+          )}
+
+          {!loadingContent && logEntries.length > 0 && (
+            <>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {logEntries.map((entry, index) => (
+                  <div
+                    key={index}
+                    className={`border rounded-lg p-4 transition-colors ${
+                      entry.level === 'ERROR' ? 'border-red-200 bg-red-50 hover:bg-red-100' :
+                      entry.level === 'WARN' ? 'border-yellow-200 bg-yellow-50 hover:bg-yellow-100' :
+                      entry.level === 'SUCCESS' ? 'border-green-200 bg-green-50 hover:bg-green-100' :
+                      'border-blue-200 bg-blue-50 hover:bg-blue-100'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge 
+                          variant={
+                            entry.level === 'ERROR' ? 'error' :
+                            entry.level === 'WARN' ? 'warning' :
+                            entry.level === 'SUCCESS' ? 'success' :
+                            'info'
+                          }
+                        >
+                          {entry.level}
+                        </Badge>
+                        {entry.action && (
+                          <Badge variant="outline" className="text-xs">
+                            {entry.action}
+                          </Badge>
+                        )}
+                        <span className="text-sm text-gray-600">{formatDate(entry.timestamp)}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">Path:</span>{' '}
+                        <span className="text-gray-900">{entry.path || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Message:</span>{' '}
+                        <span className="text-gray-900">{entry.message || 'N/A'}</span>
+                      </div>
+                      {entry.url && (
+                        <div>
+                          <span className="font-medium text-gray-700">URL:</span>{' '}
+                          <span className="text-gray-600 break-all">{entry.url}</span>
+                        </div>
+                      )}
+                      {entry.userAgent && (
+                        <div>
+                          <span className="font-medium text-gray-700">User Agent:</span>{' '}
+                          <span className="text-gray-600 text-xs break-all">{entry.userAgent}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {pagination.total > 0 && (
+                <div className="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
+                  <div className="text-sm text-gray-600">
+                    Showing {pagination.offset + 1} to{' '}
+                    {Math.min(pagination.offset + pagination.limit, pagination.total)} of{' '}
+                    {pagination.total} entries
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      variant="outline"
+                      size="sm"
+                      icon={ChevronLeft}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {Math.ceil(pagination.total / limit)}
+                    </span>
+                    <Button
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                      disabled={!pagination.hasMore}
+                      variant="outline"
+                      size="sm"
+                      icon={ChevronRight}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </Card>
       )}
 

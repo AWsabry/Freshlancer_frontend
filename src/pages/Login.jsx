@@ -5,6 +5,8 @@ import { useAuthStore } from '../stores/authStore';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
+import logo from '../assets/logos/01.png';
+import { Briefcase, Users, Shield, Zap, CheckCircle } from 'lucide-react';
 
 const translations = {
   en: {
@@ -29,6 +31,16 @@ const translations = {
     emailNotVerified: 'Please verify your email address before logging in. Check your inbox for the verification email or request a new one.',
     invalidEmailFormat: 'Please provide a valid email address. Login must be done using your email, not your name.',
     missingCredentials: 'Please provide both email and password.',
+    tagline: 'Connect talented students with innovative projects',
+    featuresTitle: 'Why Choose Freshlancer?',
+    feature1: 'Find Quality Projects',
+    feature1Desc: 'Access verified job opportunities from startups and businesses',
+    feature2: 'Build Your Portfolio',
+    feature2Desc: 'Showcase your skills and grow your professional network',
+    feature3: 'Secure Platform',
+    feature3Desc: 'Your data and payments are protected with enterprise-grade security',
+    feature4: 'Fast & Easy',
+    feature4Desc: 'Streamlined process to connect students with clients quickly',
   },
   it: {
     welcomeToFreshlancer: 'Benvenuto su Freshlancer',
@@ -52,6 +64,16 @@ const translations = {
     emailNotVerified: 'Verifica il tuo indirizzo email prima di accedere. Controlla la tua casella di posta per l\'email di verifica o richiedine una nuova.',
     invalidEmailFormat: 'Fornisci un indirizzo email valido. L\'accesso deve essere effettuato utilizzando la tua email, non il tuo nome.',
     missingCredentials: 'Fornisci sia email che password.',
+    tagline: 'Collega studenti talentuosi con progetti innovativi',
+    featuresTitle: 'Perché Scegliere Freshlancer?',
+    feature1: 'Trova Progetti di Qualità',
+    feature1Desc: 'Accedi a opportunità di lavoro verificate da startup e aziende',
+    feature2: 'Costruisci il Tuo Portfolio',
+    feature2Desc: 'Mostra le tue competenze e fai crescere la tua rete professionale',
+    feature3: 'Piattaforma Sicura',
+    feature3Desc: 'I tuoi dati e pagamenti sono protetti con sicurezza di livello enterprise',
+    feature4: 'Veloce e Facile',
+    feature4Desc: 'Processo semplificato per collegare studenti e clienti rapidamente',
   },
 };
 
@@ -104,14 +126,22 @@ const Login = () => {
       // Small delay to ensure error state is cleared before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Redirect based on role
+      // Redirect based on role and email verification status
       const user = response.data.user;
-      if (user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (user.role === 'client') {
-        navigate('/client/dashboard');
+      
+      // Check if email is verified (except for admin)
+      if (user.role !== 'admin' && !user.emailVerified) {
+        // Redirect to email verification page if not verified
+        navigate('/verify-email-required');
       } else {
-        navigate('/student/dashboard');
+        // Redirect to dashboard based on role
+        if (user.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (user.role === 'client') {
+          navigate('/client/dashboard');
+        } else {
+          navigate('/student/dashboard');
+        }
       }
       
       // Only reset form on successful login
@@ -173,16 +203,80 @@ const Login = () => {
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-white p-6 sm:p-8 rounded-xl shadow-lg">
-        <div>
-          <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
-            {t.welcomeToFreshlancer}
-          </h2>
-          <p className="mt-2 text-center text-xs sm:text-sm text-gray-600">
-            {t.signInToAccount}
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        {/* Left Side - Features */}
+        <div className="hidden lg:block space-y-8">
+          <div className="space-y-4">
+            <img src={logo} alt="Freshlancer" className="h-40 w-auto mb-6" />
+            <h1 className="text-4xl font-bold text-gray-900 leading-tight">
+              {t.welcomeToFreshlancer}
+            </h1>
+            <p className="text-lg text-gray-600">
+              {t.tagline}
+            </p>
+          </div>
+          
+          <div className="space-y-6 pt-4">
+            <h3 className="text-xl font-semibold text-gray-900">{t.featuresTitle}</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t.feature1}</h4>
+                  <p className="text-sm text-gray-600">{t.feature1Desc}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t.feature2}</h4>
+                  <p className="text-sm text-gray-600">{t.feature2Desc}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t.feature3}</h4>
+                  <p className="text-sm text-gray-600">{t.feature3Desc}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t.feature4}</h4>
+                  <p className="text-sm text-gray-600">{t.feature4Desc}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Right Side - Login Form */}
+        <div className="w-full">
+          <div className="max-w-md mx-auto space-y-6 sm:space-y-8 bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-100">
+            <div className="lg:hidden text-center mb-6">
+              <img src={logo} alt="Freshlancer" className="h-16 w-auto mx-auto mb-4" />
+            </div>
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                {t.welcomeToFreshlancer}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                {t.signInToAccount}
+              </p>
+            </div>
 
         {error && (
           <Alert 
@@ -254,6 +348,8 @@ const Login = () => {
             </Link>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
   );

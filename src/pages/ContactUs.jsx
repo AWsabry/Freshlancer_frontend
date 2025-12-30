@@ -56,6 +56,7 @@ const translations = {
     enterAmount: 'Please enter an amount',
     learnMore: 'Learn more about why we need your support',
     whySupport: 'Why We Need Your Support',
+    processingFeeNote: 'Note: A 3% processing fee will be added to your donation amount.',
   },
   it: {
     heading: 'Contattaci',
@@ -92,6 +93,7 @@ const translations = {
     enterAmount: 'Inserisci un importo',
     learnMore: 'Scopri di più sul perché abbiamo bisogno del tuo supporto',
     whySupport: 'Perché Abbiamo Bisogno del Tuo Supporto',
+    processingFeeNote: 'Nota: Verrà aggiunta una commissione di elaborazione del 3% all\'importo della tua donazione.',
   },
 };
 
@@ -448,6 +450,15 @@ const ContactUs = () => {
           <p className="text-gray-700 mb-4">
             {t.supportDescription}
           </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-800">
+                {t.processingFeeNote}
+              </p>
+            </div>
+          </div>
           
           <Link
             to={user?.role === 'student' ? '/student/why-support' : '/client/why-support'}

@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../stores/authStore';
+import { generatePassword, validatePassword } from '../utils/passwordGenerator';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
 import Alert from '../components/common/Alert';
+import logo from '../assets/logos/01.png';
+import { RefreshCw, CheckCircle, XCircle, Eye, EyeOff, Briefcase, Users, Shield, Zap, Star, Globe } from 'lucide-react';
 
 // Country to Currency mapping
 const COUNTRY_CURRENCY_MAP = {
@@ -294,7 +297,16 @@ const translations = {
     invalidEmail: 'Please enter a valid email address (e.g., name@example.com)',
     password: 'Password',
     passwordRequired: 'Please create a password',
-    passwordMinLength: 'Your password must be at least 8 characters long',
+    passwordRequirements: 'Password Requirements:',
+    passwordMinLength: 'At least 12 characters',
+    passwordUppercase: 'One uppercase letter (A-Z)',
+    passwordLowercase: 'One lowercase letter (a-z)',
+    passwordNumber: 'One number (0-9)',
+    passwordSpecial: 'One special character (!@#$%^&*()_+-=[]{}|;:,.<>?)',
+    generatePassword: 'Generate Password',
+    passwordGenerated: 'Password generated!',
+    showPassword: 'Show Password',
+    hidePassword: 'Hide Password',
     confirmPassword: 'Confirm Password',
     confirmPasswordRequired: 'Please confirm your password',
     passwordsDoNotMatch: 'The passwords you entered do not match. Please try again.',
@@ -417,10 +429,24 @@ const translations = {
     emailAlreadyRegistered: 'This email address is already registered. Please sign in or use a different email.',
     phoneRequired: 'Please enter your phone number to continue.',
     nationalityRequiredError: 'Please select your nationality to continue.',
-    passwordIssue: 'There was an issue with your password. Please make sure it\'s at least 8 characters long.',
+    passwordIssue: 'There was an issue with your password. Please ensure it meets all requirements.',
     invalidEmailError: 'Please enter a valid email address.',
     unableToConnect: 'Unable to connect to our servers. Please check your internet connection and try again.',
     experienceLevelRequiredError: 'Experience level is required',
+    tagline: 'Join thousands of students and clients building the future together',
+    whyJoin: 'Why Join Freshlancer?',
+    benefit1: 'Verified Opportunities',
+    benefit1Desc: 'Access quality projects from verified startups and businesses',
+    benefit2: 'Global Network',
+    benefit2Desc: 'Connect with clients and students from around the world',
+    benefit3: 'Secure & Trusted',
+    benefit3Desc: 'Enterprise-grade security protecting your data and transactions',
+    benefit4: 'Build Your Career',
+    benefit4Desc: 'Showcase your skills and build a professional portfolio',
+    trustedBy: 'Trusted by',
+    students: 'Students',
+    clients: 'Clients',
+    projects: 'Projects Completed',
   },
   it: {
     createAccount: 'Crea il tuo account',
@@ -435,7 +461,16 @@ const translations = {
     invalidEmail: 'Inserisci un indirizzo email valido (es. nome@esempio.com)',
     password: 'Password',
     passwordRequired: 'Crea una password',
-    passwordMinLength: 'La tua password deve essere di almeno 8 caratteri',
+    passwordRequirements: 'Requisiti Password:',
+    passwordMinLength: 'Almeno 12 caratteri',
+    passwordUppercase: 'Una lettera maiuscola (A-Z)',
+    passwordLowercase: 'Una lettera minuscola (a-z)',
+    passwordNumber: 'Un numero (0-9)',
+    passwordSpecial: 'Un carattere speciale (!@#$%^&*()_+-=[]{}|;:,.<>?)',
+    generatePassword: 'Genera Password',
+    passwordGenerated: 'Password generata!',
+    showPassword: 'Mostra Password',
+    hidePassword: 'Nascondi Password',
     confirmPassword: 'Conferma Password',
     confirmPasswordRequired: 'Conferma la tua password',
     passwordsDoNotMatch: 'Le password che hai inserito non corrispondono. Riprova.',
@@ -558,10 +593,24 @@ const translations = {
     emailAlreadyRegistered: 'Questo indirizzo email è già registrato. Accedi o usa un\'email diversa.',
     phoneRequired: 'Inserisci il tuo numero di telefono per continuare.',
     nationalityRequiredError: 'Seleziona la tua nazionalità per continuare.',
-    passwordIssue: 'C\'è stato un problema con la tua password. Assicurati che sia di almeno 8 caratteri.',
+    passwordIssue: 'C\'è stato un problema con la tua password. Assicurati che soddisfi tutti i requisiti.',
     invalidEmailError: 'Inserisci un indirizzo email valido.',
     unableToConnect: 'Impossibile connettersi ai nostri server. Controlla la tua connessione internet e riprova.',
     experienceLevelRequiredError: 'Il livello di esperienza è obbligatorio',
+    tagline: 'Unisciti a migliaia di studenti e clienti che costruiscono il futuro insieme',
+    whyJoin: 'Perché Unirsi a Freshlancer?',
+    benefit1: 'Opportunità Verificate',
+    benefit1Desc: 'Accedi a progetti di qualità da startup e aziende verificate',
+    benefit2: 'Rete Globale',
+    benefit2Desc: 'Connettiti con clienti e studenti da tutto il mondo',
+    benefit3: 'Sicuro e Affidabile',
+    benefit3Desc: 'Sicurezza di livello enterprise che protegge i tuoi dati e transazioni',
+    benefit4: 'Costruisci la Tua Carriera',
+    benefit4Desc: 'Mostra le tue competenze e costruisci un portfolio professionale',
+    trustedBy: 'Fidato da',
+    students: 'Studenti',
+    clients: 'Clienti',
+    projects: 'Progetti Completati',
   },
 };
 
@@ -572,6 +621,9 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('');
   const [step, setStep] = useState(1); // Step 1: Basic info, Step 2: Role-specific info
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState({ isValid: false, errors: [] });
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -610,6 +662,25 @@ const Register = () => {
   const howDidYouHear = watch('howDidYouHear');
   const isStartup = watch('isStartup');
   const startupIndustry = watch('startupIndustry');
+
+  // Validate password in real-time
+  useEffect(() => {
+    if (password) {
+      const validation = validatePassword(password);
+      setPasswordValidation(validation);
+    } else {
+      setPasswordValidation({ isValid: false, errors: [] });
+    }
+  }, [password]);
+
+  // Generate password handler
+  const handleGeneratePassword = () => {
+    const generated = generatePassword(16);
+    setValue('password', generated);
+    setValue('passwordConfirm', generated);
+    setShowPassword(true);
+    setShowConfirmPassword(true);
+  };
 
   // Auto-detect currency when country of study changes
   useEffect(() => {
@@ -813,16 +884,99 @@ const Register = () => {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            {t.createAccount}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {step === 1 ? t.step1of2 : t.step2of2}
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
+        {/* Left Side - Benefits */}
+        <div className="hidden lg:block lg:col-span-1 space-y-8 sticky top-8">
+          <div className="space-y-4">
+          <img src={logo} alt="Freshlancer" className="h-40 w-auto mb-6" />
+          <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+              {t.createAccount}
+            </h1>
+            <p className="text-base text-gray-600">
+              {t.tagline}
+            </p>
+          </div>
+          
+          <div className="space-y-6 pt-4">
+            <h3 className="text-lg font-semibold text-gray-900">{t.whyJoin}</h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mt-0.5">
+                  <CheckCircle className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{t.benefit1}</h4>
+                  <p className="text-xs text-gray-600">{t.benefit1Desc}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mt-0.5">
+                  <Globe className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{t.benefit2}</h4>
+                  <p className="text-xs text-gray-600">{t.benefit2Desc}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mt-0.5">
+                  <Shield className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{t.benefit3}</h4>
+                  <p className="text-xs text-gray-600">{t.benefit3Desc}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary-300 transition-colors">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mt-0.5">
+                  <Star className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{t.benefit4}</h4>
+                  <p className="text-xs text-gray-600">{t.benefit4Desc}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Section */}
+          <div className="pt-6 border-t border-gray-200">
+            <p className="text-sm font-semibold text-gray-700 mb-4">{t.trustedBy}</p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary-600">1000+</div>
+                <div className="text-xs text-gray-600 mt-1">{t.students}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary-600">500+</div>
+                <div className="text-xs text-gray-600 mt-1">{t.clients}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary-600">2000+</div>
+                <div className="text-xs text-gray-600 mt-1">{t.projects}</div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Right Side - Registration Form */}
+        <div className="lg:col-span-2 w-full">
+          <div className="max-w-2xl mx-auto space-y-8 bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-100">
+            <div className="lg:hidden text-center mb-6">
+              <img src={logo} alt="Freshlancer" className="h-16 w-auto mx-auto mb-4" />
+            </div>
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                {t.createAccount}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                {step === 1 ? t.step1of2 : t.step2of2}
+              </p>
+            </div>
 
         {error && (
           <Alert type="error" message={error} />
@@ -856,30 +1010,114 @@ const Register = () => {
                 />
               </div>
 
-              <Input
-                label={t.password}
-                type="password"
-                placeholder="••••••••"
-                error={errors.password?.message}
-                  {...register('password', {
-                    required: t.passwordRequired,
-                    minLength: {
-                      value: 8,
-                      message: t.passwordMinLength,
-                    },
-                  })}
-              />
+              <div className="md:col-span-2">
+                <div className="relative">
+                  <Input
+                    label={t.password}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    error={errors.password?.message || (password && !passwordValidation.isValid ? passwordValidation.errors[0] : '')}
+                    {...register('password', {
+                      required: t.passwordRequired,
+                      validate: (value) => {
+                        const validation = validatePassword(value);
+                        if (!validation.isValid) {
+                          return validation.errors[0];
+                        }
+                        return true;
+                      },
+                    })}
+                  />
+                  <div className="absolute right-2 top-9 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="p-1 text-gray-500 hover:text-gray-700"
+                      title={showPassword ? t.hidePassword : t.showPassword}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGeneratePassword}
+                      className="p-1 text-primary-600 hover:text-primary-700"
+                      title={t.generatePassword}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Password Requirements */}
+                <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">{t.passwordRequirements}</p>
+                  <ul className="space-y-1 text-xs text-gray-600">
+                    <li className={`flex items-center gap-2 ${password && password.length >= 12 ? 'text-green-600' : ''}`}>
+                      {password && password.length >= 12 ? (
+                        <CheckCircle className="w-3 h-3" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-gray-400" />
+                      )}
+                      {t.passwordMinLength}
+                    </li>
+                    <li className={`flex items-center gap-2 ${password && /[a-z]/.test(password) ? 'text-green-600' : ''}`}>
+                      {password && /[a-z]/.test(password) ? (
+                        <CheckCircle className="w-3 h-3" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-gray-400" />
+                      )}
+                      {t.passwordLowercase}
+                    </li>
+                    <li className={`flex items-center gap-2 ${password && /[A-Z]/.test(password) ? 'text-green-600' : ''}`}>
+                      {password && /[A-Z]/.test(password) ? (
+                        <CheckCircle className="w-3 h-3" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-gray-400" />
+                      )}
+                      {t.passwordUppercase}
+                    </li>
+                    <li className={`flex items-center gap-2 ${password && /[0-9]/.test(password) ? 'text-green-600' : ''}`}>
+                      {password && /[0-9]/.test(password) ? (
+                        <CheckCircle className="w-3 h-3" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-gray-400" />
+                      )}
+                      {t.passwordNumber}
+                    </li>
+                    <li className={`flex items-center gap-2 ${password && /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password) ? 'text-green-600' : ''}`}>
+                      {password && /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password) ? (
+                        <CheckCircle className="w-3 h-3" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-gray-400" />
+                      )}
+                      {t.passwordSpecial}
+                    </li>
+                  </ul>
+                </div>
+              </div>
 
-              <Input
-                label={t.confirmPassword}
-                type="password"
-                placeholder="••••••••"
-                error={errors.passwordConfirm?.message}
-                  {...register('passwordConfirm', {
-                    required: t.confirmPasswordRequired,
-                    validate: (value) => value === password || t.passwordsDoNotMatch,
-                  })}
-              />
+              <div className="md:col-span-2">
+                <div className="relative">
+                  <Input
+                    label={t.confirmPassword}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    error={errors.passwordConfirm?.message}
+                    {...register('passwordConfirm', {
+                      required: t.confirmPasswordRequired,
+                      validate: (value) => value === password || t.passwordsDoNotMatch,
+                    })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2 top-9 p-1 text-gray-500 hover:text-gray-700"
+                    title={showConfirmPassword ? t.hidePassword : t.showPassword}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
 
               <div className="md:col-span-2">
                 <Select
@@ -1291,6 +1529,8 @@ const Register = () => {
             </Link>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
 import { applicationService } from '../../services/applicationService';
+import { useToast } from '../../contexts/ToastContext';
+import { translateError } from '../../utils/errorTranslations';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { API_BASE_URL } from '../../config/env';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
@@ -39,16 +42,19 @@ const translations = {
     jobCancelledMessage: 'This job has been cancelled. You can still view and unlock applicant profiles, but you cannot accept or reject applications.',
     budget: 'Budget',
     deadline: 'Deadline',
+    noDeadlineSettled: 'No deadline settled',
     duration: 'Duration',
     applicants: 'Applicants',
     filtersSorting: 'Filters & Sorting',
     nationality: 'Nationality',
     allNationalities: 'All Nationalities',
+    university: 'University',
+    allUniversities: 'All Universities',
     experienceLevel: 'Experience Level',
     allLevels: 'All Levels',
     accountType: 'Account Type',
     allStudents: 'All Students',
-    premiumOnly: 'Premium Only',
+    premiumOnly: '👑 Premium Only',
     freeOnly: 'Free Only',
     status: 'Status',
     allStatuses: 'All Statuses',
@@ -119,11 +125,14 @@ const translations = {
     unlockSuccess: 'Student contact unlocked successfully!',
     unlockFailed: 'Failed to unlock contact',
     unlockConfirm: 'Unlock this student\'s contact for 10 points?',
+    confirmUnlock: 'Confirm Unlock',
     acceptSuccess: 'Application accepted! The student has been notified that they can be contacted to discuss the project.',
     acceptConfirm: 'Accept this application? The student will be notified that they can be contacted to discuss the project.',
+    confirmAccept: 'Confirm Accept',
     acceptFailed: 'Failed to accept application',
     rejectSuccess: 'Application rejected. The student has been notified.',
     rejectConfirm: 'Reject this application? The student will be notified.',
+    confirmReject: 'Confirm Reject',
     rejectFailed: 'Failed to reject application',
   },
   it: {
@@ -134,16 +143,19 @@ const translations = {
     jobCancelledMessage: 'Questo lavoro è stato annullato. Puoi ancora visualizzare e sbloccare i profili dei candidati, ma non puoi accettare o rifiutare le candidature.',
     budget: 'Budget',
     deadline: 'Scadenza',
+    noDeadlineSettled: 'Nessuna scadenza stabilita',
     duration: 'Durata',
     applicants: 'Candidati',
     filtersSorting: 'Filtri e Ordinamento',
     nationality: 'Nazionalità',
     allNationalities: 'Tutte le Nazionalità',
+    university: 'Università',
+    allUniversities: 'Tutte le Università',
     experienceLevel: 'Livello di Esperienza',
     allLevels: 'Tutti i Livelli',
     accountType: 'Tipo di Account',
     allStudents: 'Tutti gli Studenti',
-    premiumOnly: 'Solo Premium',
+    premiumOnly: '👑 Solo Premium',
     freeOnly: 'Solo Gratuito',
     status: 'Stato',
     allStatuses: 'Tutti gli Stati',
@@ -214,11 +226,14 @@ const translations = {
     unlockSuccess: 'Contatto studente sbloccato con successo!',
     unlockFailed: 'Impossibile sbloccare il contatto',
     unlockConfirm: 'Sbloccare il contatto di questo studente per 10 punti?',
+    confirmUnlock: 'Conferma Sblocco',
     acceptSuccess: 'Candidatura accettata! Lo studente è stato informato che può essere contattato per discutere il progetto.',
     acceptConfirm: 'Accettare questa candidatura? Lo studente sarà informato che può essere contattato per discutere il progetto.',
+    confirmAccept: 'Conferma Accettazione',
     acceptFailed: 'Impossibile accettare la candidatura',
     rejectSuccess: 'Candidatura rifiutata. Lo studente è stato informato.',
     rejectConfirm: 'Rifiutare questa candidatura? Lo studente sarà informato.',
+    confirmReject: 'Conferma Rifiuto',
     rejectFailed: 'Impossibile rifiutare la candidatura',
   },
 };
@@ -227,8 +242,17 @@ const JobApplicationsDetail = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { success: showSuccess, error: showError } = useToast();
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
+  });
+  
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    message: '',
+    onConfirm: null,
+    title: '',
   });
 
   useEffect(() => {
@@ -282,6 +306,7 @@ const JobApplicationsDetail = () => {
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterNationality, setFilterNationality] = useState('');
+  const [filterUniversity, setFilterUniversity] = useState('');
   const [filterExperience, setFilterExperience] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPremium, setFilterPremium] = useState('');
@@ -320,12 +345,13 @@ const JobApplicationsDetail = () => {
     isLoading: loadingApplications,
     error: applicationsError,
   } = useQuery({
-    queryKey: ['jobApplications', jobId, sortBy, sortOrder, filterNationality, filterExperience, filterStatus, filterPremium, page],
+    queryKey: ['jobApplications', jobId, sortBy, sortOrder, filterNationality, filterUniversity, filterExperience, filterStatus, filterPremium, page],
     queryFn: () =>
       applicationService.getJobApplications(jobId, {
         sortBy,
         sortOrder,
         nationality: filterNationality,
+        university: filterUniversity,
         experienceLevel: filterExperience,
         status: filterStatus,
         subscriptionTier: filterPremium,
@@ -348,18 +374,27 @@ const JobApplicationsDetail = () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
       queryClient.invalidateQueries(['currentUser']);
       queryClient.invalidateQueries(['fullApplication', selectedApplication]);
-      alert(t.unlockSuccess);
+      showSuccess(t.unlockSuccess);
     },
     onError: (error) => {
-      const errorMessage = error.response?.data?.message || error.message || t.unlockFailed;
+      let errorMessage = t.unlockFailed;
+      
+      if (error.response?.data?.message) {
+        errorMessage = translateError(error.response.data.message, language);
+      } else if (error.message) {
+        errorMessage = translateError(error.message, language);
+      }
       
       // Check if it's an insufficient points error
-      if (errorMessage.toLowerCase().includes('insufficient points') || 
-          errorMessage.toLowerCase().includes('need') && errorMessage.toLowerCase().includes('points')) {
+      const lowerMessage = errorMessage.toLowerCase();
+      if (lowerMessage.includes('insufficient points') || 
+          lowerMessage.includes('insufficienti punti') ||
+          (lowerMessage.includes('need') && lowerMessage.includes('points')) ||
+          (lowerMessage.includes('bisogno') && lowerMessage.includes('punti'))) {
         setInsufficientPointsMessage(errorMessage);
         setShowInsufficientPointsModal(true);
       } else {
-        alert(errorMessage);
+        showError(errorMessage);
       }
     },
   });
@@ -369,7 +404,7 @@ const JobApplicationsDetail = () => {
     mutationFn: (applicationId) => applicationService.acceptApplication(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
-      alert(t.acceptSuccess);
+      showSuccess(t.acceptSuccess);
     },
   });
 
@@ -378,14 +413,19 @@ const JobApplicationsDetail = () => {
     mutationFn: (applicationId) => applicationService.rejectApplication(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries(['jobApplications', jobId]);
-      alert(t.rejectSuccess);
+      showSuccess(t.rejectSuccess);
     },
   });
 
   const handleUnlock = async (applicationId) => {
-    if (confirm(t.unlockConfirm)) {
-      unlockMutation.mutate(applicationId);
-    }
+    setConfirmModal({
+      isOpen: true,
+      message: t.unlockConfirm,
+      title: t.confirmUnlock,
+      onConfirm: () => {
+        unlockMutation.mutate(applicationId);
+      },
+    });
   };
 
   const handleBuyPoints = () => {
@@ -394,23 +434,39 @@ const JobApplicationsDetail = () => {
   };
 
   const handleAccept = async (applicationId) => {
-    if (confirm(t.acceptConfirm)) {
-      try {
-        await acceptMutation.mutateAsync(applicationId);
-      } catch (error) {
-        alert(error.response?.data?.message || t.acceptFailed);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      message: t.acceptConfirm,
+      title: t.confirmAccept,
+      onConfirm: async () => {
+        try {
+          await acceptMutation.mutateAsync(applicationId);
+        } catch (error) {
+          const errorMessage = error.response?.data?.message 
+            ? translateError(error.response.data.message, language)
+            : t.acceptFailed;
+          showError(errorMessage);
+        }
+      },
+    });
   };
 
   const handleReject = async (applicationId) => {
-    if (confirm(t.rejectConfirm)) {
-      try {
-        await rejectMutation.mutateAsync(applicationId);
-      } catch (error) {
-        alert(error.response?.data?.message || t.rejectFailed);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      message: t.rejectConfirm,
+      title: t.confirmReject,
+      onConfirm: async () => {
+        try {
+          await rejectMutation.mutateAsync(applicationId);
+        } catch (error) {
+          const errorMessage = error.response?.data?.message 
+            ? translateError(error.response.data.message, language)
+            : t.rejectFailed;
+          showError(errorMessage);
+        }
+      },
+    });
   };
 
   const handleSort = (field) => {
@@ -451,6 +507,7 @@ const JobApplicationsDetail = () => {
   const applications = applicationsData?.data?.applications || [];
   const pagination = applicationsData?.data?.pagination || {};
   const uniqueNationalities = applicationsData?.data?.uniqueNationalities || [];
+  const uniqueUniversities = applicationsData?.data?.uniqueUniversities || [];
   
   // Get total count - check multiple possible locations
   const totalCount = pagination?.total || applicationsData?.data?.total || applications.length;
@@ -493,7 +550,12 @@ const JobApplicationsDetail = () => {
                 <Calendar className="w-5 h-5 text-primary-600" />
                 <div>
                   <p className="text-xs text-gray-500">{t.deadline}</p>
-                  <p className="font-semibold">{new Date(job?.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}</p>
+                  <p className="font-semibold">
+                    {job?.deadline 
+                      ? new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')
+                      : t.noDeadlineSettled
+                    }
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-gray-700">
@@ -525,7 +587,7 @@ const JobApplicationsDetail = () => {
           <Filter className="w-5 h-5 text-gray-600 flex-shrink-0" />
           <h3 className="font-bold text-gray-900 text-sm sm:text-base">{t.filtersSorting}</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4">
           {/* Nationality Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -543,6 +605,28 @@ const JobApplicationsDetail = () => {
               {uniqueNationalities.map((nat) => (
                 <option key={nat} value={nat}>
                   {nat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* University Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t.university}
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={filterUniversity}
+              onChange={(e) => {
+                setFilterUniversity(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">{t.allUniversities}</option>
+              {uniqueUniversities.map((uni) => (
+                <option key={uni} value={uni}>
+                  {uni}
                 </option>
               ))}
             </select>
@@ -714,7 +798,7 @@ const JobApplicationsDetail = () => {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-3">
                         <div>
                           <p className="text-xs text-gray-500">{t.proposedBudgetLabel}</p>
                           <p className="font-bold text-green-600 text-lg">
@@ -734,6 +818,21 @@ const JobApplicationsDetail = () => {
                         <div>
                           <p className="text-xs text-gray-500">{t.nationalityLabel}</p>
                           <p className="font-semibold">{student?.nationality || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">{t.university}</p>
+                          <p className="font-semibold">
+                            {(() => {
+                              console.log(application);
+                              // Try multiple ways to access university
+                              const university = student?.studentProfile?.university || 
+                                               (student?.studentProfile && student.studentProfile.university) ||
+                                               null;
+                              return university || 'N/A';
+                     
+              
+                            })()}
+                          </p>
                         </div>
                       </div>
 
@@ -902,11 +1001,19 @@ const JobApplicationsDetail = () => {
                             <p className="text-gray-600 mb-1">{fullStudent?.email}</p>
                             <p className="text-sm text-gray-500">
                               {fullStudent?.nationality && `${t.nationalityLabel}: ${fullStudent.nationality}`}
-                              {fullStudent?.age && ` • ${t.applied}: ${fullStudent.age}`}
+                              {fullStudent?.age && ` • Age: ${fullStudent.age}`}
+                              {fullStudent?.studentProfile?.university && ` • ${t.university}: ${fullStudent.studentProfile.university}`}
                             </p>
                           </>
                         ) : (
-                          <p className="text-gray-500">{t.unlockContactToView}</p>
+                          <>
+                            <p className="text-gray-500 mb-1">{t.unlockContactToView}</p>
+                            {fullStudent?.studentProfile?.university && (
+                              <p className="text-sm text-gray-500">
+                                {t.university}: {fullStudent.studentProfile.university}
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -1242,6 +1349,17 @@ const JobApplicationsDetail = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, message: '', onConfirm: null, title: '' })}
+        onConfirm={confirmModal.onConfirm || (() => {})}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={t.confirm || 'Confirm'}
+        cancelText={t.cancel}
+      />
     </div>
   );
 };

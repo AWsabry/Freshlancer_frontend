@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import { jobService } from '../../services/jobService';
 import { applicationService } from '../../services/applicationService';
 import { subscriptionService } from '../../services/subscriptionService';
+import { useToast } from '../../contexts/ToastContext';
+import { translateError } from '../../utils/errorTranslations';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -258,6 +260,8 @@ const JobDetails = () => {
   const hasAlreadyApplied = applicationStatusData?.data?.hasApplied || false;
   const existingApplication = applicationStatusData?.data?.application || null;
 
+  const { success: showSuccess, error: showError, warning: showWarning } = useToast();
+
   // Apply mutation
   const applyMutation = useMutation({
     mutationFn: (applicationData) => applicationService.applyToJob(applicationData),
@@ -269,7 +273,7 @@ const JobDetails = () => {
       queryClient.invalidateQueries(['jobs']); // Invalidate jobs list to update Available/Applied tabs
       setShowApplicationModal(false);
       reset();
-      alert(t.applicationSuccess);
+      showSuccess(t.applicationSuccess);
       navigate('/student/jobs');
     },
     onError: (error) => {
@@ -277,14 +281,22 @@ const JobDetails = () => {
       let errorMessage = t.applicationFailed;
       
       if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+        const backendMessage = error.response.data.message;
+        // Check if it's an "already applied" error
+        if (backendMessage.toLowerCase().includes('already applied')) {
+          errorMessage = language === 'it' 
+            ? 'Hai già fatto domanda per questo lavoro.'
+            : 'You have already applied for this job.';
+        } else {
+          errorMessage = translateError(backendMessage, language);
+        }
       } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = translateError(error.message, language);
       }
       
-      // Don't show alert for duplicate application errors (user might have clicked twice)
-      if (!errorMessage.includes('already applied')) {
-        alert(errorMessage);
+      // Don't show toast for duplicate application errors (user might have clicked twice)
+      if (!errorMessage.toLowerCase().includes('already applied') && !errorMessage.toLowerCase().includes('già fatto domanda')) {
+        showError(errorMessage);
       }
     },
   });
@@ -292,22 +304,22 @@ const JobDetails = () => {
   const onSubmit = (data) => {
     // Validate required fields before submission
     if (!id) {
-      alert(t.jobIdMissing);
+      showError(t.jobIdMissing);
       return;
     }
 
     if (!data.proposedBudget || isNaN(parseFloat(data.proposedBudget))) {
-      alert(t.validBudgetRequired);
+      showError(t.validBudgetRequired);
       return;
     }
 
     if (!data.estimatedDuration) {
-      alert(t.durationRequiredAlert);
+      showError(t.durationRequiredAlert);
       return;
     }
 
     if (!data.availabilityCommitment) {
-      alert(t.availabilityRequiredAlert);
+      showError(t.availabilityRequiredAlert);
       return;
     }
 

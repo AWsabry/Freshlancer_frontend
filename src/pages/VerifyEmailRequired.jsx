@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
+import { translateError } from '../utils/errorTranslations';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Alert from '../components/common/Alert';
@@ -62,7 +63,7 @@ const translations = {
 
 const VerifyEmailRequired = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState(null);
   const [language, setLanguage] = useState(() => {
@@ -132,7 +133,10 @@ const VerifyEmailRequired = () => {
       setTimeout(() => setResendSuccess(false), 5000);
     },
     onError: (error) => {
-      setResendError(error.response?.data?.message || t.failedToResend);
+      const errorMessage = error.response?.data?.message 
+        ? translateError(error.response.data.message, language)
+        : t.failedToResend;
+      setResendError(errorMessage);
       setResendSuccess(false);
     },
   });
@@ -286,8 +290,7 @@ const VerifyEmailRequired = () => {
             <Button
               variant="outline"
               onClick={async () => {
-                await authService.logout();
-                useAuthStore.getState().logout();
+                await logout();
                 navigate('/login');
               }}
               className="w-full"

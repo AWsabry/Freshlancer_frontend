@@ -180,6 +180,17 @@ const StartupProfile = () => {
 
   const startups = startupsData?.data?.startups || [];
 
+  // Helper function to get full logo URL (handles both full URLs and relative paths)
+  const getLogoUrl = (logo) => {
+    if (!logo) return null;
+    // If logo is already a full URL, return it directly
+    if (logo.startsWith('http://') || logo.startsWith('https://')) {
+      return logo;
+    }
+    // Otherwise, prepend API_BASE_URL for relative paths (backward compatibility)
+    return `${API_BASE_URL}${logo}`;
+  };
+
   // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -188,6 +199,8 @@ const StartupProfile = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['startups']);
+      // Invalidate user data to refresh isStartup status
+      queryClient.invalidateQueries(['currentUser']);
       setIsCreating(false);
       resetForm();
       setSuccess(t.startupCreated);
@@ -286,7 +299,7 @@ const StartupProfile = () => {
         whatsapp: startup.socialLinks?.whatsapp || '',
       },
     });
-    setLogoPreview(startup.logo ? `${API_BASE_URL}${startup.logo}` : null);
+    setLogoPreview(getLogoUrl(startup.logo));
     setLogoFile(null);
     setIsCreating(false);
   };
@@ -647,7 +660,7 @@ const StartupProfile = () => {
                   <div className="flex items-start gap-3 flex-1">
                     {startup.logo && (
                       <img
-                        src={`${API_BASE_URL}${startup.logo}`}
+                        src={getLogoUrl(startup.logo)}
                         alt={startup.startupName}
                         className="w-16 h-16 rounded-lg object-cover border border-gray-300"
                       />

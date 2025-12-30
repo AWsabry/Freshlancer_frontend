@@ -53,9 +53,19 @@ export const authService = {
 
   // Logout - clear all storage and sessions
   logout: async () => {
-    const user = this.getCurrentUser();
+    // Get user info before clearing storage
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
     const userEmail = user?.email || 'unknown';
     const userRole = user?.role || 'unknown';
+
+    // Call backend logout endpoint first (while we still have token)
+    try {
+      await api.get('/users/logout');
+    } catch (error) {
+      // Continue with logout even if backend call fails
+      console.warn('Backend logout call failed, continuing with client-side logout:', error);
+    }
 
     // Clear all localStorage items
     localStorage.clear();
@@ -68,13 +78,12 @@ export const authService = {
     // Clear all cookies
     clearAllCookies();
 
-    // Call backend logout endpoint to clear server-side session
+    // Log the logout action
     try {
-      await api.get('/users/logout');
       await logger.info(`User logged out: ${userEmail}`, { action: 'user_logout', role: userRole });
     } catch (error) {
-      // Still log logout even if backend call fails
-      await logger.info(`User logged out (client-side): ${userEmail}`, { action: 'user_logout', role: userRole });
+      // Logging failure shouldn't prevent logout
+      console.warn('Failed to log logout action:', error);
     }
   },
 

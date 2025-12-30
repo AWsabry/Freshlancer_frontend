@@ -134,7 +134,7 @@ const Dashboard = () => {
       { key: 'email', label: 'Email' },
       { key: 'role', label: 'Role' },
       { 
-        key: 'createdAt', 
+        key: 'joinedAt', 
         label: 'Joined Date',
         formatter: formatDate
       },
@@ -383,7 +383,7 @@ const Dashboard = () => {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : 'N/A'}
                     </div>
                   </td>
                 </tr>

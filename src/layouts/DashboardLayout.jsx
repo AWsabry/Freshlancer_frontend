@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '../services/notificationService';
 import { authService } from '../services/authService';
+import { API_BASE_URL } from '../config/env';
 import {
   Home,
   Briefcase,
@@ -234,11 +235,9 @@ const DashboardLayout = () => {
         ...baseItems.slice(1),
       ];
       
-      // Add Startup Profile menu item if user is a startup
-      if (user?.clientProfile?.isStartup || userData?.data?.user?.clientProfile?.isStartup) {
-        // Insert after Packages
-        items.splice(4, 0, { name: t.startupProfile, icon: Rocket, path: '/client/startup-profile' });
-      }
+      // Add Startup Profile menu item for all clients (not just those with isStartup=true)
+      // Insert after Packages
+      items.splice(4, 0, { name: t.startupProfile, icon: Rocket, path: '/client/startup-profile' });
       
       return items;
     }
@@ -309,11 +308,44 @@ const DashboardLayout = () => {
           {/* User info */}
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b">
             <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-primary-600 font-semibold text-sm sm:text-lg">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {(() => {
+                const currentUser = userData?.data?.user || user;
+                const userPhoto = currentUser?.photo;
+                let photoUrl = null;
+                
+                if (userPhoto) {
+                  if (userPhoto.startsWith('http://') || userPhoto.startsWith('https://')) {
+                    photoUrl = userPhoto;
+                  } else if (userPhoto.startsWith('/uploads/')) {
+                    photoUrl = `${API_BASE_URL}${userPhoto}`;
+                  } else {
+                    photoUrl = `${API_BASE_URL}/uploads/${userPhoto}`;
+                  }
+                }
+                
+                return (
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                    {photoUrl ? (
+                      <img
+                        src={photoUrl}
+                        alt={user?.name || 'User'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const fallback = e.target.parentElement.querySelector('.photo-fallback');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <span 
+                      className="photo-fallback text-primary-600 font-semibold text-sm sm:text-lg"
+                      style={{ display: photoUrl ? 'none' : 'flex' }}
+                    >
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                );
+              })()}
               <div className="ml-2 sm:ml-3 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{user?.name}</p>
                 <p className="text-[10px] sm:text-xs text-gray-500 capitalize">{t.role[user?.role] || user?.role}</p>
