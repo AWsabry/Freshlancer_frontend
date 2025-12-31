@@ -58,6 +58,12 @@ export const universityService = {
     return response;
   },
 
+  // Admin: Get single university by ID
+  getUniversityAdmin: async (id) => {
+    const response = await api.get(`/admin/universities/${id}`);
+    return response.data;
+  },
+
   // Admin: Create university (automatically approved)
   createUniversity: async (universityData) => {
     const response = await api.post('/admin/universities', universityData);

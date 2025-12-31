@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -18,11 +19,14 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { analyticsService } from '../../services/analyticsService';
+import { adminService } from '../../services/adminService';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Select from '../../components/common/Select';
 import DateRangePicker from '../../components/common/DateRangePicker';
+import Button from '../../components/common/Button';
+import { exportToCSV, formatDate, formatCurrency } from '../../utils/exportUtils';
 import {
   TrendingUp,
   Users,
@@ -32,11 +36,18 @@ import {
   Target,
   BarChart3,
   PieChart as PieChartIcon,
+  UserCheck,
+  Clock,
+  Crown,
+  CreditCard,
+  AlertCircle,
+  Download,
 } from 'lucide-react';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 const Analytics = () => {
+  const navigate = useNavigate();
   const [period, setPeriod] = useState('month');
   const [dateRange, setDateRange] = useState({
     startDate: null,
@@ -51,6 +62,18 @@ const Analytics = () => {
         startDate: dateRange.startDate || undefined,
         endDate: dateRange.endDate || undefined,
       }),
+  });
+
+  // Fetch dashboard stats for the summary
+  const { data: statsData } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: () => adminService.getDashboardStats(),
+  });
+
+  // Fetch log statistics for error count
+  const { data: logStatsData } = useQuery({
+    queryKey: ['adminLogStats'],
+    queryFn: () => adminService.getLogStats(),
   });
 
   if (isLoading) {
@@ -68,6 +91,321 @@ const Analytics = () => {
 
   const analytics = analyticsData || {};
 
+  // Export functions
+  const handleExportStats = () => {
+    const stats = statsData?.data?.stats || {};
+    const logStats = logStatsData?.data || {};
+    
+    const statsDataForExport = [
+      {
+        metric: 'Total Users',
+        value: stats.totalUsers || 0,
+      },
+      {
+        metric: 'Total Students',
+        value: stats.totalStudents || 0,
+      },
+      {
+        metric: 'Total Clients',
+        value: stats.totalClients || 0,
+      },
+      {
+        metric: 'Total Applications',
+        value: stats.totalApplications || 0,
+      },
+      {
+        metric: 'Total Jobs',
+        value: stats.totalJobs || 0,
+      },
+      {
+        metric: 'Active Jobs',
+        value: stats.activeJobs || 0,
+      },
+      {
+        metric: 'Pending Applications',
+        value: stats.pendingApplications || 0,
+      },
+      {
+        metric: 'Current Premium Students',
+        value: stats.currentPremiumStudents || 0,
+      },
+      {
+        metric: 'Total Client Transactions',
+        value: stats.totalClientTransactions || 0,
+      },
+      {
+        metric: 'Total Active Subscriptions',
+        value: stats.totalActiveSubscriptions || 0,
+      },
+      {
+        metric: 'Audit Log Entries',
+        value: logStats.totalEntries || 0,
+      },
+      {
+        metric: 'Audit Log Files',
+        value: logStats.totalFiles || 0,
+      },
+    ];
+
+    const columns = [
+      { key: 'metric', label: 'Metric' },
+      { key: 'value', label: 'Value' },
+    ];
+
+    exportToCSV(statsDataForExport, columns, 'analytics_stats');
+  };
+
+  const handleExportUserGrowth = () => {
+    const userGrowthData = analytics.userGrowth?.timeline || [];
+    if (userGrowthData.length === 0) {
+      alert('No user growth data to export');
+      return;
+    }
+
+    const columns = [
+      { key: 'date', label: 'Date', formatter: formatDate },
+      { key: 'total', label: 'Total Users' },
+      { key: 'students', label: 'Students' },
+      { key: 'clients', label: 'Clients' },
+    ];
+
+    exportToCSV(userGrowthData, columns, 'user_growth');
+  };
+
+  const handleExportRevenue = () => {
+    const revenueData = analytics.revenueAnalytics?.timeline || [];
+    if (revenueData.length === 0) {
+      alert('No revenue data to export');
+      return;
+    }
+
+    const columns = [
+      { key: 'date', label: 'Date', formatter: formatDate },
+      { key: 'revenueUSD', label: 'Revenue (USD)', formatter: (val) => formatCurrency(val, 'USD') },
+      { key: 'revenueEGP', label: 'Revenue (EGP)', formatter: (val) => formatCurrency(val, 'EGP') },
+      { key: 'revenue', label: 'Total Revenue', formatter: (val) => formatCurrency(val, 'USD') },
+      { key: 'transactions', label: 'Transactions' },
+    ];
+
+    exportToCSV(revenueData, columns, 'revenue_analytics');
+  };
+
+  const handleExportJobs = () => {
+    const jobsData = analytics.jobAnalytics?.timeline || [];
+    if (jobsData.length === 0) {
+      alert('No job analytics data to export');
+      return;
+    }
+
+    const columns = [
+      { key: 'date', label: 'Date', formatter: formatDate },
+      { key: 'total', label: 'Total Jobs' },
+      { key: 'open', label: 'Open Jobs' },
+      { key: 'inProgress', label: 'In Progress' },
+      { key: 'completed', label: 'Completed' },
+    ];
+
+    exportToCSV(jobsData, columns, 'job_analytics');
+  };
+
+  const handleExportApplications = () => {
+    const applicationsData = analytics.applicationAnalytics?.timeline || [];
+    if (applicationsData.length === 0) {
+      alert('No application analytics data to export');
+      return;
+    }
+
+    const columns = [
+      { key: 'date', label: 'Date', formatter: formatDate },
+      { key: 'total', label: 'Total Applications' },
+      { key: 'pending', label: 'Pending' },
+      { key: 'accepted', label: 'Accepted' },
+      { key: 'rejected', label: 'Rejected' },
+    ];
+
+    exportToCSV(applicationsData, columns, 'application_analytics');
+  };
+
+  const handleExportCategoryPerformance = () => {
+    const categoryData = analytics.categoryPerformance || [];
+    if (categoryData.length === 0) {
+      alert('No category performance data to export');
+      return;
+    }
+
+    const columns = [
+      { key: 'category', label: 'Category' },
+      { key: 'jobCount', label: 'Job Count' },
+      { key: 'applicationCount', label: 'Application Count' },
+    ];
+
+    exportToCSV(categoryData, columns, 'category_performance');
+  };
+
+  const handleExportTopPerformers = () => {
+    const topClients = analytics.topMetrics?.topClients || [];
+    const topStudents = analytics.topMetrics?.topStudents || [];
+    
+    if (topClients.length === 0 && topStudents.length === 0) {
+      alert('No top performers data to export');
+      return;
+    }
+
+    // Export top clients
+    if (topClients.length > 0) {
+      const clientColumns = [
+        { key: 'clientName', label: 'Client Name' },
+        { key: 'clientEmail', label: 'Email' },
+        { key: 'jobCount', label: 'Job Count' },
+      ];
+      exportToCSV(topClients, clientColumns, 'top_clients');
+    }
+
+    // Export top students
+    if (topStudents.length > 0) {
+      const studentColumns = [
+        { key: 'studentName', label: 'Student Name' },
+        { key: 'studentEmail', label: 'Email' },
+        { key: 'applicationCount', label: 'Application Count' },
+      ];
+      exportToCSV(topStudents, studentColumns, 'top_students');
+    }
+  };
+
+  const handleExportUserDemographics = () => {
+    const topNationalities = analytics.userDemographics?.topNationalities || [];
+    const roleDistribution = analytics.userDemographics?.roleDistribution || [];
+    
+    if (topNationalities.length === 0 && roleDistribution.length === 0) {
+      alert('No user demographics data to export');
+      return;
+    }
+
+    // Export top nationalities
+    if (topNationalities.length > 0) {
+      const nationalityColumns = [
+        { key: 'nationality', label: 'Nationality' },
+        { key: 'count', label: 'User Count' },
+      ];
+      exportToCSV(topNationalities, nationalityColumns, 'top_nationalities');
+    }
+
+    // Export role distribution
+    if (roleDistribution.length > 0) {
+      const roleColumns = [
+        { key: 'role', label: 'Role' },
+        { key: 'count', label: 'Count' },
+      ];
+      exportToCSV(roleDistribution, roleColumns, 'role_distribution');
+    }
+  };
+
+  const handleExportClientTransactions = async () => {
+    try {
+      const exportData = await adminService.getAllTransactions({
+        limit: 10000,
+        role: 'client',
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+      });
+
+      const allTransactions = exportData?.data?.data?.transactions || exportData?.data?.transactions || [];
+      
+      if (allTransactions.length === 0) {
+        alert('No client transactions to export');
+        return;
+      }
+
+      const columns = [
+        { key: 'user.name', label: 'Client Name' },
+        { key: 'user.email', label: 'Client Email' },
+        { key: 'description', label: 'Description' },
+        { 
+          key: 'amount', 
+          label: 'Amount',
+          formatter: (value, item) => formatCurrency(value, item.currency)
+        },
+        { key: 'currency', label: 'Currency' },
+        { key: 'status', label: 'Status' },
+        { key: 'type', label: 'Transaction Type' },
+        { key: 'points', label: 'Points' },
+        { key: 'packageType', label: 'Package Type' },
+        { key: 'paymentMethod', label: 'Payment Method' },
+        { key: 'gatewayTransactionId', label: 'Transaction ID' },
+        { 
+          key: 'createdAt', 
+          label: 'Transaction Date',
+          formatter: formatDate
+        },
+      ];
+
+      exportToCSV(allTransactions, columns, 'client_transactions');
+    } catch (error) {
+      alert('Failed to export client transactions: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  const handleExportStudentTransactions = async () => {
+    try {
+      const exportData = await adminService.getAllTransactions({
+        limit: 10000,
+        role: 'student',
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+      });
+
+      const allTransactions = exportData?.data?.data?.transactions || exportData?.data?.transactions || [];
+      
+      if (allTransactions.length === 0) {
+        alert('No student transactions to export');
+        return;
+      }
+
+      const columns = [
+        { key: 'user.name', label: 'Student Name' },
+        { key: 'user.email', label: 'Student Email' },
+        { key: 'description', label: 'Description' },
+        { 
+          key: 'amount', 
+          label: 'Amount',
+          formatter: (value, item) => formatCurrency(value, item.currency)
+        },
+        { key: 'currency', label: 'Currency' },
+        { key: 'status', label: 'Status' },
+        { key: 'type', label: 'Transaction Type' },
+        { key: 'plan', label: 'Subscription Plan' },
+        { key: 'paymentMethod', label: 'Payment Method' },
+        { key: 'gatewayTransactionId', label: 'Transaction ID' },
+        { 
+          key: 'createdAt', 
+          label: 'Transaction Date',
+          formatter: formatDate
+        },
+      ];
+
+      exportToCSV(allTransactions, columns, 'student_transactions');
+    } catch (error) {
+      alert('Failed to export student transactions: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  const handleExportAll = () => {
+    try {
+      handleExportStats();
+      setTimeout(() => handleExportUserGrowth(), 500);
+      setTimeout(() => handleExportRevenue(), 1000);
+      setTimeout(() => handleExportJobs(), 1500);
+      setTimeout(() => handleExportApplications(), 2000);
+      setTimeout(() => handleExportCategoryPerformance(), 2500);
+      setTimeout(() => handleExportTopPerformers(), 3000);
+      setTimeout(() => handleExportUserDemographics(), 3500);
+      setTimeout(() => handleExportClientTransactions(), 4000);
+      setTimeout(() => handleExportStudentTransactions(), 4500);
+    } catch (error) {
+      alert('Failed to export all data: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -78,6 +416,16 @@ const Analytics = () => {
             Analytics Dashboard
           </h1>
           <p className="text-gray-600 mt-2">Comprehensive insights and data visualization</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportAll}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export All
+          </Button>
         </div>
       </div>
 
@@ -104,6 +452,29 @@ const Analytics = () => {
           />
         </div>
       </Card>
+
+      {/* Stats Summary - Moved from Dashboard */}
+      {statsData && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Platform Statistics</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportStats}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export Stats
+            </Button>
+          </div>
+          <StatsSummary 
+            stats={statsData?.data?.stats || {}} 
+            logStatsData={logStatsData}
+            navigate={navigate}
+          />
+        </div>
+      )}
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -151,15 +522,26 @@ const Analytics = () => {
 
       {/* User Growth Chart */}
       <Card>
-        <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            User Growth
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Students: {formatNumber(analytics.userGrowth?.totals?.students || 0)} | Clients:{' '}
-            {formatNumber(analytics.userGrowth?.totals?.clients || 0)}
-          </p>
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              User Growth
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Students: {formatNumber(analytics.userGrowth?.totals?.students || 0)} | Clients:{' '}
+              {formatNumber(analytics.userGrowth?.totals?.clients || 0)}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportUserGrowth}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={analytics.userGrowth?.timeline || []}>
@@ -202,16 +584,47 @@ const Analytics = () => {
       {/* Revenue Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              Revenue Trend by Currency
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Avg Transaction: ${formatNumber(analytics.revenueAnalytics?.totals?.avgTransaction || 0)} | 
-              USD: ${formatNumber(analytics.revenueAnalytics?.totals?.totalRevenueUSD || 0)} | 
-              EGP: {formatNumber(analytics.revenueAnalytics?.totals?.totalRevenueEGP || 0)}
-            </p>
+          <div className="mb-4 flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                Revenue Trend by Currency
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Avg Transaction: ${formatNumber(analytics.revenueAnalytics?.totals?.avgTransaction || 0)} | 
+                USD: ${formatNumber(analytics.revenueAnalytics?.totals?.totalRevenueUSD || 0)} | 
+                EGP: {formatNumber(analytics.revenueAnalytics?.totals?.totalRevenueEGP || 0)}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportRevenue}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export Trends
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportClientTransactions}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export Client Transactions
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportStudentTransactions}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export Student Transactions
+              </Button>
+            </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={analytics.revenueAnalytics?.timeline || []}>
@@ -253,14 +666,45 @@ const Analytics = () => {
         </Card>
 
         <Card>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              Transactions
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Total: {formatNumber(analytics.revenueAnalytics?.totals?.totalTransactions || 0)}
-            </p>
+          <div className="mb-4 flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                Transactions
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Total: {formatNumber(analytics.revenueAnalytics?.totals?.totalTransactions || 0)}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportRevenue}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export Trends
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportClientTransactions}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export Client Transactions
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportStudentTransactions}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export Student Transactions
+              </Button>
+            </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analytics.revenueAnalytics?.timeline || []}>
@@ -277,16 +721,27 @@ const Analytics = () => {
 
       {/* Job Analytics */}
       <Card>
-        <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Briefcase className="w-5 h-5" />
-            Job Posting Trends
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Open: {formatNumber(analytics.jobAnalytics?.totals?.open || 0)} | In Progress:{' '}
-            {formatNumber(analytics.jobAnalytics?.totals?.inProgress || 0)} | Completed:{' '}
-            {formatNumber(analytics.jobAnalytics?.totals?.completed || 0)}
-          </p>
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Briefcase className="w-5 h-5" />
+              Job Posting Trends
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Open: {formatNumber(analytics.jobAnalytics?.totals?.open || 0)} | In Progress:{' '}
+              {formatNumber(analytics.jobAnalytics?.totals?.inProgress || 0)} | Completed:{' '}
+              {formatNumber(analytics.jobAnalytics?.totals?.completed || 0)}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportJobs}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={analytics.jobAnalytics?.timeline || []}>
@@ -337,16 +792,27 @@ const Analytics = () => {
 
       {/* Application Analytics */}
       <Card>
-        <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Application Trends
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Pending: {formatNumber(analytics.applicationAnalytics?.totals?.pending || 0)} | Accepted:{' '}
-            {formatNumber(analytics.applicationAnalytics?.totals?.accepted || 0)} | Rejected:{' '}
-            {formatNumber(analytics.applicationAnalytics?.totals?.rejected || 0)}
-          </p>
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Application Trends
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Pending: {formatNumber(analytics.applicationAnalytics?.totals?.pending || 0)} | Accepted:{' '}
+              {formatNumber(analytics.applicationAnalytics?.totals?.accepted || 0)} | Rejected:{' '}
+              {formatNumber(analytics.applicationAnalytics?.totals?.rejected || 0)}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportApplications}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={analytics.applicationAnalytics?.timeline || []}>
@@ -366,11 +832,20 @@ const Analytics = () => {
       {/* Category Performance & Conversion Rates */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <PieChartIcon className="w-5 h-5" />
               Category Performance
             </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCategoryPerformance}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
@@ -423,11 +898,20 @@ const Analytics = () => {
       {/* User Demographics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Users className="w-5 h-5" />
               Top Nationalities
             </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportUserDemographics}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analytics.userDemographics?.topNationalities || []}>
@@ -442,11 +926,20 @@ const Analytics = () => {
         </Card>
 
         <Card>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <PieChartIcon className="w-5 h-5" />
               Role Distribution
             </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportUserDemographics}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -474,8 +967,17 @@ const Analytics = () => {
       {/* Top Performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Top Clients by Job Posts</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportTopPerformers}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
           <div className="space-y-3">
             {(analytics.topMetrics?.topClients || []).map((client, index) => (
@@ -497,8 +999,17 @@ const Analytics = () => {
         </Card>
 
         <Card>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Top Students by Applications</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportTopPerformers}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
           <div className="space-y-3">
             {(analytics.topMetrics?.topStudents || []).map((student, index) => (
@@ -547,6 +1058,116 @@ const formatNumber = (num) => {
     return (num / 1000).toFixed(1) + 'K';
   }
   return num.toLocaleString();
+};
+
+// Stats Summary Component - Moved from Dashboard
+const StatsSummary = ({ stats, logStatsData, navigate }) => {
+  const statCards = [
+    {
+      title: 'Total Users',
+      value: stats.totalUsers || 0,
+      icon: Users,
+      color: 'bg-blue-500',
+      onClick: () => navigate('/admin/users'),
+    },
+    {
+      title: 'Students',
+      value: stats.totalStudents || 0,
+      icon: UserCheck,
+      color: 'bg-green-500',
+      onClick: () => navigate('/admin/users?role=student'),
+    },
+    {
+      title: 'Clients',
+      value: stats.totalClients || 0,
+      icon: Briefcase,
+      color: 'bg-purple-500',
+      onClick: () => navigate('/admin/users?role=client'),
+    },
+    {
+      title: 'Total Applications',
+      value: stats.totalApplications || 0,
+      icon: FileText,
+      color: 'bg-orange-500',
+      onClick: () => navigate('/admin/applications'),
+    },
+    {
+      title: 'Total Jobs',
+      value: stats.totalJobs || 0,
+      icon: Briefcase,
+      color: 'bg-indigo-500',
+      onClick: () => navigate('/admin/jobs'),
+    },
+    {
+      title: 'Active Jobs',
+      value: stats.activeJobs || 0,
+      icon: TrendingUp,
+      color: 'bg-teal-500',
+    },
+    {
+      title: 'Pending Applications',
+      value: stats.pendingApplications || 0,
+      icon: Clock,
+      color: 'bg-yellow-500',
+      onClick: () => navigate('/admin/applications?status=pending'),
+    },
+    {
+      title: 'Current Premium Students',
+      value: stats.currentPremiumStudents || 0,
+      icon: Crown,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/student-packages?plan=premium'),
+    },
+    {
+      title: 'Total Client Transactions',
+      value: stats.totalClientTransactions || 0,
+      icon: CreditCard,
+      color: 'bg-cyan-500',
+      onClick: () => navigate('/admin/transactions?role=client'),
+    },
+    {
+      title: 'Total Active Subscriptions',
+      value: stats.totalActiveSubscriptions || 0,
+      icon: Users,
+      color: 'bg-gray-500',
+      onClick: () => navigate('/admin/student-packages'),
+    },
+    {
+      title: 'Audit Logs',
+      value: logStatsData?.data?.totalEntries || 0,
+      icon: AlertCircle,
+      color: 'bg-red-500',
+      onClick: () => navigate('/admin/logs'),
+      subtitle: `${logStatsData?.data?.totalFiles || 0} log file(s)`,
+    },
+  ];
+
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat, index) => (
+          <Card
+            key={index}
+            className={`${stat.onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+            onClick={stat.onClick}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                {stat.subtitle && (
+                  <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+                )}
+              </div>
+              <div className={`${stat.color} p-3 rounded-lg`}>
+                <stat.icon className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default Analytics;

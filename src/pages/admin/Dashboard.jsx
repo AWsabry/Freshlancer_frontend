@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
@@ -10,16 +10,22 @@ import Button from '../../components/common/Button';
 import { logger } from '../../utils/logger';
 import { useAuthStore } from '../../stores/authStore';
 import {
-  Users,
   Briefcase,
   FileText,
-  UserCheck,
-  Clock,
-  TrendingUp,
-  Crown,
   CreditCard,
   Download,
   AlertCircle,
+  BarChart3,
+  Shield,
+  Folder,
+  GraduationCap,
+  DollarSign,
+  User,
+  Tag,
+  Star,
+  Mail,
+  Heart,
+  Users,
 } from 'lucide-react';
 import { exportToCSV, formatDate } from '../../utils/exportUtils';
 import {
@@ -66,62 +72,9 @@ const Dashboard = () => {
     );
   }
 
-  const stats = statsData?.data?.stats || {};
   const recentUsers = statsData?.data?.recentUsers || [];
   const clientYearlyChartData = statsData?.data?.clientYearlyChartData || [];
   const studentYearlyChartData = statsData?.data?.studentYearlyChartData || [];
-
-  const handleExportStats = () => {
-    const statsData = [
-      {
-        metric: 'Total Users',
-        value: stats.totalUsers || 0,
-      },
-      {
-        metric: 'Total Students',
-        value: stats.totalStudents || 0,
-      },
-      {
-        metric: 'Total Clients',
-        value: stats.totalClients || 0,
-      },
-      {
-        metric: 'Total Applications',
-        value: stats.totalApplications || 0,
-      },
-      {
-        metric: 'Total Jobs',
-        value: stats.totalJobs || 0,
-      },
-      {
-        metric: 'Active Jobs',
-        value: stats.activeJobs || 0,
-      },
-      {
-        metric: 'Pending Applications',
-        value: stats.pendingApplications || 0,
-      },
-      {
-        metric: 'Current Premium Students',
-        value: stats.currentPremiumStudents || 0,
-      },
-      {
-        metric: 'Total Client Transactions',
-        value: stats.totalClientTransactions || 0,
-      },
-      {
-        metric: 'Total Active Subscriptions',
-        value: stats.totalActiveSubscriptions || 0,
-      },
-    ];
-
-    const columns = [
-      { key: 'metric', label: 'Metric' },
-      { key: 'value', label: 'Value' },
-    ];
-
-    exportToCSV(statsData, columns, 'dashboard_stats');
-  };
 
   const handleExportRecentUsers = () => {
     if (recentUsers.length === 0) {
@@ -143,90 +96,112 @@ const Dashboard = () => {
     exportToCSV(recentUsers, columns, 'recent_users');
   };
 
-  const statCards = [
+  // Shortcut cards for all admin menu items
+  const shortcutCards = [
     {
-      title: 'Total Users',
-      value: stats.totalUsers || 0,
-      icon: Users,
+      title: 'Analytics',
+      description: 'View platform analytics and statistics',
+      icon: BarChart3,
       color: 'bg-blue-500',
-      onClick: () => navigate('/admin/users'),
+      path: '/admin/analytics',
     },
     {
-      title: 'Students',
-      value: stats.totalStudents || 0,
-      icon: UserCheck,
+      title: 'Users',
+      description: 'Manage all users',
+      icon: Users,
+      color: 'bg-indigo-500',
+      path: '/admin/users',
+    },
+    {
+      title: 'Verifications',
+      description: 'Verify student accounts',
+      icon: Shield,
       color: 'bg-green-500',
-      onClick: () => navigate('/admin/users?role=student'),
+      path: '/admin/students',
     },
     {
-      title: 'Clients',
-      value: stats.totalClients || 0,
-      icon: Briefcase,
-      color: 'bg-purple-500',
-      onClick: () => navigate('/admin/users?role=client'),
-    },
-    {
-      title: 'Total Applications',
-      value: stats.totalApplications || 0,
+      title: 'Applications',
+      description: 'View and manage job applications',
       icon: FileText,
       color: 'bg-orange-500',
-      onClick: () => navigate('/admin/applications'),
+      path: '/admin/applications',
     },
     {
-      title: 'Total Jobs',
-      value: stats.totalJobs || 0,
+      title: 'Jobs',
+      description: 'Manage job postings',
       icon: Briefcase,
-      color: 'bg-indigo-500',
-      onClick: () => navigate('/admin/jobs'),
+      color: 'bg-purple-500',
+      path: '/admin/jobs',
     },
     {
-      title: 'Active Jobs',
-      value: stats.activeJobs || 0,
-      icon: TrendingUp,
+      title: 'Categories',
+      description: 'Manage job categories',
+      icon: Folder,
       color: 'bg-teal-500',
+      path: '/admin/categories',
     },
     {
-      title: 'Pending Applications',
-      value: stats.pendingApplications || 0,
-      icon: Clock,
-      color: 'bg-yellow-500',
-      onClick: () => navigate('/admin/applications?status=pending'),
-    },
-    {
-      title: 'Current Premium Students',
-      value: stats.currentPremiumStudents || 0,
-      icon: Crown,
-      color: 'bg-amber-500',
-      onClick: () => navigate('/admin/student-packages?plan=premium'),
-    },
-    {
-      title: 'Total Client Transactions',
-      value: stats.totalClientTransactions || 0,
-      icon: CreditCard,
+      title: 'Universities',
+      description: 'Manage universities',
+      icon: GraduationCap,
       color: 'bg-cyan-500',
-      onClick: () => navigate('/admin/transactions?role=client'),
+      path: '/admin/universities',
     },
     {
-      title: 'Total Current Premium Users',
-      value: stats.currentPremiumStudents || 0,
-      icon: Crown,
-      color: 'bg-amber-600',
-      onClick: () => navigate('/admin/student-packages?plan=premium'),
+      title: 'Client Packages',
+      description: 'Manage client packages',
+      icon: CreditCard,
+      color: 'bg-pink-500',
+      path: '/admin/client-packages',
     },
     {
-      title: 'Total Active Subscriptions',
-      value: stats.totalActiveSubscriptions || 0,
-      icon: Users,
-      color: 'bg-gray-500',
-      onClick: () => navigate('/admin/student-packages'),
+      title: 'Client Transactions',
+      description: 'View client transactions',
+      icon: DollarSign,
+      color: 'bg-yellow-500',
+      path: '/admin/client-transactions',
+    },
+    {
+      title: 'Student Subscriptions',
+      description: 'Manage student subscriptions',
+      icon: User,
+      color: 'bg-amber-500',
+      path: '/admin/student-packages',
+    },
+    {
+      title: 'Coupons',
+      description: 'Manage discount coupons',
+      icon: Tag,
+      color: 'bg-red-500',
+      path: '/admin/coupons',
+    },
+    {
+      title: 'Startups',
+      description: 'Manage startup profiles',
+      icon: Star,
+      color: 'bg-violet-500',
+      path: '/admin/startups',
+    },
+    {
+      title: 'Contact Us',
+      description: 'View contact messages',
+      icon: Mail,
+      color: 'bg-slate-500',
+      path: '/admin/contact-us',
+    },
+    {
+      title: 'Support & Donations',
+      description: 'Manage support and donations',
+      icon: Heart,
+      color: 'bg-rose-500',
+      path: '/admin/grantings',
     },
     {
       title: 'Audit Logs',
-      value: logStatsData?.data?.totalEntries || 0,
+      description: 'View system audit logs',
       icon: AlertCircle,
-      color: 'bg-red-500',
-      onClick: () => navigate('/admin/logs'),
-      subtitle: `${logStatsData?.data?.totalFiles || 0} log file(s)`,
+      color: 'bg-gray-600',
+      path: '/admin/logs',
     },
   ];
 
@@ -236,52 +211,46 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">Overview of platform statistics and activity</p>
+          <p className="text-gray-600 mt-1">Quick access to all admin features</p>
         </div>
-        <div className="flex gap-2">
+        {recentUsers.length > 0 && (
           <Button
             variant="outline"
-            onClick={handleExportStats}
+            onClick={handleExportRecentUsers}
             className="flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Export Stats
+            Export Recent Users
           </Button>
-          {recentUsers.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={handleExportRecentUsers}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export Recent Users
-            </Button>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, index) => (
-          <Card
-            key={index}
-            className={`${stat.onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
-            onClick={stat.onClick}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                {stat.subtitle && (
-                  <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
-                )}
-              </div>
-              <div className={`${stat.color} p-3 rounded-lg`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </Card>
-        ))}
+      {/* Quick Access Shortcuts */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Access</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {shortcutCards.map((shortcut, index) => (
+            <Link
+              key={index}
+              to={shortcut.path}
+              className="block"
+            >
+              <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 h-full">
+                <div className="flex flex-col items-center text-center p-4">
+                  <div className={`${shortcut.color} p-4 rounded-lg mb-3`}>
+                    <shortcut.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {shortcut.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {shortcut.description}
+                  </p>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Yearly Charts */}

@@ -18,6 +18,7 @@ import {
   GraduationCap,
   Clock,
   Globe,
+  Eye,
 } from 'lucide-react';
 
 const Universities = () => {
@@ -27,7 +28,9 @@ const Universities = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [loadingUniversityDetails, setLoadingUniversityDetails] = useState(false);
   const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCountryCode, setFilterCountryCode] = useState('');
@@ -136,14 +139,49 @@ const Universities = () => {
     createMutation.mutate(formData);
   };
 
-  const handleEdit = (university) => {
-    setSelectedUniversity(university);
-    setFormData({
-      name: university.name || '',
-      countryCode: university.countryCode || '',
-      website: university.website || '',
-    });
-    setShowEditModal(true);
+  const handleView = async (university) => {
+    setLoadingUniversityDetails(true);
+    setShowViewModal(true);
+    try {
+      // Fetch full university details
+      const response = await universityService.getUniversityAdmin(university._id);
+      const fullUniversity = response?.data?.university || response?.university || university;
+      setSelectedUniversity(fullUniversity);
+    } catch (error) {
+      console.error('Error fetching university details:', error);
+      // Fallback to the university from list if fetch fails
+      setSelectedUniversity(university);
+    } finally {
+      setLoadingUniversityDetails(false);
+    }
+  };
+
+  const handleEdit = async (university) => {
+    setLoadingUniversityDetails(true);
+    try {
+      // Fetch full university details before editing
+      const response = await universityService.getUniversityAdmin(university._id);
+      const fullUniversity = response?.data?.university || response?.university || university;
+      setSelectedUniversity(fullUniversity);
+      setFormData({
+        name: fullUniversity.name || '',
+        countryCode: fullUniversity.countryCode || '',
+        website: fullUniversity.website || '',
+      });
+      setShowEditModal(true);
+    } catch (error) {
+      console.error('Error fetching university details:', error);
+      // Fallback to the university from list if fetch fails
+      setSelectedUniversity(university);
+      setFormData({
+        name: university.name || '',
+        countryCode: university.countryCode || '',
+        website: university.website || '',
+      });
+      setShowEditModal(true);
+    } finally {
+      setLoadingUniversityDetails(false);
+    }
   };
 
   const handleUpdate = () => {
@@ -383,6 +421,14 @@ const Universities = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleView(university)}
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
                           {university.status === 'pending' && (
                             <>
                               <Button
@@ -644,6 +690,133 @@ const Universities = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedUniversity(null);
+        }}
+        title="University Details"
+        size="lg"
+      >
+        {loadingUniversityDetails ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading university details...</p>
+          </div>
+        ) : selectedUniversity ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Name</label>
+                <p className="text-gray-900 font-semibold">{selectedUniversity.name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Country Code</label>
+                <p className="text-gray-900">{selectedUniversity.countryCode || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Status</label>
+                <div className="mt-1">{getStatusBadge(selectedUniversity.status)}</div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Website</label>
+                {selectedUniversity.website ? (
+                  <a
+                    href={selectedUniversity.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-600 hover:underline flex items-center gap-1"
+                  >
+                    <Globe className="w-4 h-4" />
+                    {selectedUniversity.website}
+                  </a>
+                ) : (
+                  <p className="text-gray-500">N/A</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Added By</label>
+                {selectedUniversity.addedBy ? (
+                  <div>
+                    <p className="text-gray-900">{selectedUniversity.addedBy.name}</p>
+                    <p className="text-sm text-gray-500">{selectedUniversity.addedBy.email}</p>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">System</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Approved By</label>
+                {selectedUniversity.approvedBy ? (
+                  <div>
+                    <p className="text-gray-900">{selectedUniversity.approvedBy.name}</p>
+                    <p className="text-sm text-gray-500">{selectedUniversity.approvedBy.email}</p>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">N/A</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Created At</label>
+                <p className="text-gray-900">
+                  {selectedUniversity.createdAt
+                    ? new Date(selectedUniversity.createdAt).toLocaleString()
+                    : 'N/A'}
+                </p>
+              </div>
+              {selectedUniversity.approvedAt && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Approved At</label>
+                  <p className="text-gray-900">
+                    {new Date(selectedUniversity.approvedAt).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {selectedUniversity.rejectedAt && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Rejected At</label>
+                  <p className="text-gray-900">
+                    {new Date(selectedUniversity.rejectedAt).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {selectedUniversity.rejectionReason && (
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-gray-500">Rejection Reason</label>
+                  <p className="text-gray-900">{selectedUniversity.rejectionReason}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedUniversity(null);
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setShowViewModal(false);
+                  handleEdit(selectedUniversity);
+                }}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No university data available</p>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Modal */}

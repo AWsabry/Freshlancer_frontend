@@ -25,8 +25,6 @@ import {
   ExternalLink,
   List,
   Grid,
-  UserCog,
-  Shield,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 import { exportToCSV, formatDate } from '../../utils/exportUtils';
@@ -55,9 +53,7 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showRoleModal, setShowRoleModal] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState('');
-  const [newRole, setNewRole] = useState('');
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [dateRange, setDateRange] = useState({
     startDate: searchParams.get('startDate') || null,
@@ -115,23 +111,6 @@ const Users = () => {
     },
   });
 
-  // Update user role mutation
-  const updateRoleMutation = useMutation({
-    mutationFn: ({ id, role }) => adminService.updateUserRole(id, role),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['adminUsers']);
-      setShowRoleModal(false);
-      setSelectedUser(null);
-      setNewRole('');
-      if (showViewModal) {
-        setShowViewModal(false);
-      }
-    },
-    onError: (error) => {
-      alert(error.response?.data?.message || 'Failed to update user role');
-    },
-  });
-
   const handleSearch = () => {
     // Update the actual search term (triggers query refetch)
     setSearchTerm(searchInput.trim());
@@ -163,21 +142,6 @@ const Users = () => {
   const handleSuspend = (user) => {
     setSelectedUser(user);
     setShowSuspendModal(true);
-  };
-
-  const handleChangeRole = (user) => {
-    setSelectedUser(user);
-    setNewRole(user.role);
-    setShowRoleModal(true);
-  };
-
-  const handleConfirmRoleChange = () => {
-    if (selectedUser && newRole && newRole !== selectedUser.role) {
-      updateRoleMutation.mutate({
-        id: selectedUser._id,
-        role: newRole,
-      });
-    }
   };
 
   const handleConfirmSuspend = () => {
@@ -352,11 +316,12 @@ const Users = () => {
     users = allUsers.filter(user => user.suspended === true);
   }
 
-  // Use backend pagination data when not filtering for suspended users
-  // When filtering suspended, we show all results without pagination
-  const totalPages = showSuspended ? 1 : (usersData?.totalPages || 1);
-  const currentPage = showSuspended ? 1 : (usersData?.currentPage || 1);
+  // Extract pagination data from response
+  // API interceptor unwraps response.data, so pagination fields are at top level
   const totalCount = usersData?.totalCount || 0;
+  const totalPages = showSuspended ? 1 : (usersData?.totalPages || Math.ceil(totalCount / 20) || 1);
+  const currentPage = showSuspended ? 1 : (usersData?.currentPage || parseInt(page) || 1);
+  const resultsCount = usersData?.results || allUsers.length || 0;
 
   return (
     <div className="space-y-6">
@@ -606,14 +571,6 @@ const Users = () => {
                           )}
                         </button>
                         <button
-                          onClick={() => handleChangeRole(user)}
-                          className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                          title="Change Role"
-                          disabled={user.role === 'admin'}
-                        >
-                          <UserCog className="w-4 h-4" />
-                        </button>
-                        <button
                           onClick={() => handleDelete(user)}
                           disabled={user.role === 'admin'}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -731,16 +688,6 @@ const Users = () => {
                           )}
                         </Button>
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleChangeRole(user)}
-                          disabled={user.role === 'admin'}
-                          title={user.role === 'admin' ? 'Cannot change admin role' : 'Change Role'}
-                        >
-                          <UserCog className="w-4 h-4 mr-1" />
-                          Role
-                        </Button>
-                        <Button
                           variant="danger"
                           size="sm"
                           onClick={() => handleDelete(user)}
@@ -758,30 +705,36 @@ const Users = () => {
           </div>
         )}
 
-        {/* Pagination - Hidden when filtering suspended users */}
-        {!showSuspended && totalPages > 1 && (
+        {/* Pagination - Always show when there are results */}
+        {!showSuspended && totalCount > 0 && (
           <div className="flex items-center justify-between mt-6 pt-4 border-t">
             <div className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
+              Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, totalCount)} of {totalCount} users
+              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="flex items-center px-3 text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </Card>
@@ -1195,18 +1148,6 @@ const Users = () => {
               >
                 Close
               </Button>
-              {selectedUser.role !== 'admin' && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowViewModal(false);
-                    handleChangeRole(selectedUser);
-                  }}
-                >
-                  <UserCog className="w-4 h-4 mr-1" />
-                  Change Role
-                </Button>
-              )}
               {(selectedUser.role === 'student' || selectedUser.role === 'client') && (
                 <Button
                   variant={
@@ -1231,103 +1172,6 @@ const Users = () => {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">No user data available</p>
-          </div>
-        )}
-      </Modal>
-
-      {/* Change Role Modal */}
-      <Modal
-        isOpen={showRoleModal}
-        onClose={() => {
-          setShowRoleModal(false);
-          setSelectedUser(null);
-          setNewRole('');
-        }}
-        title="Change User Role"
-      >
-        {selectedUser && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-2">
-                Change role for <strong>{selectedUser.name}</strong> ({selectedUser.email})
-              </p>
-              <p className="text-xs text-gray-500 mb-4">
-                Current role: <Badge variant={selectedUser.role === 'student' ? 'success' : selectedUser.role === 'client' ? 'info' : selectedUser.role === 'admin' ? 'warning' : 'default'}>{selectedUser.role}</Badge>
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select New Role
-              </label>
-              <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                disabled={updateRoleMutation.isPending}
-              >
-                <option value="">Select a role...</option>
-                {selectedUser.role === 'student' && (
-                  <>
-                    <option value="moderator">Moderator</option>
-                    <option value="student" disabled>Student (Current role)</option>
-                    <option value="client" disabled>Client (Not allowed)</option>
-                  </>
-                )}
-                {selectedUser.role === 'client' && (
-                  <>
-                    <option value="moderator">Moderator</option>
-                    <option value="client" disabled>Client (Current role)</option>
-                    <option value="student" disabled>Student (Not allowed)</option>
-                  </>
-                )}
-                {selectedUser.role === 'moderator' && (
-                  <>
-                    <option value="student">Student</option>
-                    <option value="client">Client</option>
-                    <option value="moderator" disabled>Moderator (Current role)</option>
-                  </>
-                )}
-                {selectedUser.role === 'admin' && (
-                  <option value="admin" disabled>Admin (Cannot change)</option>
-                )}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                {selectedUser.role === 'student' || selectedUser.role === 'client' 
-                  ? 'Note: Students and clients can only be changed to moderator role.'
-                  : selectedUser.role === 'moderator'
-                  ? 'Note: Moderators can be changed to student or client role.'
-                  : 'Note: Admin role cannot be assigned through this interface for security reasons.'}
-              </p>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowRoleModal(false);
-                  setSelectedUser(null);
-                  setNewRole('');
-                }}
-                disabled={updateRoleMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleConfirmRoleChange}
-                disabled={
-                  updateRoleMutation.isPending || 
-                  !newRole || 
-                  newRole === selectedUser.role || 
-                  newRole === 'admin' ||
-                  (selectedUser.role === 'student' && newRole !== 'moderator') ||
-                  (selectedUser.role === 'client' && newRole !== 'moderator')
-                }
-              >
-                {updateRoleMutation.isPending ? 'Updating...' : 'Update Role'}
-              </Button>
-            </div>
           </div>
         )}
       </Modal>
