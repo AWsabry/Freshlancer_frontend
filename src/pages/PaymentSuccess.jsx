@@ -166,19 +166,18 @@ const PaymentSuccess = () => {
         // Don't fail the whole flow if coupon recording fails
       }
 
-      setIsProcessing(false);
-
       // Clear stored data from sessionStorage
       sessionStorage.removeItem('pendingPackage');
       sessionStorage.removeItem('paymob_intention_id');
       sessionStorage.removeItem('appliedCoupon');
 
-      // Reset and start countdown
+      // Keep processing state during countdown, then redirect
       setCountdown(5);
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
+            setIsProcessing(false);
             handleContinue();
             return 0;
           }
@@ -218,21 +217,14 @@ const PaymentSuccess = () => {
             )}
           </div>
 
-          {/* Message */}
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {isProcessing ? t.redirecting : error ? t.failedToCompletePayment : t.paymentSuccessful}
-            </h1>
-            <p className="text-gray-600">
-              {isProcessing ? t.redirecting : error ? error : t.paymentConfirmed}
-            </p>
-          </div>
-
-          {/* Countdown */}
-          {!isProcessing && !error && (
-            <div className="text-center">
-              <p className="text-sm text-gray-500">
-                {t.redirectingIn} <span className="font-semibold text-gray-900">{countdown}</span> {t.seconds}
+          {/* Message - Only show error, hide success content */}
+          {error && (
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {t.failedToCompletePayment}
+              </h1>
+              <p className="text-gray-600">
+                {error}
               </p>
             </div>
           )}
