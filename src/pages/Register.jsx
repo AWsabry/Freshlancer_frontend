@@ -812,7 +812,7 @@ const Register = () => {
           ? COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
           : 'USD'; // Default to USD if country not found
         
-        // Handle custom university - store the name for now, submit after registration
+        // Handle custom university - store the name, backend will create it during registration
         let universityName = data.university?.trim() || '';
         if (isOtherUniversity && universityAdded && customUniversityName) {
           universityName = customUniversityName.trim();
@@ -889,78 +889,6 @@ const Register = () => {
       
       console.log('[Register] Registration successful, user:', user);
       console.log('[Register] Email verified:', user?.emailVerified);
-      console.log('[Register] Full response:', response);
-      
-      // Submit custom university AFTER registration (user is now authenticated)
-      if (isOtherUniversity && universityAdded && customUniversityName) {
-        try {
-          // Get country code from selected country of study (from form data or userData)
-          const countryOfStudy = data.countryOfStudy || userData.country;
-          const countryCode = countryOfStudy ? COUNTRY_TO_ISO_CODE[countryOfStudy] : undefined;
-          
-          console.log('[Register] Submitting custom university:', {
-            name: customUniversityName.trim(),
-            countryOfStudy,
-            countryCode,
-          });
-          
-          if (!countryCode) {
-            console.error('[Register] Country code not available for custom university submission. Country of study:', countryOfStudy);
-            throw new Error('Country code is required. Please ensure country of study is selected.');
-          }
-          
-          if (!customUniversityName || !customUniversityName.trim()) {
-            console.error('[Register] Custom university name is empty');
-            throw new Error('University name is required.');
-          }
-          
-          // Submit the custom university to backend (will be pending)
-          // User is now authenticated, so this will work
-          const universityResponse = await universityService.createPendingUniversity({
-            name: customUniversityName.trim(),
-            countryCode: countryCode,
-          });
-          
-          // Verify the university was created and update user's university reference
-          if (universityResponse?.data?.university || universityResponse?.university) {
-            const university = universityResponse.data?.university || universityResponse.university;
-            const universityId = university._id || university.id;
-            
-            console.log('[Register] Custom university submitted successfully:', {
-              id: universityId,
-              name: university.name,
-              countryCode: university.countryCode,
-              status: university.status,
-            });
-            
-            // Update user's university reference to link with the created university
-            try {
-              await authService.updateProfile({
-                studentProfile: {
-                  university: universityId,
-                },
-              });
-              console.log('[Register] User university reference updated successfully');
-            } catch (updateErr) {
-              console.error('[Register] Error updating user university reference:', updateErr);
-              // Non-blocking error - university is created, reference can be updated later
-            }
-          } else {
-            console.warn('[Register] University response structure unexpected:', universityResponse);
-          }
-        } catch (err) {
-          // Log error but don't block registration - university name is already saved in user profile
-          console.error('[Register] Error submitting custom university (non-blocking):', err);
-          console.error('[Register] Error details:', {
-            message: err.message,
-            response: err.response?.data,
-            status: err.response?.status,
-          });
-          if (err.response?.data?.message) {
-            console.warn('[Register] University submission error:', err.response.data.message);
-          }
-        }
-      }
       
       // Check if email is verified - if not, redirect to email verification page
       // Default to false if emailVerified is undefined (new registrations should not be verified)
@@ -1440,7 +1368,7 @@ const Register = () => {
                                     return;
                                   }
                                   
-                                  // Store the university name - it will be submitted after registration
+                                  // Store the university name - backend will create it during registration
                                   setUniversityAdded(true);
                                   field.onChange(customUniversityName.trim());
                                   setError('');

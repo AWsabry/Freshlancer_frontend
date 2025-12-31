@@ -23,6 +23,10 @@ export const adminService = {
     return api.patch(`/admin/users/${id}/verify`);
   },
 
+  updateUserRole: async (id, role) => {
+    return api.patch(`/admin/users/${id}/role`, { role });
+  },
+
   deleteUser: async (id) => {
     return api.delete(`/admin/users/${id}`);
   },

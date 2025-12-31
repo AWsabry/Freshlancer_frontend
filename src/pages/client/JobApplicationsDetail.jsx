@@ -5,6 +5,7 @@ import { jobService } from '../../services/jobService';
 import { applicationService } from '../../services/applicationService';
 import { useToast } from '../../contexts/ToastContext';
 import { translateError } from '../../utils/errorTranslations';
+import { getUniversityName, getUniversityId } from '../../utils/universityHelpers';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { API_BASE_URL } from '../../config/env';
 import Button from '../../components/common/Button';
@@ -624,11 +625,23 @@ const JobApplicationsDetail = () => {
               }}
             >
               <option value="">{t.allUniversities}</option>
-              {uniqueUniversities.map((uni) => (
-                <option key={uni} value={uni}>
-                  {uni}
-                </option>
-              ))}
+              {uniqueUniversities.map((uni) => {
+                // Handle both object format { _id, name } and legacy string/ID format
+                const uniId = getUniversityId(uni) || (typeof uni === 'string' ? uni : uni?._id?.toString() || uni);
+                // For display, prefer name from object, fallback to 'Unknown University' instead of ID
+                let uniName;
+                if (typeof uni === 'object' && uni !== null && uni.name) {
+                  uniName = uni.name;
+                } else {
+                  console.log('uni', uni);
+                  uniName = getUniversityName(uni, 'Unknown University');
+                }
+                return (
+                  <option key={uniId} value={uniId}>
+                    {uniName}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -822,16 +835,7 @@ const JobApplicationsDetail = () => {
                         <div>
                           <p className="text-xs text-gray-500">{t.university}</p>
                           <p className="font-semibold">
-                            {(() => {
-                              console.log(application);
-                              // Try multiple ways to access university
-                              const university = student?.studentProfile?.university || 
-                                               (student?.studentProfile && student.studentProfile.university) ||
-                                               null;
-                              return university || 'N/A';
-                     
-              
-                            })()}
+                            {getUniversityName(student?.studentProfile?.university)}
                           </p>
                         </div>
                       </div>
@@ -1002,17 +1006,23 @@ const JobApplicationsDetail = () => {
                             <p className="text-sm text-gray-500">
                               {fullStudent?.nationality && `${t.nationalityLabel}: ${fullStudent.nationality}`}
                               {fullStudent?.age && ` • Age: ${fullStudent.age}`}
-                              {fullStudent?.studentProfile?.university && ` • ${t.university}: ${fullStudent.studentProfile.university}`}
+                              {(() => {
+                                const universityName = getUniversityName(fullStudent?.studentProfile?.university, null);
+                                return universityName ? ` • ${t.university}: ${universityName}` : null;
+                              })()}
                             </p>
                           </>
                         ) : (
                           <>
                             <p className="text-gray-500 mb-1">{t.unlockContactToView}</p>
-                            {fullStudent?.studentProfile?.university && (
-                              <p className="text-sm text-gray-500">
-                                {t.university}: {fullStudent.studentProfile.university}
-                              </p>
-                            )}
+                            {(() => {
+                              const universityName = getUniversityName(fullStudent?.studentProfile?.university, null);
+                              return universityName ? (
+                                <p className="text-sm text-gray-500">
+                                  {t.university}: {universityName}
+                                </p>
+                              ) : null;
+                            })()}
                           </>
                         )}
                       </div>

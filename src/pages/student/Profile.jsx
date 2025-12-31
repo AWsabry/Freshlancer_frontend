@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import Cropper from 'react-easy-crop';
 import { authService } from '../../services/authService';
 import { verificationService } from '../../services/verificationService';
@@ -15,6 +15,7 @@ import Modal from '../../components/common/Modal';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import TagInput from '../../components/common/TagInput';
+import UniversitySelect from '../../components/common/UniversitySelect';
 import {
   User,
   Mail,
@@ -47,6 +48,29 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 import { logger } from '../../utils/logger';
+import { getUniversityName, getUniversityId } from '../../utils/universityHelpers';
+
+// Country name to ISO country code mapping (for university filtering)
+const COUNTRY_TO_ISO_CODE = {
+  'Afghanistan': 'AF', 'Albania': 'AL', 'Algeria': 'DZ', 'Argentina': 'AR',
+  'Australia': 'AU', 'Austria': 'AT', 'Bahrain': 'BH', 'Bangladesh': 'BD',
+  'Belgium': 'BE', 'Brazil': 'BR', 'Bulgaria': 'BG', 'Canada': 'CA',
+  'Chile': 'CL', 'China': 'CN', 'Colombia': 'CO', 'Croatia': 'HR',
+  'Czech Republic': 'CZ', 'Denmark': 'DK', 'Egypt': 'EG', 'Ethiopia': 'ET',
+  'Finland': 'FI', 'France': 'FR', 'Germany': 'DE', 'Ghana': 'GH',
+  'Greece': 'GR', 'Hungary': 'HU', 'India': 'IN', 'Indonesia': 'ID',
+  'Ireland': 'IE', 'Italy': 'IT', 'Japan': 'JP', 'Jordan': 'JO',
+  'Kenya': 'KE', 'Kuwait': 'KW', 'Lebanon': 'LB', 'Malaysia': 'MY',
+  'Mexico': 'MX', 'Morocco': 'MA', 'Netherlands': 'NL', 'New Zealand': 'NZ',
+  'Nigeria': 'NG', 'Norway': 'NO', 'Oman': 'OM', 'Pakistan': 'PK',
+  'Palestine': 'PS', 'Peru': 'PE', 'Philippines': 'PH', 'Poland': 'PL',
+  'Portugal': 'PT', 'Qatar': 'QA', 'Romania': 'RO', 'Russia': 'RU',
+  'Saudi Arabia': 'SA', 'Singapore': 'SG', 'Slovakia': 'SK', 'South Africa': 'ZA',
+  'South Korea': 'KR', 'Spain': 'ES', 'Sweden': 'SE', 'Switzerland': 'CH',
+  'Tanzania': 'TZ', 'Thailand': 'TH', 'Tunisia': 'TN', 'Turkey': 'TR',
+  'Uganda': 'UG', 'Ukraine': 'UA', 'United Arab Emirates': 'AE', 'United Kingdom': 'GB',
+  'United States': 'US', 'Vietnam': 'VN',
+};
 
 const translations = {
   en: {
@@ -98,6 +122,9 @@ const translations = {
     universityWebsite: 'University Website (Optional)',
     universityWebsitePlaceholder: 'https://university.edu',
     invalidUrl: 'Please enter a valid URL starting with http:// or https://',
+    customUniversity: 'Custom University Name',
+    customUniversityPlaceholder: 'Enter your university name',
+    customUniversityInfo: 'Enter your university name. It will be saved and linked to your profile.',
     bio: 'Bio',
     bioPlaceholder: 'Tell us about yourself, your expertise, and what you\'re passionate about...',
     experienceLevel: 'Experience Level',
@@ -629,6 +656,8 @@ const Profile = () => {
   const verificationFileInputRef = useRef(null);
   const additionalDocumentInputRef = useRef(null);
   const photoInputRef = useRef(null);
+  const [isOtherUniversity, setIsOtherUniversity] = useState(false);
+  const [customUniversityName, setCustomUniversityName] = useState('');
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -656,8 +685,8 @@ const Profile = () => {
 
   const t = translations[language] || translations.en;
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
-  const { register: registerVerification, handleSubmit: handleSubmitVerification, formState: { errors: verificationErrors }, reset: resetVerification } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control } = useForm();
+  const { register: registerVerification, handleSubmit: handleSubmitVerification, formState: { errors: verificationErrors }, reset: resetVerification, setValue: setValueVerification } = useForm();
 
   // Fetch user profile
   const { data: userData, isLoading, error: profileError } = useQuery({
@@ -672,6 +701,16 @@ const Profile = () => {
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
   const isPremium = studentProfile?.subscriptionTier === 'premium';
+
+  // Auto-fill institution name with university name when user data is loaded
+  useEffect(() => {
+    if (user?.studentProfile?.university && setValueVerification) {
+      const universityName = getUniversityName(user.studentProfile.university, null);
+      if (universityName) {
+        setValueVerification('institutionName', universityName);
+      }
+    }
+  }, [user, setValueVerification]);
 
   // Helper function to get photo URL
   const getPhotoUrl = useCallback((photo) => {
@@ -788,11 +827,19 @@ const Profile = () => {
       setValue('location.timezone', user.location?.timezone || '');
 
       if (studentProfile) {
-        // Handle university - can be object (populated) or string (legacy)
-        const universityValue = typeof studentProfile.university === 'object' 
-          ? studentProfile.university.name || '' 
-          : studentProfile.university || '';
+        // Handle university - use ID if it's an object (populated), otherwise keep as is (might be ID or name)
+        const universityId = getUniversityId(studentProfile.university);
+        const universityValue = universityId || studentProfile.university || '';
         setValue('studentProfile.university', universityValue);
+        // Check if it's a custom university (not an ID and not empty)
+        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(universityValue);
+        if (universityValue && !isValidObjectId && universityValue !== '__OTHER__') {
+          setIsOtherUniversity(true);
+          setCustomUniversityName(universityValue);
+        } else {
+          setIsOtherUniversity(false);
+          setCustomUniversityName('');
+        }
         setValue('studentProfile.universityLink', studentProfile.universityLink || '');
         setValue('studentProfile.bio', studentProfile.bio || '');
         setValue('studentProfile.experienceLevel', studentProfile.experienceLevel || '');
@@ -1448,12 +1495,10 @@ const Profile = () => {
                     </label>
                     <div className="flex items-center gap-2">
                       <p className="text-sm sm:text-base text-gray-900">
-                        {typeof studentProfile.university === 'object' 
-                          ? studentProfile.university.name 
-                          : studentProfile.university}
+                        {getUniversityName(studentProfile.university)}
                       </p>
                       {typeof studentProfile.university === 'object' && 
-                       studentProfile.university.status === 'pending' && (
+                       studentProfile.university?.status === 'pending' && (
                         <Badge variant="warning" className="text-xs">
                           Pending for review
                         </Badge>
@@ -1597,12 +1642,10 @@ const Profile = () => {
                       <p className="text-xs sm:text-sm text-gray-600 mb-1">{t.university}</p>
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <p className="font-bold text-base sm:text-lg text-gray-900 truncate">
-                          {typeof studentProfile.university === 'object' 
-                            ? studentProfile.university.name 
-                            : studentProfile.university}
+                          {getUniversityName(studentProfile.university)}
                         </p>
                         {typeof studentProfile.university === 'object' && 
-                         studentProfile.university.status === 'pending' && (
+                         studentProfile.university?.status === 'pending' && (
                           <Badge variant="warning" className="text-xs">
                             Pending for review
                           </Badge>
@@ -1943,31 +1986,45 @@ const Profile = () => {
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       {t.uploadDocument} <span className="text-red-500">*</span>
                     </label>
-                    <div className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
+                    <div
+                      onClick={() => verificationFileInputRef.current?.click()}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const files = e.dataTransfer.files;
+                        if (files && files.length > 0) {
+                          const file = files[0];
+                          // Check file type
+                          const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                          if (validTypes.includes(file.type)) {
+                            // Validate file size (10MB max)
+                            if (file.size > 10 * 1024 * 1024) {
+                              setVerificationError(t.verificationFileSizeTooLarge);
+                              return;
+                            }
+                            setVerificationFile(file);
+                            setVerificationError(null);
+                          } else {
+                            setVerificationError(t.invalidFileType || 'Please upload a PDF, JPG, or PNG file');
+                          }
+                        }
+                      }}
+                      className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors cursor-pointer"
+                    >
                       <div className="space-y-1 text-center">
                         <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                         <div className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm text-gray-600 gap-1">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
-                            <span>{t.uploadFile}</span>
-                            <input
-                              ref={verificationFileInputRef}
-                              type="file"
-                              className="sr-only"
-                              accept=".pdf,.jpg,.jpeg,.png"
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                  // Validate file size (10MB max)
-                                  if (file.size > 10 * 1024 * 1024) {
-                                    setVerificationError(t.verificationFileSizeTooLarge);
-                                    return;
-                                  }
-                                  setVerificationFile(file);
-                                  setVerificationError(null);
-                                }
-                              }}
-                            />
-                          </label>
+                          <span className="font-medium text-primary-600 hover:text-primary-500">
+                            {t.uploadFile}
+                          </span>
                           <p className="sm:pl-1">{t.dragAndDrop}</p>
                         </div>
                         <p className="text-[10px] sm:text-xs text-gray-500">
@@ -1980,6 +2037,24 @@ const Profile = () => {
                         )}
                       </div>
                     </div>
+                    <input
+                      ref={verificationFileInputRef}
+                      type="file"
+                      className="sr-only"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // Validate file size (10MB max)
+                          if (file.size > 10 * 1024 * 1024) {
+                            setVerificationError(t.verificationFileSizeTooLarge);
+                            return;
+                          }
+                          setVerificationFile(file);
+                          setVerificationError(null);
+                        }
+                      }}
+                    />
                   </div>
 
                   <Button
@@ -2158,27 +2233,68 @@ const Profile = () => {
                     onChange={(e) => setDocumentDescription(e.target.value)}
                     disabled={uploadingDocument}
                   />
+                  <div
+                    onClick={() => additionalDocumentInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const files = e.dataTransfer.files;
+                      if (files && files.length > 0) {
+                        const file = files[0];
+                        // Check file type
+                        const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/jpg', 'image/png'];
+                        if (validTypes.includes(file.type)) {
+                          // Validate file size (10MB max)
+                          if (file.size > 10 * 1024 * 1024) {
+                            alert(t.fileSizeTooLarge || 'File size must be less than 10MB');
+                            return;
+                          }
+                          setUploadingDocument(true);
+                          uploadAdditionalDocumentMutation.mutate({
+                            file,
+                            description: documentDescription,
+                          });
+                        } else {
+                          alert(t.invalidFileType || 'Please upload a PDF, DOC, DOCX, JPG, or PNG file');
+                        }
+                      }
+                    }}
+                    className="flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors cursor-pointer"
+                  >
+                    <div className="space-y-1 text-center">
+                      <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                      <div className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm text-gray-600 gap-1">
+                        <span className="font-medium text-primary-600 hover:text-primary-500">
+                          {t.uploadFile || t.uploadDocumentButton}
+                        </span>
+                        <p className="sm:pl-1">{t.dragAndDrop || 'or drag and drop'}</p>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-gray-500">
+                        {t.supportedFormatsAdditional}
+                      </p>
+                      {(uploadingDocument || uploadAdditionalDocumentMutation.isPending) && (
+                        <p className="text-xs sm:text-sm text-primary-600 font-medium">
+                          {t.uploading || 'Uploading...'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                   <input
                     ref={additionalDocumentInputRef}
                     type="file"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     onChange={handleAdditionalDocumentChange}
-                    className="hidden"
+                    className="sr-only"
                     disabled={uploadingDocument}
                   />
-                  <Button
-                    variant="secondary"
-                    onClick={() => additionalDocumentInputRef.current?.click()}
-                    loading={uploadingDocument || uploadAdditionalDocumentMutation.isPending}
-                    disabled={uploadingDocument || uploadAdditionalDocumentMutation.isPending}
-                    className="flex items-center gap-1.5 sm:gap-2 w-full text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5"
-                  >
-                    <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {uploadingDocument ? t.uploading : t.uploadDocumentButton}
-                  </Button>
-                  <p className="text-[10px] sm:text-xs text-gray-500">
-                    {t.supportedFormatsAdditional}
-                  </p>
                 </div>
               </div>
 
@@ -2683,11 +2799,52 @@ const Profile = () => {
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t.professionalInformation}</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="col-span-full">
-                <Input
-                  label={t.university}
-                  placeholder={t.universityPlaceholder}
-                  error={errors.studentProfile?.university?.message}
-                  {...register('studentProfile.university')}
+                <Controller
+                  name="studentProfile.university"
+                  control={control}
+                  rules={{ required: false }}
+                  render={({ field }) => (
+                    <div>
+                      <UniversitySelect
+                        label={t.university}
+                        placeholder={t.universityPlaceholder}
+                        error={errors.studentProfile?.university?.message}
+                        name={field.name}
+                        value={field.value || ''}
+                        countryCode={user?.country ? COUNTRY_TO_ISO_CODE[user.country] : undefined}
+                        onChange={(e) => {
+                          const value = e.target?.value || '';
+                          const isOther = e.target?.isOther || value === '__OTHER__';
+                          setIsOtherUniversity(isOther);
+                          if (isOther) {
+                            field.onChange('__OTHER__');
+                            setCustomUniversityName('');
+                          } else {
+                            field.onChange(value);
+                            setCustomUniversityName('');
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                      {isOtherUniversity && (
+                        <div className="mt-2">
+                          <Input
+                            label={t.customUniversity || 'Custom University Name'}
+                            placeholder={t.customUniversityPlaceholder || 'Enter your university name'}
+                            value={customUniversityName}
+                            onChange={(e) => {
+                              setCustomUniversityName(e.target.value);
+                              // Update the field value with the custom name
+                              field.onChange(e.target.value.trim() || '__OTHER__');
+                            }}
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            {t.customUniversityInfo || 'Enter your university name. It will be saved and linked to your profile.'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 />
               </div>
 

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { verificationService } from '../../services/verificationService';
+import { authService } from '../../services/authService';
+import { getUniversityName } from '../../utils/universityHelpers';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -109,10 +111,11 @@ const translations = {
 const Verification = () => {
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
 
   useEffect(() => {
     const handleLanguageChange = (event) => {
@@ -138,6 +141,23 @@ const Verification = () => {
     queryKey: ['verifications'],
     queryFn: () => verificationService.getMyVerifications(),
   });
+
+  // Fetch user profile to get university name
+  const { data: userData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => authService.getMe(),
+    enabled: true, // Always fetch to get university name
+  });
+
+  // Auto-fill institution name with university name when user data is loaded
+  useEffect(() => {
+    if (userData?.data?.user?.studentProfile?.university) {
+      const universityName = getUniversityName(userData.data.user.studentProfile.university, null);
+      if (universityName) {
+        setValue('institutionName', universityName);
+      }
+    }
+  }, [userData, setValue]);
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -294,19 +314,39 @@ const Verification = () => {
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 {t.uploadDocument} <span className="text-red-500">*</span>
               </label>
-              <div className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const files = e.dataTransfer.files;
+                  if (files && files.length > 0) {
+                    const file = files[0];
+                    // Check file type
+                    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                    if (validTypes.includes(file.type)) {
+                      setSelectedFile(file);
+                    } else {
+                      alert('Please upload a PDF, JPG, or PNG file');
+                    }
+                  }
+                }}
+                className="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors cursor-pointer"
+              >
                 <div className="space-y-1 text-center">
                   <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                   <div className="flex flex-col sm:flex-row items-center justify-center text-xs sm:text-sm text-gray-600 gap-1">
-                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
-                      <span>{t.uploadFile}</span>
-                      <input
-                        type="file"
-                        className="sr-only"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => setSelectedFile(e.target.files[0])}
-                      />
-                    </label>
+                    <span className="font-medium text-primary-600 hover:text-primary-500">
+                      {t.uploadFile}
+                    </span>
                     <p className="sm:pl-1">{t.orDragAndDrop}</p>
                   </div>
                   <p className="text-[10px] sm:text-xs text-gray-500">
@@ -319,6 +359,13 @@ const Verification = () => {
                   )}
                 </div>
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="sr-only"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+              />
             </div>
 
             <Button

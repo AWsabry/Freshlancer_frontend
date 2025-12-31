@@ -45,17 +45,19 @@ const UniversitySelect = React.forwardRef(({
     // Response is now a direct array of universities
     if (Array.isArray(universitiesData) && universitiesData.length > 0) {
       console.log('[UniversitySelect] Updating default options');
-      // Extract only the 'name' field from each university object in the array
-      const universityNames = universitiesData.map((uni) => {
+      // Extract university ID and name from each university object
+      const universityOptions = universitiesData.map((uni) => {
+        const universityId = uni._id || uni.id;
         const universityName = uni.name;
         return {
-          value: universityName,
+          value: universityId, // Use ID as value
           label: universityName,
+          university: uni, // Store full university object for reference
         };
       });
 
       // Add "Other" option at the end
-      const optionsWithOther = [...universityNames, { value: '__OTHER__', label: 'Other (Please specify)' }];
+      const optionsWithOther = [...universityOptions, { value: '__OTHER__', label: 'Other (Please specify)' }];
       setDefaultOptions(optionsWithOther);
       console.log('[UniversitySelect] Set default options:', optionsWithOther.length);
     }
@@ -91,14 +93,15 @@ const UniversitySelect = React.forwardRef(({
 
         // Response is now a direct array of universities
         if (Array.isArray(response) && response.length > 0) {
-          // Extract university names from search results
-          const universityNames = response.map((uni) => ({
-            value: uni.name,
+          // Extract university ID and name from search results
+          const universityOptions = response.map((uni) => ({
+            value: uni._id || uni.id, // Use ID as value
             label: uni.name,
+            university: uni, // Store full university object for reference
           }));
 
           // Add "Other" option at the end
-          const optionsWithOther = [...universityNames, { value: '__OTHER__', label: 'Other (Please specify)' }];
+          const optionsWithOther = [...universityOptions, { value: '__OTHER__', label: 'Other (Please specify)' }];
           console.log('[UniversitySelect] Search results:', optionsWithOther.length);
           return optionsWithOther;
         }
@@ -156,9 +159,35 @@ const UniversitySelect = React.forwardRef(({
       return { value: '__OTHER__', label: 'Other (Please specify)' };
     }
     
-    // Return option object with the value as both value and label
+    // Check if value is a valid MongoDB ObjectId (24 hex characters)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(value);
+    
+    if (isValidObjectId) {
+      // Value is an ID - find it in defaultOptions or universitiesData
+      const allUniversities = Array.isArray(universitiesData) ? universitiesData : [];
+      const foundUniversity = allUniversities.find(uni => (uni._id || uni.id) === value);
+      
+      if (foundUniversity) {
+        return {
+          value: foundUniversity._id || foundUniversity.id,
+          label: foundUniversity.name,
+          university: foundUniversity,
+        };
+      }
+      
+      // If not found in loaded data, return a placeholder (will be updated when data loads)
+      return { value, label: 'Loading...' };
+    }
+    
+    // Value is a name (legacy) - try to find it in defaultOptions
+    const foundOption = defaultOptions.find(opt => opt.label === value || opt.value === value);
+    if (foundOption) {
+      return foundOption;
+    }
+    
+    // Return option object with the value as both value and label (fallback for legacy names)
     return { value, label: value };
-  }, [value]);
+  }, [value, defaultOptions, universitiesData]);
 
   // Custom MenuList component - simple scrollable list (all universities loaded at once)
   const MenuList = (props) => {

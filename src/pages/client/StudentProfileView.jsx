@@ -518,7 +518,9 @@ const StudentProfileView = () => {
                 <div className="mb-2">
                   <p className="text-sm text-gray-600 mb-1">{t.university}</p>
                   <div className="flex items-center gap-2">
-                    <p className="font-bold text-lg text-gray-900">{profile.university}</p>
+                    <p className="font-bold text-lg text-gray-900">
+                      {getUniversityName(profile.university)}
+                    </p>
                     {profile.universityLink && (
                       <a
                         href={profile.universityLink}
