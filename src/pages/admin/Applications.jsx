@@ -96,6 +96,18 @@ const Applications = () => {
         { key: 'student.email', label: 'Student Email' },
         { key: 'jobPost.title', label: 'Job Title' },
         { key: 'jobPost.category', label: 'Job Category' },
+        {
+          key: 'categorySpecAnswers',
+          label: 'Category Spec Answers',
+          formatter: (value, item) => {
+            try {
+              const answers = item.categorySpecAnswers || {};
+              return JSON.stringify(answers);
+            } catch (e) {
+              return '';
+            }
+          },
+        },
         { key: 'jobPost.client.name', label: 'Client Name' },
         { key: 'jobPost.client.email', label: 'Client Email' },
         { 

@@ -36,6 +36,8 @@ import StudentNotifications from './pages/student/Notifications';
 import StudentProfile from './pages/student/Profile';
 import StudentReviews from './pages/student/Reviews';
 import StudentTransactions from './pages/student/Transactions';
+import StudentContracts from './pages/student/Contracts';
+import StudentWallet from './pages/student/Wallet';
 import ContactUs from './pages/ContactUs';
 import WhySupport from './pages/WhySupport';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -55,6 +57,8 @@ import ClientProfile from './pages/client/Profile';
 import ClientStartupProfile from './pages/client/StartupProfile';
 import ClientReviews from './pages/client/Reviews';
 import ClientTransactions from './pages/client/Transactions';
+import ClientContracts from './pages/client/Contracts';
+import ClientWallet from './pages/client/Wallet';
 import StudentProfileView from './pages/client/StudentProfileView';
 import UnlockedStudents from './pages/client/UnlockedStudents';
 
@@ -140,6 +144,8 @@ function App() {
         <Route path="jobs/:id" element={<StudentJobDetails />} />
         <Route path="applications" element={<StudentApplications />} />
         <Route path="applications/:id" element={<StudentApplicationDetails />} />
+        <Route path="contracts" element={<StudentContracts />} />
+        <Route path="wallet" element={<StudentWallet />} />
         <Route path="subscription" element={<StudentSubscription />} />
         <Route path="payment" element={<StudentPayment />} />
         <Route path="payment-usd" element={<StudentPaymentUSD />} />
@@ -168,6 +174,8 @@ function App() {
         <Route path="jobs/:id/edit" element={<ClientJobForm />} />
         <Route path="applications" element={<ClientApplications />} />
         <Route path="jobs/:jobId/applications" element={<JobApplicationsDetail />} />
+        <Route path="contracts" element={<ClientContracts />} />
+        <Route path="wallet" element={<ClientWallet />} />
         <Route path="students/:studentId" element={<StudentProfileView />} />
         <Route path="packages" element={<ClientPackages />} />
         <Route path="payment" element={<ClientPayment />} />

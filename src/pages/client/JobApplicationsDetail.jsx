@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
 import { applicationService } from '../../services/applicationService';
+import { categoryService } from '../../services/categoryService';
+import { contractService } from '../../services/contractService';
 import { useToast } from '../../contexts/ToastContext';
 import { translateError } from '../../utils/errorTranslations';
 import { getUniversityName, getUniversityId } from '../../utils/universityHelpers';
@@ -340,6 +342,12 @@ const JobApplicationsDetail = () => {
     queryFn: () => jobService.getJob(jobId),
   });
 
+  // Fetch categories to label dynamic spec answers
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+
   // Fetch applications with filters
   const {
     data: applicationsData,
@@ -418,6 +426,26 @@ const JobApplicationsDetail = () => {
     },
   });
 
+  const createContractMutation = useMutation({
+    mutationFn: (applicationId) => contractService.createFromApplication(applicationId, {}),
+    onSuccess: (resp) => {
+      const contractId = resp?.data?.contract?._id;
+      showSuccess('Contract created');
+      if (contractId) {
+        navigate(`/client/contracts?contractId=${contractId}`);
+      } else {
+        navigate('/client/contracts');
+      }
+    },
+    onError: (error) => {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to create contract';
+      showError(msg);
+    },
+  });
+
   const handleUnlock = async (applicationId) => {
     setConfirmModal({
       isOpen: true,
@@ -465,6 +493,21 @@ const JobApplicationsDetail = () => {
             ? translateError(error.response.data.message, language)
             : t.rejectFailed;
           showError(errorMessage);
+        }
+      },
+    });
+  };
+
+  const handleCreateContract = (applicationId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Create Contract',
+      message: 'Create a contract for this accepted application?',
+      onConfirm: async () => {
+        try {
+          await createContractMutation.mutateAsync(applicationId);
+        } catch (e) {
+          // handled by mutation onError
         }
       },
     });
@@ -901,6 +944,17 @@ const JobApplicationsDetail = () => {
                               </Button>
                             </>
                           )}
+
+                          {application.status === 'accepted' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCreateContract(application._id)}
+                              loading={createContractMutation.isPending}
+                            >
+                              Create Contract
+                            </Button>
+                          )}
                         </>
                       ) : (
                         <Button
@@ -968,6 +1022,20 @@ const JobApplicationsDetail = () => {
               const isUnlocked = fullApp.contactUnlockedByClient;
               const isPremium = fullStudent?.studentProfile?.subscriptionTier === 'premium';
               const modalImageKey = `modal-img-${fullApp._id}`;
+              const categoriesList =
+                categoriesData?.data?.categories || categoriesData?.categories || [];
+              const fullJobCategoryName = fullApp.jobPost?.category;
+              const category =
+                fullJobCategoryName
+                  ? categoriesList.find((c) => c.name === fullJobCategoryName) || null
+                  : null;
+              const specDefs = Array.isArray(category?.specs) ? category.specs : [];
+              const specByKey = new Map(specDefs.map((s) => [s.key, s]));
+              const categorySpecAnswers =
+                fullApp?.categorySpecAnswers && typeof fullApp.categorySpecAnswers === 'object'
+                  ? fullApp.categorySpecAnswers
+                  : {};
+              const categorySpecKeys = Object.keys(categorySpecAnswers || {});
 
               return (
                 <>
@@ -1131,6 +1199,43 @@ const JobApplicationsDetail = () => {
                             <p className="font-semibold">{fullApp.approachSelections.communicationPreference}</p>
                           </div>
                         )}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Category Spec Answers */}
+                  {categorySpecKeys.length > 0 && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-4">Category Answers</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {categorySpecKeys
+                          .slice()
+                          .sort((a, b) => {
+                            const sa = specByKey.get(a);
+                            const sb = specByKey.get(b);
+                            return (sa?.order ?? 0) - (sb?.order ?? 0);
+                          })
+                          .map((key) => {
+                            const def = specByKey.get(key);
+                            const label = def?.label || key;
+                            const rawVal = categorySpecAnswers[key];
+                            let displayVal = rawVal;
+
+                            if (def?.type === 'boolean') {
+                              displayVal = rawVal === true ? 'Yes' : rawVal === false ? 'No' : '-';
+                            } else if (def?.type === 'multi_select') {
+                              displayVal = Array.isArray(rawVal) ? rawVal.join(', ') : '-';
+                            } else if (rawVal === undefined || rawVal === null || rawVal === '') {
+                              displayVal = '-';
+                            }
+
+                            return (
+                              <div key={key}>
+                                <p className="text-sm text-gray-500">{label}</p>
+                                <p className="font-semibold">{String(displayVal)}</p>
+                              </div>
+                            );
+                          })}
                       </div>
                     </Card>
                   )}

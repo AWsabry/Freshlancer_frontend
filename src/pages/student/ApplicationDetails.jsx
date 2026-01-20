@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationService } from '../../services/applicationService';
 import { authService } from '../../services/authService';
+import { categoryService } from '../../services/categoryService';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -173,6 +174,12 @@ const ApplicationDetails = () => {
     queryFn: () => authService.getMe(),
   });
 
+  // Fetch categories to label dynamic spec answers
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+
   // Withdraw application mutation
   const withdrawMutation = useMutation({
     mutationFn: () => applicationService.withdrawApplication(id),
@@ -221,6 +228,20 @@ const ApplicationDetails = () => {
   }
 
   const job = application.jobPost;
+  const categoriesList =
+    categoriesData?.data?.categories || categoriesData?.categories || [];
+  const category = job?.category
+    ? categoriesList.find((c) => c.name === job.category)
+    : null;
+
+  const specDefs = Array.isArray(category?.specs) ? category.specs : [];
+  const specByKey = new Map(specDefs.map((s) => [s.key, s]));
+
+  const categorySpecAnswers =
+    application?.categorySpecAnswers && typeof application.categorySpecAnswers === 'object'
+      ? application.categorySpecAnswers
+      : {};
+  const categorySpecKeys = Object.keys(categorySpecAnswers || {});
   const canWithdraw = application.status === 'pending' || application.status === 'reviewed';
 
   const getStatusBadge = (status) => {
@@ -568,6 +589,47 @@ const ApplicationDetails = () => {
                     <p className="text-xs sm:text-sm font-medium text-gray-900">{application.approachSelections.communicationPreference}</p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Category Spec Answers */}
+          {categorySpecKeys.length > 0 && (
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
+                Category Answers
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {categorySpecKeys
+                  .slice()
+                  .sort((a, b) => {
+                    const sa = specByKey.get(a);
+                    const sb = specByKey.get(b);
+                    return (sa?.order ?? 0) - (sb?.order ?? 0);
+                  })
+                  .map((key) => {
+                    const def = specByKey.get(key);
+                    const label = def?.label || key;
+                    const rawVal = categorySpecAnswers[key];
+                    let displayVal = rawVal;
+
+                    if (def?.type === 'boolean') {
+                      displayVal = rawVal === true ? 'Yes' : rawVal === false ? 'No' : '-';
+                    } else if (def?.type === 'multi_select') {
+                      displayVal = Array.isArray(rawVal) ? rawVal.join(', ') : '-';
+                    } else if (rawVal === undefined || rawVal === null || rawVal === '') {
+                      displayVal = '-';
+                    }
+
+                    return (
+                      <div key={key} className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">{label}</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">
+                          {String(displayVal)}
+                        </p>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
