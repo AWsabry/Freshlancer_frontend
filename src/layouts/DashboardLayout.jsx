@@ -34,6 +34,7 @@ import {
   GraduationCap,
   Clock,
   Wallet,
+  Percent,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 import Modal from '../components/common/Modal';
@@ -59,6 +60,7 @@ const translations = {
     universities: 'Universities',
     clientPackages: 'Client Packages',
     clientTransactions: 'Client Transactions',
+    platformFees: 'Platform Fees',
     studentSubscriptions: 'Student Subscriptions',
     coupons: 'Coupons',
     startups: 'Startups',
@@ -107,6 +109,7 @@ const translations = {
     universities: 'Università',
     clientPackages: 'Pacchetti Clienti',
     clientTransactions: 'Transazioni Clienti',
+    platformFees: 'Commissioni Piattaforma',
     studentSubscriptions: 'Abbonamenti Studenti',
     coupons: 'Coupon',
     startups: 'Startup',
@@ -328,6 +331,7 @@ const DashboardLayout = () => {
         { name: t.universities, icon: GraduationCap, path: '/admin/universities' },
         { name: t.clientPackages, icon: CreditCard, path: '/admin/client-packages' },
         { name: t.clientTransactions, icon: DollarSign, path: '/admin/client-transactions' },
+        { name: t.platformFees, icon: Percent, path: '/admin/platform-fees' },
         { name: t.studentSubscriptions, icon: User, path: '/admin/student-packages' },
         { name: t.contracts, icon: FileText, path: '/admin/contracts' },
         { name: t.withdrawals, icon: Wallet, path: '/admin/withdrawals' },

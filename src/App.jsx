@@ -87,6 +87,7 @@ import AdminUniversities from './pages/admin/Universities';
 import AdminContracts from './pages/admin/Contracts';
 import AdminWithdrawals from './pages/admin/Withdrawals';
 import AdminAppeals from './pages/admin/Appeals';
+import AdminPlatformFees from './pages/admin/PlatformFees';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -225,6 +226,7 @@ function App() {
         <Route path="client-transactions" element={<AdminClientTransactions />} />
         <Route path="contracts" element={<AdminContracts />} />
         <Route path="withdrawals" element={<AdminWithdrawals />} />
+        <Route path="platform-fees" element={<AdminPlatformFees />} />
         <Route path="appeals" element={<AdminAppeals />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />

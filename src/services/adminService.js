@@ -118,4 +118,17 @@ export const adminService = {
   deleteLogFile: async (date) => {
     return api.delete(`/admin/logs/${date}`);
   },
+
+  // Platform fee settings & income
+  getPlatformSettings: async () => {
+    return api.get('/admin/platform-settings');
+  },
+
+  updatePlatformSettings: async (data) => {
+    return api.patch('/admin/platform-settings', data);
+  },
+
+  getPlatformIncome: async (params = {}) => {
+    return api.get('/admin/platform-income', { params });
+  },
 };
