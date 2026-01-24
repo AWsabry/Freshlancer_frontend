@@ -137,6 +137,18 @@ const translations = {
     rejectConfirm: 'Reject this application? The student will be notified.',
     confirmReject: 'Confirm Reject',
     rejectFailed: 'Failed to reject application',
+    jobDetails: 'Job & Category',
+    jobTitle: 'Job Title',
+    categoryDetails: 'Category Details',
+    categoryName: 'Category',
+    categoryDescription: 'Description',
+    jobRequirement: 'Job Requirement',
+    applicantAnswer: 'Applicant\'s Answer',
+    priority: 'Priority',
+    low: 'Low',
+    normal: 'Normal',
+    high: 'High',
+    categoryField: 'Field',
   },
   it: {
     loading: 'Caricamento candidature...',
@@ -238,6 +250,18 @@ const translations = {
     rejectConfirm: 'Rifiutare questa candidatura? Lo studente sarà informato.',
     confirmReject: 'Conferma Rifiuto',
     rejectFailed: 'Impossibile rifiutare la candidatura',
+    jobDetails: 'Lavoro e Categoria',
+    jobTitle: 'Titolo Lavoro',
+    categoryDetails: 'Dettagli Categoria',
+    categoryName: 'Categoria',
+    categoryDescription: 'Descrizione',
+    jobRequirement: 'Requisito Lavoro',
+    applicantAnswer: 'Risposta Candidato',
+    priority: 'Priorità',
+    low: 'Bassa',
+    normal: 'Normale',
+    high: 'Alta',
+    categoryField: 'Campo',
   },
 };
 
@@ -1030,15 +1054,62 @@ const JobApplicationsDetail = () => {
                   ? categoriesList.find((c) => c.name === fullJobCategoryName) || null
                   : null;
               const specDefs = Array.isArray(category?.specs) ? category.specs : [];
-              const specByKey = new Map(specDefs.map((s) => [s.key, s]));
               const categorySpecAnswers =
                 fullApp?.categorySpecAnswers && typeof fullApp.categorySpecAnswers === 'object'
                   ? fullApp.categorySpecAnswers
                   : {};
-              const categorySpecKeys = Object.keys(categorySpecAnswers || {});
+              const jobSpecReqs = fullApp.jobPost?.categorySpecRequirements && typeof fullApp.jobPost.categorySpecRequirements === 'object'
+                ? fullApp.jobPost.categorySpecRequirements
+                : {};
+              const applicationSpecs = specDefs.filter((s) => s.useInApplication);
+              const applicationSpecsOrdered = [...applicationSpecs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
               return (
                 <>
+                  {/* Job & Category */}
+                  {fullApp.jobPost && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5" />
+                        {t.jobDetails}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">{t.jobTitle}</p>
+                          <p className="font-semibold text-gray-900">{fullApp.jobPost.title}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">{t.budget}</p>
+                          <p className="font-semibold">
+                            {fullApp.jobPost.budget?.currency} {fullApp.jobPost.budget?.min} – {fullApp.jobPost.budget?.max}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">{t.deadline}</p>
+                          <p className="font-semibold">
+                            {fullApp.jobPost.deadline
+                              ? new Date(fullApp.jobPost.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')
+                              : t.noDeadlineSettled}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">{t.duration}</p>
+                          <p className="font-semibold">{fullApp.jobPost.projectDuration || t.notSpecified}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">{t.categoryName}</p>
+                          <p className="font-semibold">{fullJobCategoryName || t.notSpecified}</p>
+                        </div>
+                      </div>
+                      {category?.description && (
+                        <div className="pt-3 border-t border-gray-200">
+                          <p className="text-sm text-gray-500 mb-1">{t.categoryDescription}</p>
+                          <p className="text-gray-700">{category.description}</p>
+                        </div>
+                      )}
+                    </Card>
+                  )}
+
                   {/* Student Info Section */}
                   <Card>
                     <div className="flex items-start gap-4 mb-4">
@@ -1147,24 +1218,26 @@ const JobApplicationsDetail = () => {
                           {fullApp.relevantExperienceLevel || t.notSpecified}
                         </p>
                       </div>
+                      <div>
+                        <p className="text-sm text-gray-500">{t.availabilityCommitment}</p>
+                        <p className="font-semibold">{fullApp.availabilityCommitment || t.notSpecified}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">{t.applicationNumber}</p>
+                        <p className="font-semibold">{fullApp.applicationNumber || t.notSpecified}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">{t.priority}</p>
+                        <p className="font-semibold">
+                          {fullApp.priority === 'high' ? t.high : fullApp.priority === 'low' ? t.low : t.normal}
+                        </p>
+                      </div>
                       {fullApp.proposalType && (
                         <div>
                           <p className="text-sm text-gray-500">{t.proposalType}</p>
                           <Badge variant="info">
                             {fullApp.proposalType.charAt(0).toUpperCase() + fullApp.proposalType.slice(1)}
                           </Badge>
-                        </div>
-                      )}
-                      {fullApp.availabilityCommitment && (
-                        <div>
-                          <p className="text-sm text-gray-500">{t.availabilityCommitment}</p>
-                          <p className="font-semibold">{fullApp.availabilityCommitment}</p>
-                        </div>
-                      )}
-                      {fullApp.applicationNumber && (
-                        <div>
-                          <p className="text-sm text-gray-500">{t.applicationNumber}</p>
-                          <p className="font-semibold">{fullApp.applicationNumber}</p>
                         </div>
                       )}
                     </div>
@@ -1203,40 +1276,76 @@ const JobApplicationsDetail = () => {
                     </Card>
                   )}
 
-                  {/* Category Spec Answers */}
-                  {categorySpecKeys.length > 0 && (
+                  {/* Category Details – all specs, job requirements, applicant answers */}
+                  {(category || applicationSpecsOrdered.length > 0) && (
                     <Card>
-                      <h4 className="font-bold text-gray-900 mb-4">Category Answers</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {categorySpecKeys
-                          .slice()
-                          .sort((a, b) => {
-                            const sa = specByKey.get(a);
-                            const sb = specByKey.get(b);
-                            return (sa?.order ?? 0) - (sb?.order ?? 0);
-                          })
-                          .map((key) => {
-                            const def = specByKey.get(key);
-                            const label = def?.label || key;
-                            const rawVal = categorySpecAnswers[key];
-                            let displayVal = rawVal;
-
-                            if (def?.type === 'boolean') {
-                              displayVal = rawVal === true ? 'Yes' : rawVal === false ? 'No' : '-';
-                            } else if (def?.type === 'multi_select') {
-                              displayVal = Array.isArray(rawVal) ? rawVal.join(', ') : '-';
-                            } else if (rawVal === undefined || rawVal === null || rawVal === '') {
-                              displayVal = '-';
-                            }
-
-                            return (
-                              <div key={key}>
-                                <p className="text-sm text-gray-500">{label}</p>
-                                <p className="font-semibold">{String(displayVal)}</p>
-                              </div>
-                            );
-                          })}
-                      </div>
+                      <h4 className="font-bold text-gray-900 mb-4">{t.categoryDetails}</h4>
+                      {category && (
+                        <div className="mb-4 pb-4 border-b border-gray-200">
+                          <p className="text-sm text-gray-500">{t.categoryName}</p>
+                          <p className="font-semibold text-gray-900">{category.name}</p>
+                          {category.description && (
+                            <>
+                              <p className="text-sm text-gray-500 mt-2">{t.categoryDescription}</p>
+                              <p className="text-gray-700">{category.description}</p>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {applicationSpecsOrdered.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="py-2 pr-4 text-sm font-semibold text-gray-700">{t.categoryField}</th>
+                                {Object.keys(jobSpecReqs).length > 0 && (
+                                  <th className="py-2 pr-4 text-sm font-semibold text-gray-700">{t.jobRequirement}</th>
+                                )}
+                                <th className="py-2 text-sm font-semibold text-gray-700">{t.applicantAnswer}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {applicationSpecsOrdered.map((spec) => {
+                                const key = spec.key;
+                                const label = spec.label || key;
+                                const jobReq = jobSpecReqs[key];
+                                const rawVal = categorySpecAnswers[key];
+                                let displayVal = rawVal;
+                                if (spec.type === 'boolean') {
+                                  displayVal = rawVal === true ? 'Yes' : rawVal === false ? 'No' : '—';
+                                } else if (spec.type === 'multi_select') {
+                                  displayVal = Array.isArray(rawVal) ? rawVal.join(', ') : '—';
+                                } else if (rawVal === undefined || rawVal === null || rawVal === '') {
+                                  displayVal = '—';
+                                } else {
+                                  displayVal = String(rawVal);
+                                }
+                                const showJobCol = Object.keys(jobSpecReqs).length > 0;
+                                const jobReqDisplay = jobReq !== undefined && jobReq !== null && jobReq !== ''
+                                  ? (typeof jobReq === 'boolean' ? (jobReq ? 'Yes' : 'No') : Array.isArray(jobReq) ? jobReq.join(', ') : String(jobReq))
+                                  : '—';
+                                return (
+                                  <tr key={key} className="border-b border-gray-100">
+                                    <td className="py-3 pr-4">
+                                      <p className="text-sm text-gray-600">{label}</p>
+                                    </td>
+                                    {showJobCol && (
+                                      <td className="py-3 pr-4">
+                                        <p className="font-medium text-gray-800">{jobReqDisplay}</p>
+                                      </td>
+                                    )}
+                                    <td className="py-3">
+                                      <p className="font-semibold text-gray-900">{displayVal}</p>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : category && (
+                        <p className="text-sm text-gray-500">{t.notSpecified}</p>
+                      )}
                     </Card>
                   )}
 
@@ -1396,6 +1505,18 @@ const JobApplicationsDetail = () => {
                           {t.rejectApplication}
                         </Button>
                       </>
+                    )}
+                    {fullApp.status === 'accepted' && job?.status !== 'cancelled' && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleCreateContract(fullApp._id);
+                          handleCloseFullViewModal();
+                        }}
+                        loading={createContractMutation.isPending}
+                      >
+                        Create Contract
+                      </Button>
                     )}
                   </div>
                 </>

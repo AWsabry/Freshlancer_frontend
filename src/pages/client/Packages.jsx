@@ -15,6 +15,7 @@ const translations = {
     availablePoints: 'Available Points',
     pointsDescription: 'Each point unlocks one student profile (10 points per unlock)',
     selectCurrency: 'Select Currency',
+    usdComingSoon: 'USD coming soon',
     paypalDescription: 'Pay with PayPal using USD. PayPal accepts credit/debit cards, bank accounts, and PayPal balance.',
     paymobDescription: 'Pay with Paymob using Egyptian Pounds (EGP). Paymob accepts credit/debit cards and mobile wallets.',
     buyPointsPackages: 'Buy Points Packages',
@@ -37,6 +38,7 @@ const translations = {
     availablePoints: 'Punti Disponibili',
     pointsDescription: 'Ogni punto sblocca un profilo studente (10 punti per sblocco)',
     selectCurrency: 'Seleziona Valuta',
+    usdComingSoon: 'USD in arrivo',
     paypalDescription: 'Paga con PayPal usando USD. PayPal accetta carte di credito/debito, conti bancari e saldo PayPal.',
     paymobDescription: 'Paga con Paymob usando Sterline Egiziane (EGP). Paymob accetta carte di credito/debito e portafogli mobili.',
     buyPointsPackages: 'Acquista Pacchetti di Punti',
@@ -195,21 +197,20 @@ const Packages = () => {
         </div>
       </Card>
 
-      {/* Currency Selection */}
+      {/* Currency Selection - USD disabled for now */}
       <Card title={t.selectCurrency}>
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
                 <button
-                  onClick={() => setSelectedCurrency('USD')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
-                    selectedCurrency === 'USD'
-                      ? 'bg-primary-500 text-[#2f00c0] border-primary-500 shadow-md'
-                      : 'text-gray-700 border-transparent hover:bg-gray-100'
-                  }`}
+                  type="button"
+                  disabled
+                  className="px-6 py-2 rounded-md font-medium border border-transparent text-gray-400 bg-gray-100 cursor-not-allowed opacity-60"
+                  title={t.usdComingSoon}
                 >
                   USD ($)
                 </button>
                 <button
+                  type="button"
                   onClick={() => setSelectedCurrency('EGP')}
                   className={`px-6 py-2 rounded-md font-medium transition-all border ${
                     selectedCurrency === 'EGP'
@@ -222,9 +223,7 @@ const Packages = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 text-center mt-3">
-              {selectedCurrency === 'USD' 
-                ? t.paypalDescription
-                : t.paymobDescription}
+              {t.paymobDescription}
             </p>
         </Card>
 

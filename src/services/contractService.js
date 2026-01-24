@@ -36,5 +36,13 @@ export const contractService = {
   approveMilestone: async (id, milestoneId) => {
     return api.post(`/contracts/${id}/milestones/${milestoneId}/approve`);
   },
+
+  completeContractAfterAppeal: async (id) => {
+    return api.post(`/contracts/${id}/complete-after-appeal`);
+  },
+
+  cancelContractAfterAppeal: async (id) => {
+    return api.post(`/contracts/${id}/cancel-after-appeal`);
+  },
 };
 

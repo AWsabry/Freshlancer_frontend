@@ -65,10 +65,12 @@ const translations = {
     contactUs: 'Contact Us',
     grantings: 'Support & Donations',
     logs: 'Audit Logs',
+    withdrawals: 'Withdrawals',
     logout: 'Logout',
     welcomeBack: 'Welcome back, {name}!',
     points: 'Points',
     wallet: 'Wallet',
+    appeals: 'Appeals',
     applicationCountInfo: 'How Applications Are Counted',
     applicationCountInfoDesc: 'Understanding your application limit',
     applicationCountRule1: 'All applications you submit count toward your monthly limit.',
@@ -111,10 +113,12 @@ const translations = {
     contactUs: 'Contattaci',
     grantings: 'Supporto e Donazioni',
     logs: 'Log di Audit',
+    withdrawals: 'Prelievi',
     logout: 'Esci',
     welcomeBack: 'Bentornato, {name}!',
     points: 'Punti',
     wallet: 'Portafoglio',
+    appeals: 'Ricorsi',
     applicationCountInfo: 'Come Vengono Contate le Candidature',
     applicationCountInfoDesc: 'Comprendere il tuo limite di candidature',
     applicationCountRule1: 'Tutte le candidature che invii contano verso il tuo limite mensile.',
@@ -190,7 +194,7 @@ const DashboardLayout = () => {
     const wallet = u?.wallet;
     const balances = wallet?.balances || {};
     const escrow = wallet?.escrow || {};
-    const candidates = ['EGP', 'USD', 'EUR', 'GBP'];
+    const candidates = ['EGP', 'USD'];
 
     const keys = Array.from(new Set([...candidates, ...getKeys(balances), ...getKeys(escrow)]));
     const nonZero = keys.filter((cur) => getVal(balances, cur) !== 0 || getVal(escrow, cur) !== 0);
@@ -280,6 +284,7 @@ const DashboardLayout = () => {
         { name: t.transactions, icon: DollarSign, path: '/student/transactions' },
         { name: t.wallet, icon: Wallet, path: '/student/wallet' },
         { name: t.contracts, icon: FileText, path: '/student/contracts' },
+        { name: t.appeals, icon: AlertCircle, path: '/student/appeals' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         { name: t.contactUs, icon: Mail, path: '/student/contact-us' },
         { name: t.internship, icon: GraduationCap, path: '#', disabled: true, comingSoon: true },
@@ -298,6 +303,7 @@ const DashboardLayout = () => {
         { name: t.transactions, icon: DollarSign, path: '/client/transactions' },
         { name: t.wallet, icon: Wallet, path: '/client/wallet' },
         { name: t.contracts, icon: FileText, path: '/client/contracts' },
+        { name: t.appeals, icon: AlertCircle, path: '/client/appeals' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         { name: t.contactUs, icon: Mail, path: '/client/contact-us' },
         ...baseItems.slice(1),
@@ -323,6 +329,9 @@ const DashboardLayout = () => {
         { name: t.clientPackages, icon: CreditCard, path: '/admin/client-packages' },
         { name: t.clientTransactions, icon: DollarSign, path: '/admin/client-transactions' },
         { name: t.studentSubscriptions, icon: User, path: '/admin/student-packages' },
+        { name: t.contracts, icon: FileText, path: '/admin/contracts' },
+        { name: t.withdrawals, icon: Wallet, path: '/admin/withdrawals' },
+        { name: t.appeals, icon: AlertCircle, path: '/admin/appeals' },
         { name: t.coupons, icon: Tag, path: '/admin/coupons' },
         { name: t.startups, icon: Star, path: '/admin/startups' },
         { name: t.contactUs, icon: Mail, path: '/admin/contact-us' },

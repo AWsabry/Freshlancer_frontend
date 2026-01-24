@@ -122,8 +122,6 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
           >
             <option value="EGP">EGP</option>
             <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
           </select>
         </div>
         <div>

@@ -21,6 +21,7 @@ const translations = {
     applicationsRemaining: '{remaining} of {limit} applications remaining this month',
     nextBilling: 'Next billing: {date}',
     selectCurrency: 'Select Currency',
+    usdComingSoon: 'USD coming soon',
     payWithPayPal: 'Pay securely with PayPal in US Dollars',
     payWithPaymob: 'Pay securely with Paymob in Egyptian Pounds',
     currentPlan: 'Current Plan',
@@ -69,6 +70,7 @@ const translations = {
     applicationsRemaining: '{remaining} di {limit} candidature rimanenti questo mese',
     nextBilling: 'Prossimo addebito: {date}',
     selectCurrency: 'Seleziona Valuta',
+    usdComingSoon: 'USD in arrivo',
     payWithPayPal: 'Paga in sicurezza con PayPal in Dollari USA',
     payWithPaymob: 'Paga in sicurezza con Paymob in Sterline Egiziane',
     currentPlan: 'Piano Attuale',
@@ -309,21 +311,20 @@ const Subscription = () => {
       {/* Pricing Plans */}
       {!isPremium && (
         <>
-          {/* Currency Selection */}
+          {/* Currency Selection - USD disabled for now */}
           <Card title={t.selectCurrency}>
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
                 <button
-                  onClick={() => setSelectedCurrency('USD')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
-                    selectedCurrency === 'USD'
-                      ? 'bg-primary-500 text-[#8904aa] border-primary-500 shadow-md'
-                      : 'text-gray-700 border-transparent hover:bg-gray-100'
-                  }`}
+                  type="button"
+                  disabled
+                  className="px-6 py-2 rounded-md font-medium border border-transparent text-gray-400 bg-gray-100 cursor-not-allowed opacity-60"
+                  title={t.usdComingSoon}
                 >
                   USD ($)
                 </button>
                 <button
+                  type="button"
                   onClick={() => setSelectedCurrency('EGP')}
                   className={`px-6 py-2 rounded-md font-medium transition-all border ${
                     selectedCurrency === 'EGP'
@@ -336,9 +337,7 @@ const Subscription = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 text-center mt-3">
-              {selectedCurrency === 'USD'
-                ? t.payWithPayPal
-                : t.payWithPaymob}
+              {t.payWithPaymob}
             </p>
           </Card>
 

@@ -38,6 +38,7 @@ import StudentReviews from './pages/student/Reviews';
 import StudentTransactions from './pages/student/Transactions';
 import StudentContracts from './pages/student/Contracts';
 import StudentWallet from './pages/student/Wallet';
+import StudentAppeals from './pages/student/Appeals';
 import ContactUs from './pages/ContactUs';
 import WhySupport from './pages/WhySupport';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -59,6 +60,7 @@ import ClientReviews from './pages/client/Reviews';
 import ClientTransactions from './pages/client/Transactions';
 import ClientContracts from './pages/client/Contracts';
 import ClientWallet from './pages/client/Wallet';
+import ClientAppeals from './pages/client/Appeals';
 import StudentProfileView from './pages/client/StudentProfileView';
 import UnlockedStudents from './pages/client/UnlockedStudents';
 
@@ -82,6 +84,9 @@ import AdminNotifications from './pages/admin/Notifications';
 import AdminGrantings from './pages/admin/Grantings';
 import AdminLogs from './pages/admin/Logs';
 import AdminUniversities from './pages/admin/Universities';
+import AdminContracts from './pages/admin/Contracts';
+import AdminWithdrawals from './pages/admin/Withdrawals';
+import AdminAppeals from './pages/admin/Appeals';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -146,6 +151,7 @@ function App() {
         <Route path="applications/:id" element={<StudentApplicationDetails />} />
         <Route path="contracts" element={<StudentContracts />} />
         <Route path="wallet" element={<StudentWallet />} />
+        <Route path="appeals" element={<StudentAppeals />} />
         <Route path="subscription" element={<StudentSubscription />} />
         <Route path="payment" element={<StudentPayment />} />
         <Route path="payment-usd" element={<StudentPaymentUSD />} />
@@ -176,6 +182,7 @@ function App() {
         <Route path="jobs/:jobId/applications" element={<JobApplicationsDetail />} />
         <Route path="contracts" element={<ClientContracts />} />
         <Route path="wallet" element={<ClientWallet />} />
+        <Route path="appeals" element={<ClientAppeals />} />
         <Route path="students/:studentId" element={<StudentProfileView />} />
         <Route path="packages" element={<ClientPackages />} />
         <Route path="payment" element={<ClientPayment />} />
@@ -216,6 +223,9 @@ function App() {
         <Route path="grantings" element={<AdminGrantings />} />
         <Route path="transactions" element={<AdminTransactions />} />
         <Route path="client-transactions" element={<AdminClientTransactions />} />
+        <Route path="contracts" element={<AdminContracts />} />
+        <Route path="withdrawals" element={<AdminWithdrawals />} />
+        <Route path="appeals" element={<AdminAppeals />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="logs" element={<AdminLogs />} />

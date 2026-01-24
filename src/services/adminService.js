@@ -37,6 +37,23 @@ export const adminService = {
     return api.get('/admin/jobs', { params });
   },
 
+  // Contracts overview
+  getAllContracts: async (params = {}) => {
+    return api.get('/admin/contracts', { params });
+  },
+
+  // Withdrawals overview
+  getAllWithdrawals: async (params = {}) => {
+    return api.get('/admin/withdrawals', { params });
+  },
+
+  /**
+   * Update withdrawal status. Uses FormData: status, adminNotes?, rejectedReason?, paymentEvidence? (File).
+   */
+  updateWithdrawalStatus: async (id, formData) => {
+    return api.patch(`/admin/withdrawals/${id}`, formData);
+  },
+
   // Students verification management
   getStudentsWithVerification: async (params = {}) => {
     return api.get('/admin/students/verification', { params });
