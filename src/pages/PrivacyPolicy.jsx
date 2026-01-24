@@ -28,6 +28,32 @@ const translations = {
   en: {
     title: 'Privacy Policy',
     lastUpdated: 'Last Updated: January 2025',
+    walletSecurity: {
+      title: 'Wallet and Payment Security',
+      subtitle: 'We implement industry-leading security measures to protect your financial information and transactions.',
+      measures: [
+        {
+          title: 'Escrow Protection',
+          description: 'All milestone payments are held in secure escrow accounts until project completion. Funds are only released upon your approval, ensuring you maintain control over payments.',
+        },
+        {
+          title: 'Secure Payment Gateways',
+          description: 'We use certified payment processors (PayMob for EGP, PayPal for USD) that comply with PCI-DSS standards. Your payment information is never stored on our servers.',
+        },
+        {
+          title: 'Transaction Security',
+          description: 'All transactions are encrypted and monitored for fraud. We maintain detailed transaction records for your reference and dispute resolution.',
+        },
+        {
+          title: 'Wallet Protection',
+          description: 'Your wallet balance is protected by multiple security layers. Withdrawals require authentication, and all wallet activities are logged for security auditing.',
+        },
+        {
+          title: 'Fee Transparency',
+          description: 'Platform and transaction fees are clearly displayed before payment. You can view all fees and charges in your transaction history.',
+        },
+      ],
+    },
     backToHome: 'Back to Home',
     introduction: {
       title: 'Introduction',
@@ -67,6 +93,9 @@ const translations = {
           'Billing address and payment method information',
           'Company website and description',
           'Social media and professional links',
+          'Wallet balance and transaction history',
+          'Escrow account information and milestone funding details',
+          'Payment gateway preferences and saved payment methods',
         ],
       },
       usageData: {
@@ -78,6 +107,9 @@ const translations = {
           'Transaction history and payment information',
           'Subscription status and usage limits',
           'Reviews and ratings given or received',
+          'Wallet transactions, escrow deposits, and withdrawals',
+          'Contract milestone funding and payment releases',
+          'Platform fee and transaction fee records',
         ],
       },
       technicalData: {
@@ -106,7 +138,11 @@ const translations = {
         },
         {
           title: 'Payment Processing',
-          description: 'To process payments for subscriptions, packages, and transactions through our payment partners (Paymob).',
+          description: 'To process payments for subscriptions, packages, and transactions through our secure payment partners (PayMob for EGP, PayPal for USD). We use escrow protection to secure milestone payments, ensuring funds are held safely until project completion.',
+        },
+        {
+          title: 'Wallet Management',
+          description: 'To manage client wallets, process escrow deposits, track milestone funding, handle withdrawals, and maintain transaction records with full security and transparency.',
         },
         {
           title: 'Communication',
@@ -152,8 +188,13 @@ const translations = {
         'Secure password hashing using bcrypt',
         'Regular security audits and vulnerability assessments',
         'Access controls and authentication mechanisms',
-        'Secure payment processing through certified providers',
+        'Secure payment processing through certified providers (PayMob, PayPal)',
+        'Escrow protection system for milestone payments',
+        'Secure wallet infrastructure with encrypted transaction records',
+        'PCI-DSS compliant payment gateway integration',
+        'Two-factor authentication for sensitive operations',
         'Regular backups and disaster recovery procedures',
+        'Real-time fraud detection and monitoring',
       ],
     },
     dataRetention: {
@@ -205,8 +246,12 @@ const translations = {
       subtitle: 'Our platform integrates with third-party services that have their own privacy policies:',
       services: [
         {
-          name: 'Paymob',
-          description: 'Payment processing service. Please review Paymob\'s privacy policy for information about how they handle payment data.',
+          name: 'PayMob',
+          description: 'Payment processing service for EGP transactions. PayMob handles payment data according to PCI-DSS standards. Please review PayMob\'s privacy policy for information about how they handle payment data.',
+        },
+        {
+          name: 'PayPal',
+          description: 'Payment processing service for USD transactions. PayPal provides secure payment processing with buyer and seller protection. Please review PayPal\'s privacy policy for information about how they handle payment data.',
         },
         {
           name: 'Email Services',
@@ -241,6 +286,32 @@ const translations = {
   it: {
     title: 'Informativa sulla Privacy',
     lastUpdated: 'Ultimo aggiornamento: Gennaio 2025',
+    walletSecurity: {
+      title: 'Sicurezza del Portafoglio e dei Pagamenti',
+      subtitle: 'Implementiamo misure di sicurezza di livello enterprise per proteggere le tue informazioni finanziarie e le transazioni.',
+      measures: [
+        {
+          title: 'Protezione Escrow',
+          description: 'Tutti i pagamenti delle milestone sono conservati in account escrow sicuri fino al completamento del progetto. I fondi vengono rilasciati solo con la tua approvazione, garantendo il controllo sui pagamenti.',
+        },
+        {
+          title: 'Gateway di Pagamento Sicuri',
+          description: 'Utilizziamo processori di pagamento certificati (PayMob per EGP, PayPal per USD) conformi agli standard PCI-DSS. Le tue informazioni di pagamento non sono mai memorizzate sui nostri server.',
+        },
+        {
+          title: 'Sicurezza delle Transazioni',
+          description: 'Tutte le transazioni sono crittografate e monitorate per frodi. Manteniamo registri dettagliati delle transazioni per riferimento e risoluzione delle controversie.',
+        },
+        {
+          title: 'Protezione del Portafoglio',
+          description: 'Il saldo del tuo portafoglio è protetto da più livelli di sicurezza. I prelievi richiedono autenticazione e tutte le attività del portafoglio sono registrate per audit di sicurezza.',
+        },
+        {
+          title: 'Trasparenza delle Commissioni',
+          description: 'Le commissioni della piattaforma e di transazione sono chiaramente visualizzate prima del pagamento. Puoi visualizzare tutte le commissioni e gli addebiti nella cronologia delle transazioni.',
+        },
+      ],
+    },
     backToHome: 'Torna alla Home',
     introduction: {
       title: 'Introduzione',
@@ -754,6 +825,28 @@ const PrivacyPolicy = () => {
             <div key={index} className="p-4 border border-gray-200 rounded-lg">
               <h3 className="font-semibold text-gray-900 mb-2">{service.name}</h3>
               <p className="text-gray-700 text-sm leading-relaxed">{service.description}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Wallet and Payment Security */}
+      <Card className="p-6 sm:p-8 mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <CreditCard className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.walletSecurity.title}</h2>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">{t.walletSecurity.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {t.walletSecurity.measures.map((measure, index) => (
+            <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">{measure.title}</h3>
+              <p className="text-gray-700 text-sm leading-relaxed">{measure.description}</p>
             </div>
           ))}
         </div>

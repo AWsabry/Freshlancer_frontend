@@ -43,7 +43,8 @@ const Contracts = () => {
   });
 
   const contract = detailResp?.data?.contract || null;
-  const canEdit = contract && ['draft', 'pending_signatures'].includes(contract.status);
+  const isCancelled = contract?.status === 'cancelled';
+  const canEdit = contract && ['draft', 'pending_signatures'].includes(contract.status) && !isCancelled;
   const pending = contract?.pendingConfirmation?.required;
   const pendingUpdatedById = contract?.pendingConfirmation?.updatedBy?._id || contract?.pendingConfirmation?.updatedBy;
   const isBlockedFromSigning =
@@ -53,7 +54,7 @@ const Contracts = () => {
       ? contract.pendingConfirmation.changes.map((c) => c.field).filter(Boolean)
       : [];
   const hasActiveAppeal = !!contract?.activeAppeal;
-  const canFileAppeal = contract && ['signed', 'active'].includes(contract.status) && !hasActiveAppeal;
+  const canFileAppeal = contract && ['signed', 'active'].includes(contract.status) && !hasActiveAppeal && !isCancelled;
 
   // Check for active appeal
   const { data: appealCheckResp } = useQuery({
@@ -278,6 +279,8 @@ const Contracts = () => {
                             <Button
                               onClick={() => confirmMutation.mutate()}
                               loading={confirmMutation.isPending}
+                              disabled={isCancelled}
+                              title={isCancelled ? 'Contract is cancelled' : ''}
                             >
                               Confirm changes
                             </Button>
@@ -351,9 +354,11 @@ const Contracts = () => {
                               onClick={() => signMutation.mutate(signature)}
                               loading={signMutation.isPending}
                               disabled={
+                                isCancelled ||
                                 isBlockedFromSigning ||
                                 (!signature.typedName && !signature.drawnSignatureDataUrl)
                               }
+                              title={isCancelled ? 'Contract is cancelled' : ''}
                             >
                               Sign
                             </Button>

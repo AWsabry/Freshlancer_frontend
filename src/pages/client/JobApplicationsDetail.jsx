@@ -34,6 +34,9 @@ import {
   Crown,
   FileText,
   Download,
+  LayoutGrid,
+  List,
+  ListChecks,
 } from 'lucide-react';
 
 const translations = {
@@ -149,6 +152,23 @@ const translations = {
     normal: 'Normal',
     high: 'High',
     categoryField: 'Field',
+    studentInformation: 'Student Information',
+    compactView: 'Compact View',
+    detailedView: 'Detailed View',
+    email: 'Email',
+    age: 'Age',
+    major: 'Major',
+    graduationYear: 'Graduation Year',
+    yearsOfExperience: 'Years of Experience',
+    hourlyRate: 'Hourly Rate',
+    skills: 'Skills',
+    universityLink: 'University Link',
+    bio: 'Bio',
+    availability: 'Availability',
+    languages: 'Languages',
+    certifications: 'Certifications',
+    socialLinks: 'Social Links',
+    portfolio: 'Portfolio',
   },
   it: {
     loading: 'Caricamento candidature...',
@@ -262,6 +282,23 @@ const translations = {
     normal: 'Normale',
     high: 'Alta',
     categoryField: 'Campo',
+    studentInformation: 'Informazioni Studente',
+    compactView: 'Vista Compatta',
+    detailedView: 'Vista Dettagliata',
+    email: 'Email',
+    age: 'Età',
+    major: 'Corso di Laurea',
+    graduationYear: 'Anno di Laurea',
+    yearsOfExperience: 'Anni di Esperienza',
+    hourlyRate: 'Tariffa Oraria',
+    skills: 'Competenze',
+    universityLink: 'Link Università',
+    bio: 'Biografia',
+    availability: 'Disponibilità',
+    languages: 'Lingue',
+    certifications: 'Certificazioni',
+    socialLinks: 'Link Social',
+    portfolio: 'Portfolio',
   },
 };
 
@@ -351,6 +388,11 @@ const JobApplicationsDetail = () => {
   // State for image errors
   const [imageErrors, setImageErrors] = useState({});
   const [modalImageErrors, setModalImageErrors] = useState({});
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('applicationsViewMode') || 'detailed';
+  });
+  const [listPage, setListPage] = useState(1);
+  const listLimit = 20;
   
   const handleImageError = (key) => {
     setImageErrors(prev => ({ ...prev, [key]: true }));
@@ -470,6 +512,11 @@ const JobApplicationsDetail = () => {
     },
   });
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setListPage(1);
+  }, [filterNationality, filterUniversity, filterExperience, filterStatus, filterPremium, sortBy, sortOrder]);
+
   const handleUnlock = async (applicationId) => {
     setConfirmModal({
       isOpen: true,
@@ -581,6 +628,13 @@ const JobApplicationsDetail = () => {
   const totalCount = pagination?.total || applicationsData?.data?.total || applications.length;
 
   const SortIcon = sortOrder === 'asc' ? SortAsc : SortDesc;
+
+  // Pagination for list views
+  const isListView = viewMode === 'list1' || viewMode === 'list2';
+  const totalPages = isListView ? Math.ceil(applications.length / listLimit) : 1;
+  const paginatedApplications = isListView
+    ? applications.slice((listPage - 1) * listLimit, listPage * listLimit)
+    : applications;
 
   return (
     <div className="space-y-6 px-4 sm:px-0">
@@ -811,66 +865,237 @@ const JobApplicationsDetail = () => {
       </Card>
 
       {/* Applications List */}
-      <Card title={`${t.allApplicants} (${totalCount})`}>
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900">{`${t.allApplicants} (${totalCount})`}</h2>
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 border border-gray-300 rounded-lg p-1 bg-white">
+            <button
+              onClick={() => {
+                setViewMode('list1');
+                setListPage(1);
+                localStorage.setItem('applicationsViewMode', 'list1');
+              }}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list1'
+                  ? 'bg-primary-600 text-gray-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t.listView1}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('list2');
+                setListPage(1);
+                localStorage.setItem('applicationsViewMode', 'list2');
+              }}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list2'
+                  ? 'bg-primary-600 text-gray-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t.listView2}
+            >
+              <ListChecks className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('detailed');
+                localStorage.setItem('applicationsViewMode', 'detailed');
+              }}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'detailed'
+                  ? 'bg-primary-600 text-gray-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t.detailedView}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
         {applications.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600">{t.noApplicationsMatch}</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {applications.map((application) => {
+          <>
+            <div className={
+              viewMode === 'list1' || viewMode === 'list2' 
+                ? 'space-y-0' 
+                : viewMode === 'detailed' 
+                  ? 'space-y-0' 
+                  : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'
+            }>
+              {paginatedApplications.map((application) => {
               const isUnlocked = application.contactUnlockedByClient;
               const student = application.student;
               const isPremium = student?.studentProfile?.subscriptionTier === 'premium';
+              console.log('student?.studentProfile?.university (full data):', student?.studentProfile?.university);
+              console.log('student?.studentProfile (full object):', student?.studentProfile);
               
               // Create a unique key for image error state
               const imageKey = `img-${application._id}`;
 
+              // List View 1 - Very minimal
+              if (viewMode === 'list1') {
+                return (
+                  <div key={application._id} className="border-b border-gray-200 py-2 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-gray-900 truncate">
+                            {isUnlocked ? (student?.name || 'Student') : t.contactLocked}
+                          </h3>
+                          <Badge variant={
+                            application.status === 'pending' ? 'info' :
+                            application.status === 'accepted' ? 'success' :
+                            application.status === 'rejected' ? 'error' : 'default'
+                          }>
+                            {application.status === 'pending' ? t.pending :
+                             application.status === 'accepted' ? t.accepted :
+                             application.status === 'rejected' ? t.rejected :
+                             application.status}
+                          </Badge>
+                          {isPremium && (
+                            <Badge variant="warning" className="text-xs">
+                              <Crown className="w-2.5 h-2.5" />
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                          <span>{application.proposedBudget?.currency} {application.proposedBudget?.amount}</span>
+                          <span>•</span>
+                          <span>{application.estimatedDuration || 'N/A'}</span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleViewFullApplication(application._id)}
+                        className="flex items-center gap-1 text-xs flex-shrink-0"
+                      >
+                        <Eye className="w-3 h-3" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // List View 2 - Slightly more info
+              if (viewMode === 'list2') {
+                return (
+                  <div key={application._id} className="border-b border-gray-200 py-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-sm font-bold text-gray-900">
+                            {isUnlocked ? (student?.name || 'Student') : t.contactLocked}
+                          </h3>
+                          <Badge variant={
+                            application.status === 'pending' ? 'info' :
+                            application.status === 'accepted' ? 'success' :
+                            application.status === 'rejected' ? 'error' : 'default'
+                          }>
+                            {application.status === 'pending' ? t.pending :
+                             application.status === 'accepted' ? t.accepted :
+                             application.status === 'rejected' ? t.rejected :
+                             application.status}
+                          </Badge>
+                          {isPremium && (
+                            <Badge variant="warning" className="text-xs">
+                              <Crown className="w-2.5 h-2.5" /> Premium
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
+                          <div>
+                            <span className="text-gray-500">{t.proposedBudgetLabel}: </span>
+                            <span className="font-semibold text-green-600">{application.proposedBudget?.currency} {application.proposedBudget?.amount}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">{t.duration}: </span>
+                            <span>{application.estimatedDuration || 'N/A'}</span>
+                          </div>
+                          {isUnlocked && student?.nationality && (
+                            <div>
+                              <span className="text-gray-500">{t.nationalityLabel}: </span>
+                              <span>{student.nationality}</span>
+                            </div>
+                          )}
+                          {isUnlocked && (
+                            <div>
+                              <span className="text-gray-500">{t.university}: </span>
+                              <span>{getUniversityName(student?.studentProfile?.university)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleViewFullApplication(application._id)}
+                        className="flex items-center gap-1 text-xs flex-shrink-0"
+                      >
+                        <Eye className="w-3 h-3" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Detailed/Block View
               return (
                 <div
                   key={application._id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition"
+                  className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className={`flex ${viewMode === 'compact' ? 'flex-col' : 'flex-col sm:flex-row sm:items-start sm:justify-between'} gap-4`}>
                     {/* Student Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-3">
+                      <div className={`flex items-center gap-3 ${viewMode === 'compact' ? 'mb-2' : 'mb-3'}`}>
                         {isUnlocked ? (
                           <>
-                            <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                            <div className={`${viewMode === 'compact' ? 'w-10 h-10' : 'w-12 h-12'} rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0`}>
                               {student?.photo && hasValidPhoto(student.photo) && !imageErrors[imageKey] ? (
                                 <img
                                   src={getPhotoUrl(student.photo)}
                                   alt={student.name || 'Student'}
-                                  className="w-12 h-12 rounded-full object-cover"
+                                  className={`${viewMode === 'compact' ? 'w-10 h-10' : 'w-12 h-12'} rounded-full object-cover`}
                                   onError={() => handleImageError(imageKey)}
                                 />
                               ) : (
-                                <User className="w-6 h-6 text-primary-600" />
+                                <User className={`${viewMode === 'compact' ? 'w-5 h-5' : 'w-6 h-6'} text-primary-600`} />
                               )}
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <div>
-                                <h3 className="font-bold text-gray-900">{student?.name}</h3>
-                                <p className="text-sm text-gray-600">{student?.email}</p>
+                                <h3 className={`${viewMode === 'compact' ? 'text-sm' : ''} font-bold text-gray-900`}>{student?.name}</h3>
+                                {viewMode === 'detailed' && (
+                                  <p className="text-sm text-gray-600">{student?.email}</p>
+                                )}
                               </div>
                               {isPremium && (
-                                <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
-                                  <Crown className="w-3 h-3" />
-                                  Premium Account
+                                <Badge variant="warning" className={`flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300 ${viewMode === 'compact' ? 'text-xs' : ''}`}>
+                                  <Crown className={`${viewMode === 'compact' ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} />
+                                  {viewMode === 'detailed' && 'Premium Account'}
                                 </Badge>
                               )}
                             </div>
                           </>
                         ) : (
                           <>
-                            <Lock className="w-5 h-5 text-gray-400" />
+                            <Lock className={`${viewMode === 'compact' ? 'w-4 h-4' : 'w-5 h-5'} text-gray-400`} />
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-gray-500">{t.contactLocked}</p>
+                              <p className={`${viewMode === 'compact' ? 'text-xs' : ''} text-gray-500`}>{t.contactLocked}</p>
                               {isPremium && (
-                                <Badge variant="warning" className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300">
-                                  <Crown className="w-3 h-3" />
-                                  {t.premiumAccount}
+                                <Badge variant="warning" className={`flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300 ${viewMode === 'compact' ? 'text-xs' : ''}`}>
+                                  <Crown className={`${viewMode === 'compact' ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} />
+                                  {viewMode === 'detailed' && t.premiumAccount}
                                 </Badge>
                               )}
                             </div>
@@ -878,7 +1103,8 @@ const JobApplicationsDetail = () => {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-3">
+                      {viewMode === 'detailed' && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-3">
                         <div>
                           <p className="text-xs text-gray-500">{t.proposedBudgetLabel}</p>
                           <p className="font-bold text-green-600 text-lg">
@@ -906,6 +1132,24 @@ const JobApplicationsDetail = () => {
                           </p>
                         </div>
                       </div>
+                      )}
+                      
+                      {viewMode === 'compact' && (
+                        <div className="flex items-center gap-3 text-sm mb-2">
+                          <div>
+                            <span className="text-gray-500">{t.proposedBudgetLabel}: </span>
+                            <span className="font-bold text-green-600">
+                              {application.proposedBudget?.currency} {application.proposedBudget?.amount}
+                            </span>
+                          </div>
+                          {application.estimatedDuration && (
+                            <div>
+                              <span className="text-gray-500">{t.duration}: </span>
+                              <span className="font-semibold">{application.estimatedDuration}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-2">
                         <Badge variant={
@@ -925,30 +1169,32 @@ const JobApplicationsDetail = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full sm:w-auto">
+                    <div className={`flex ${viewMode === 'compact' ? 'flex-wrap gap-2' : 'flex-col sm:flex-row lg:flex-col gap-2'} w-full sm:w-auto`}>
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => handleViewFullApplication(application._id)}
-                        className="flex items-center gap-2"
+                        className={`flex items-center gap-2 ${viewMode === 'compact' ? 'flex-1 min-w-0' : ''}`}
                       >
                         <FileText className="w-4 h-4" />
-                        {t.viewFullApplication}
+                        {viewMode === 'compact' ? <span className="text-xs">View</span> : t.viewFullApplication}
                       </Button>
                       
                       {isUnlocked ? (
                         <>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => navigate(`/client/students/${student?._id}`)}
-                          >
-                            <User className="w-4 h-4 mr-2" />
-                            {t.viewProfile}
-                          </Button>
+                          {viewMode === 'detailed' && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => navigate(`/client/students/${student?._id}`)}
+                            >
+                              <User className="w-4 h-4 mr-2" />
+                              {t.viewProfile}
+                            </Button>
+                          )}
 
                           {/* Only show Accept/Reject buttons if application is pending and job is not cancelled */}
-                          {application.status === 'pending' && job?.status !== 'cancelled' && (
+                          {viewMode === 'detailed' && application.status === 'pending' && job?.status !== 'cancelled' && (
                             <>
                               <Button
                                 variant="success"
@@ -969,7 +1215,7 @@ const JobApplicationsDetail = () => {
                             </>
                           )}
 
-                          {application.status === 'accepted' && (
+                          {viewMode === 'detailed' && application.status === 'accepted' && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -994,13 +1240,44 @@ const JobApplicationsDetail = () => {
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination for List Views */}
+            {isListView && totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <p className="text-sm text-gray-600">
+                  Showing {(listPage - 1) * listLimit + 1} to {Math.min(listPage * listLimit, applications.length)} of {applications.length} applications
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setListPage(p => Math.max(1, p - 1))}
+                    disabled={listPage === 1}
+                  >
+                    {t.previous || 'Previous'}
+                  </Button>
+                  <span className="flex items-center px-3 text-sm text-gray-600">
+                    {t.page || 'Page'} {listPage} {t.ofPages || 'of'} {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setListPage(p => Math.min(totalPages, p + 1))}
+                    disabled={listPage === totalPages}
+                  >
+                    {t.next || 'Next'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Pagination */}
-        {pagination.pages > 1 && (
+        {/* Pagination for Detailed View */}
+        {!isListView && pagination.pages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t">
             <p className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
               {t.showing} {(page - 1) * limit + 1} {t.to} {Math.min(page * limit, totalCount)} {t.of}{' '}
@@ -1112,6 +1389,10 @@ const JobApplicationsDetail = () => {
 
                   {/* Student Info Section */}
                   <Card>
+                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      {t.studentInformation || 'Student Information'}
+                    </h4>
                     <div className="flex items-start gap-4 mb-4">
                       {isUnlocked && fullStudent?.photo && hasValidPhoto(fullStudent.photo) && !modalImageErrors[modalImageKey] ? (
                         <div className="relative w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
@@ -1140,26 +1421,223 @@ const JobApplicationsDetail = () => {
                           )}
                         </div>
                         {isUnlocked ? (
-                          <>
-                            <p className="text-gray-600 mb-1">{fullStudent?.email}</p>
-                            <p className="text-sm text-gray-500">
-                              {fullStudent?.nationality && `${t.nationalityLabel}: ${fullStudent.nationality}`}
-                              {fullStudent?.age && ` • Age: ${fullStudent.age}`}
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-sm text-gray-500">{t.email || 'Email'}</p>
+                              <p className="font-semibold text-gray-900">{fullStudent?.email || t.notSpecified}</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {fullStudent?.nationality && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.nationalityLabel}</p>
+                                  <p className="font-semibold">{fullStudent.nationality}</p>
+                                </div>
+                              )}
+                              {fullStudent?.age && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.age || 'Age'}</p>
+                                  <p className="font-semibold">{fullStudent.age}</p>
+                                </div>
+                              )}
                               {(() => {
                                 const universityName = getUniversityName(fullStudent?.studentProfile?.university, null);
-                                return universityName ? ` • ${t.university}: ${universityName}` : null;
+                                return universityName ? (
+                                  <div>
+                                    <p className="text-sm text-gray-500">{t.university}</p>
+                                    <p className="font-semibold">{universityName}</p>
+                                  </div>
+                                ) : null;
                               })()}
-                            </p>
-                          </>
+                              {fullStudent?.studentProfile?.major && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.major || 'Major'}</p>
+                                  <p className="font-semibold">{fullStudent.studentProfile.major}</p>
+                                </div>
+                              )}
+                              {fullStudent?.studentProfile?.graduationYear && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.graduationYear || 'Graduation Year'}</p>
+                                  <p className="font-semibold">{fullStudent.studentProfile.graduationYear}</p>
+                                </div>
+                              )}
+                              {fullStudent?.studentProfile?.experienceLevel && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.experienceLevel}</p>
+                                  <p className="font-semibold">{fullStudent.studentProfile.experienceLevel}</p>
+                                </div>
+                              )}
+                              {fullStudent?.studentProfile?.yearsOfExperience !== undefined && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.yearsOfExperience || 'Years of Experience'}</p>
+                                  <p className="font-semibold">{fullStudent.studentProfile.yearsOfExperience} {fullStudent.studentProfile.yearsOfExperience === 1 ? 'year' : 'years'}</p>
+                                </div>
+                              )}
+                              {fullStudent?.studentProfile?.hourlyRate && (
+                                <div>
+                                  <p className="text-sm text-gray-500">{t.hourlyRate || 'Hourly Rate'}</p>
+                                  <p className="font-semibold">
+                                    {fullStudent.studentProfile.hourlyRate.min && fullStudent.studentProfile.hourlyRate.max
+                                      ? `${fullStudent.studentProfile.hourlyRate.currency} ${fullStudent.studentProfile.hourlyRate.min} - ${fullStudent.studentProfile.hourlyRate.max}`
+                                      : fullStudent.studentProfile.hourlyRate.min
+                                      ? `${fullStudent.studentProfile.hourlyRate.currency} ${fullStudent.studentProfile.hourlyRate.min}+`
+                                      : t.notSpecified}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            {fullStudent?.studentProfile?.skills && fullStudent.studentProfile.skills.length > 0 && (
+                              <div>
+                                <p className="text-sm text-gray-500 mb-2">{t.skills || 'Skills'}</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {fullStudent.studentProfile.skills.map((skill, idx) => (
+                                    <Badge key={idx} variant="info" size="sm">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {fullStudent?.studentProfile?.universityLink && (
+                              <div>
+                                <p className="text-sm text-gray-500 mb-1">{t.universityLink || 'University Link'}</p>
+                                <a
+                                  href={fullStudent.studentProfile.universityLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                  {fullStudent.studentProfile.universityLink}
+                                </a>
+                              </div>
+                            )}
+                            {fullStudent?.studentProfile?.availability && (
+                              <div>
+                                <p className="text-sm text-gray-500">{t.availability || 'Availability'}</p>
+                                <Badge variant={fullStudent.studentProfile.availability === 'Available' ? 'success' : 'warning'}>
+                                  {fullStudent.studentProfile.availability}
+                                </Badge>
+                              </div>
+                            )}
+                            {fullStudent?.studentProfile?.bio && (
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                <p className="text-sm text-gray-500 mb-2">{t.bio || 'Bio'}</p>
+                                <p className="text-gray-700 whitespace-pre-wrap">{fullStudent.studentProfile.bio}</p>
+                              </div>
+                            )}
+                            {fullStudent?.studentProfile?.languages && fullStudent.studentProfile.languages.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                <p className="text-sm text-gray-500 mb-2">{t.languages || 'Languages'}</p>
+                                <div className="space-y-2">
+                                  {fullStudent.studentProfile.languages.map((lang, idx) => (
+                                    <div key={idx} className="flex items-center justify-between">
+                                      <span className="font-medium">{lang.language}</span>
+                                      <Badge variant="info" size="sm">{lang.proficiency}</Badge>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {fullStudent?.studentProfile?.certifications && fullStudent.studentProfile.certifications.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                <p className="text-sm text-gray-500 mb-3">{t.certifications || 'Certifications'}</p>
+                                <div className="space-y-3">
+                                  {fullStudent.studentProfile.certifications.map((cert, idx) => (
+                                    <div key={idx} className="border border-gray-200 rounded-lg p-3">
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                          <p className="font-semibold text-gray-900">{cert.name}</p>
+                                          {cert.issuingOrganization && (
+                                            <p className="text-sm text-gray-600">{cert.issuingOrganization}</p>
+                                          )}
+                                        </div>
+                                        {cert.issueDate && (
+                                          <p className="text-xs text-gray-500">
+                                            {new Date(cert.issueDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                                          </p>
+                                        )}
+                                      </div>
+                                      {cert.credentialId && (
+                                        <p className="text-xs text-gray-500 mb-1">ID: {cert.credentialId}</p>
+                                      )}
+                                      {cert.credentialUrl && (
+                                        <a
+                                          href={cert.credentialUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-primary-600 hover:text-primary-700 text-xs flex items-center gap-1"
+                                        >
+                                          <ExternalLink className="w-3 h-3" />
+                                          View Credential
+                                        </a>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {fullStudent?.studentProfile?.socialLinks && Object.keys(fullStudent.studentProfile.socialLinks).some(key => fullStudent.studentProfile.socialLinks[key]) && (
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                <p className="text-sm text-gray-500 mb-3">{t.socialLinks || 'Social Links'}</p>
+                                <div className="flex flex-wrap gap-3">
+                                  {fullStudent.studentProfile.socialLinks.github && (
+                                    <a
+                                      href={fullStudent.studentProfile.socialLinks.github}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      GitHub
+                                    </a>
+                                  )}
+                                  {fullStudent.studentProfile.socialLinks.linkedin && (
+                                    <a
+                                      href={fullStudent.studentProfile.socialLinks.linkedin}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      LinkedIn
+                                    </a>
+                                  )}
+                                  {fullStudent.studentProfile.socialLinks.website && (
+                                    <a
+                                      href={fullStudent.studentProfile.socialLinks.website}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      Website
+                                    </a>
+                                  )}
+                                  {fullStudent.studentProfile.socialLinks.behance && (
+                                    <a
+                                      href={fullStudent.studentProfile.socialLinks.behance}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-primary-600 hover:text-primary-700 flex items-center gap-2"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      Behance
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <>
                             <p className="text-gray-500 mb-1">{t.unlockContactToView}</p>
                             {(() => {
                               const universityName = getUniversityName(fullStudent?.studentProfile?.university, null);
                               return universityName ? (
-                                <p className="text-sm text-gray-500">
-                                  {t.university}: {universityName}
-                                </p>
+                                <div className="mt-2">
+                                  <p className="text-sm text-gray-500">{t.university}</p>
+                                  <p className="font-semibold">{universityName}</p>
+                                </div>
                               ) : null;
                             })()}
                           </>
@@ -1597,7 +2075,7 @@ const JobApplicationsDetail = () => {
         cancelText={t.cancel}
       />
     </div>
-  );
+  )
 };
 
 export default JobApplicationsDetail;

@@ -56,11 +56,13 @@ export default function MilestonesPanel({
           const total = round2(principal + platformFee + transactionFee);
 
           const hasActiveAppeal = !!contract?.activeAppeal;
+          const isCancelled = contract?.status === 'cancelled';
           const canFund =
             role === 'client' &&
             (contract.status === 'signed' || contract.status === 'active') &&
             status === 'unfunded' &&
-            !hasActiveAppeal;
+            !hasActiveAppeal &&
+            !isCancelled;
 
           return (
             <div key={id} className="border rounded-lg p-3 bg-white">
@@ -94,28 +96,40 @@ export default function MilestonesPanel({
                         Fund
                       </Button>
                     </>
-                  ) : role === 'client' && status === 'unfunded' && hasActiveAppeal ? (
-                    <Button size="sm" disabled title="Cannot fund milestone while appeal is active">
+                  ) : role === 'client' && status === 'unfunded' && (hasActiveAppeal || isCancelled) ? (
+                    <Button
+                      size="sm"
+                      disabled
+                      title={isCancelled ? 'Contract is cancelled' : 'Cannot fund milestone while appeal is active'}
+                    >
                       Fund
                     </Button>
                   ) : null}
 
-                  {role === 'student' && status === 'funded' && !hasActiveAppeal ? (
+                  {role === 'student' && status === 'funded' && !hasActiveAppeal && !isCancelled ? (
                     <Button size="sm" onClick={() => onSubmit?.(id)} loading={isBusy}>
                       Mark done
                     </Button>
-                  ) : role === 'student' && status === 'funded' && hasActiveAppeal ? (
-                    <Button size="sm" disabled title="Cannot submit milestone while appeal is active">
+                  ) : role === 'student' && status === 'funded' && (hasActiveAppeal || isCancelled) ? (
+                    <Button
+                      size="sm"
+                      disabled
+                      title={isCancelled ? 'Contract is cancelled' : 'Cannot submit milestone while appeal is active'}
+                    >
                       Mark done
                     </Button>
                   ) : null}
 
-                  {role === 'client' && status === 'submitted' && !hasActiveAppeal ? (
+                  {role === 'client' && status === 'submitted' && !hasActiveAppeal && !isCancelled ? (
                     <Button size="sm" onClick={() => onApprove?.(id)} loading={isBusy}>
                       Approve & release
                     </Button>
-                  ) : role === 'client' && status === 'submitted' && hasActiveAppeal ? (
-                    <Button size="sm" disabled title="Cannot approve milestone while appeal is active">
+                  ) : role === 'client' && status === 'submitted' && (hasActiveAppeal || isCancelled) ? (
+                    <Button
+                      size="sm"
+                      disabled
+                      title={isCancelled ? 'Contract is cancelled' : 'Cannot approve milestone while appeal is active'}
+                    >
                       Approve & release
                     </Button>
                   ) : null}

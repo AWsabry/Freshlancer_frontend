@@ -18,6 +18,9 @@ import {
   XCircle,
   CheckCircle,
   AlertCircle,
+  LayoutGrid,
+  List,
+  ListChecks,
 } from 'lucide-react';
 
 const translations = {
@@ -63,6 +66,8 @@ const translations = {
     statusInProgress: 'In Progress',
     statusCompleted: 'Completed',
     statusCancelled: 'Cancelled',
+    compactView: 'Compact View',
+    detailedView: 'Detailed View',
   },
   it: {
     loading: 'Caricamento dei tuoi lavori...',
@@ -106,6 +111,11 @@ const translations = {
     statusInProgress: 'In Corso',
     statusCompleted: 'Completato',
     statusCancelled: 'Cancellato',
+    compactView: 'Vista Compatta',
+    detailedView: 'Vista Dettagliata',
+    listView1: 'Vista Lista 1',
+    listView2: 'Vista Lista 2',
+    viewDetails: 'Visualizza Dettagli',
   },
 };
 
@@ -117,6 +127,10 @@ const Jobs = () => {
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [jobToWithdraw, setJobToWithdraw] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('jobsViewMode') || 'detailed';
+  });
+  const [listPage, setListPage] = useState(1);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -208,6 +222,11 @@ const Jobs = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setListPage(1);
+  }, [statusFilter]);
+
   if (isLoading) {
     return <Loading text={t.loading} />;
   }
@@ -218,6 +237,14 @@ const Jobs = () => {
   const filteredJobs = statusFilter === 'all'
     ? jobs
     : jobs.filter(job => job.status === statusFilter);
+
+  // Pagination for list views
+  const isListView = viewMode === 'list1' || viewMode === 'list2';
+  const listLimit = 20;
+  const totalPages = isListView ? Math.ceil(filteredJobs.length / listLimit) : 1;
+  const paginatedJobs = isListView
+    ? filteredJobs.slice((listPage - 1) * listLimit, listPage * listLimit)
+    : filteredJobs;
 
   // Count jobs by status (only open, completed, and cancelled)
   const statusCounts = {
@@ -235,14 +262,63 @@ const Jobs = () => {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t.myJobPosts}</h1>
           <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-1">{t.managePostings}</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => navigate('/client/jobs/new')}
-          className="flex items-center justify-center gap-2 w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-sm sm:text-base">{t.postNewJob}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 border border-gray-300 rounded-lg p-1 bg-white">
+            <button
+              onClick={() => {
+                setViewMode('list1');
+                setListPage(1);
+                localStorage.setItem('jobsViewMode', 'list1');
+              }}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list1'
+                  ? 'bg-primary-600 text-gray-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t.listView1}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('list2');
+                setListPage(1);
+                localStorage.setItem('jobsViewMode', 'list2');
+              }}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list2'
+                  ? 'bg-primary-600 text-gray-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t.listView2}
+            >
+              <ListChecks className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('detailed');
+                localStorage.setItem('jobsViewMode', 'detailed');
+              }}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'detailed'
+                  ? 'bg-primary-600 text-gray-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t.detailedView}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/client/jobs/new')}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base">{t.postNewJob}</span>
+          </Button>
+        </div>
       </div>
 
       {/* Status Filter Tabs */}
@@ -303,25 +379,110 @@ const Jobs = () => {
           </div>
         </Card>
       ) : (
-        <div className="space-y-3 sm:space-y-4">
-          {filteredJobs.map((job) => (
-            <Card key={job._id} className="p-4 sm:p-6">
+        <>
+          <div className={
+            viewMode === 'list1' || viewMode === 'list2' 
+              ? 'space-y-0' 
+              : viewMode === 'detailed' 
+                ? 'space-y-0' 
+                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
+          }>
+            {paginatedJobs.map((job) => {
+              // List View 1 - Very minimal
+              if (viewMode === 'list1') {
+                return (
+                  <div key={job._id} className="border-b border-gray-200 py-2 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-gray-900 truncate">{job.title}</h3>
+                          {getStatusBadge(job.status)}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                          <span>{job.budget?.currency} {job.budget?.min}-{job.budget?.max}</span>
+                          <span>•</span>
+                          <span>{job.applicationsCount || 0} {t.applications}</span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => navigate(`/client/jobs/${job._id}`)}
+                        className="flex items-center gap-1 text-xs flex-shrink-0"
+                      >
+                        <Eye className="w-3 h-3" />
+                        {t.viewDetails}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // List View 2 - Slightly more info
+              if (viewMode === 'list2') {
+                return (
+                  <div key={job._id} className="border-b border-gray-200 py-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-sm font-bold text-gray-900">{job.title}</h3>
+                          {getStatusBadge(job.status)}
+                          {job.urgent && <Badge variant="error" className="text-xs">{t.urgent}</Badge>}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
+                          <div>
+                            <span className="text-gray-500">{t.budget}: </span>
+                            <span className="font-semibold text-green-600">{job.budget?.currency} {job.budget?.min}-{job.budget?.max}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">{t.applications}: </span>
+                            <span className="font-semibold">{job.applicationsCount || 0}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">{t.posted}: </span>
+                            <span>{new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}</span>
+                          </div>
+                          {job.deadline && (
+                            <div>
+                              <span className="text-gray-500">{t.deadline}: </span>
+                              <span>{new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => navigate(`/client/jobs/${job._id}`)}
+                        className="flex items-center gap-1 text-xs flex-shrink-0"
+                      >
+                        <Eye className="w-3 h-3" />
+                        {t.viewDetails}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Detailed/Block View
+              return (
+                <div key={job._id} className={viewMode === 'detailed' ? 'border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors' : 'border border-gray-200 rounded-lg p-3 sm:p-4'}>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                 <div className="flex-1 min-w-0">
                   {/* Title and Status */}
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 break-words">
+                  <div className={`flex flex-col ${viewMode === 'compact' ? 'gap-2' : 'sm:flex-row sm:items-start gap-3'} mb-3`}>
+                    <h3 className={`${viewMode === 'compact' ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-bold text-gray-900 flex-1 break-words`}>
                       {job.title}
                     </h3>
-                    <div className="flex flex-col sm:items-end gap-2 flex-shrink-0">
+                    <div className={`flex flex-col ${viewMode === 'compact' ? 'items-start' : 'sm:items-end'} gap-2 flex-shrink-0`}>
                       {/* Startup Name */}
                       {job.startup && job.startup.startupName && (
-                        <p className="text-xs sm:text-sm font-medium text-primary-600 text-right sm:text-left">
+                        <p className={`text-xs ${viewMode === 'compact' ? 'sm:text-xs' : 'sm:text-sm'} font-medium text-primary-600 ${viewMode === 'compact' ? 'text-left' : 'text-right sm:text-left'}`}>
                           {job.startup.startupName}
                         </p>
                       )}
                       {/* Status Badges */}
-                      <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                      <div className={`flex items-center gap-2 flex-wrap ${viewMode === 'compact' ? 'justify-start' : 'sm:justify-end'}`}>
                         {getStatusBadge(job.status)}
                         {job.urgent && <Badge variant="error">{t.urgent}</Badge>}
                         {job.featured && <Badge variant="info">{t.featured}</Badge>}
@@ -330,21 +491,23 @@ const Jobs = () => {
                   </div>
 
                   {/* Description */}
-                  <div className="mb-4 max-w-full overflow-hidden">
-                    <p className="text-sm sm:text-base text-gray-700 break-words line-clamp-1">
-                      {job.description}
-                    </p>
-                    <button
-                      onClick={() => navigate(`/client/jobs/${job._id}`)}
-                      className="text-primary-600 hover:text-primary-700 text-sm font-medium mt-1 inline-flex items-center gap-1 transition-colors"
-                    >
-                      <span className="text-lg">...</span>
-                      <span className="underline">{t.viewDetails}</span>
-                    </button>
-                  </div>
+                  {viewMode === 'detailed' && (
+                    <div className="mb-4 max-w-full overflow-hidden">
+                      <p className="text-sm sm:text-base text-gray-700 break-words line-clamp-1">
+                        {job.description}
+                      </p>
+                      <button
+                        onClick={() => navigate(`/client/jobs/${job._id}`)}
+                        className="text-primary-600 hover:text-primary-700 text-sm font-medium mt-1 inline-flex items-center gap-1 transition-colors"
+                      >
+                        <span className="text-lg">...</span>
+                        <span className="underline">{t.viewDetails}</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Job Details */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                  <div className={`grid ${viewMode === 'compact' ? 'grid-cols-2 gap-2' : 'grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'} ${viewMode === 'detailed' ? 'mb-4' : 'mb-2'}`}>
                     {/* Budget */}
                     {job.budget && (
                       <div className="flex items-start sm:items-center gap-2 text-gray-600">
@@ -394,7 +557,7 @@ const Jobs = () => {
                   </div>
 
                   {/* Skills */}
-                  {job.skillsRequired && job.skillsRequired.length > 0 && (
+                  {viewMode === 'detailed' && job.skillsRequired && job.skillsRequired.length > 0 && (
                     <div className="mb-3 sm:mb-4">
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {job.skillsRequired.slice(0, 5).map((skill, index) => (
@@ -415,64 +578,112 @@ const Jobs = () => {
                   )}
 
                   {/* Category */}
-                  <div className="mb-3 sm:mb-4">
-                    <Badge variant="default" className="text-xs sm:text-sm">{job.category}</Badge>
-                  </div>
+                  {viewMode === 'detailed' && (
+                    <div className="mb-3 sm:mb-4">
+                      <Badge variant="default" className="text-xs sm:text-sm">{job.category}</Badge>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-3 sm:pt-4 border-t mt-3 sm:mt-0">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => navigate(`/client/jobs/${job._id}`)}
-                  className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
-                >
-                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">{t.viewDetails}</span>
-                  <span className="sm:hidden">{t.viewDetails.split(' ')[0]}</span>
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/client/jobs/${job._id}/edit`)}
-                  className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
-                  disabled={job.status === 'completed' || job.status === 'cancelled'}
-                >
-                  <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  {t.edit}
-                </Button>
-
-                {/* Show Withdraw button if job has applications, otherwise show Delete button */}
-                {job.applicationsCount > 0 ? (
+              <div className={`flex flex-wrap gap-2 ${viewMode === 'compact' ? 'pt-2 border-t mt-2' : 'pt-3 sm:pt-4 border-t mt-3 sm:mt-0'}`}>
+                {viewMode === 'compact' ? (
                   <Button
-                    variant="warning"
+                    variant="primary"
                     size="sm"
-                    onClick={() => handleWithdraw(job)}
-                    className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
-                    disabled={job.status === 'completed' || job.status === 'cancelled'}
+                    onClick={() => navigate(`/client/jobs/${job._id}`)}
+                    className="flex items-center justify-center gap-1.5 flex-1 text-xs"
                   >
-                    <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{t.withdrawJob}</span>
-                    <span className="sm:hidden">{t.withdrawJob.split(' ')[0]}</span>
+                    <Eye className="w-3.5 h-3.5" />
+                    {t.viewDetails}
                   </Button>
                 ) : (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(job)}
-                    className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
-                    disabled={job.status === 'completed' || job.status === 'cancelled'}
-                  >
-                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    {t.delete}
-                  </Button>
+                  <>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => navigate(`/client/jobs/${job._id}`)}
+                      className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
+                    >
+                      <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">{t.viewDetails}</span>
+                      <span className="sm:hidden">{t.viewDetails.split(' ')[0]}</span>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/client/jobs/${job._id}/edit`)}
+                      className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
+                      disabled={job.status === 'completed' || job.status === 'cancelled'}
+                    >
+                      <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      {t.edit}
+                    </Button>
+
+                    {/* Show Withdraw button if job has applications, otherwise show Delete button */}
+                    {job.applicationsCount > 0 ? (
+                      <Button
+                        variant="warning"
+                        size="sm"
+                        onClick={() => handleWithdraw(job)}
+                        className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
+                        disabled={job.status === 'completed' || job.status === 'cancelled'}
+                      >
+                        <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">{t.withdrawJob}</span>
+                        <span className="sm:hidden">{t.withdrawJob.split(' ')[0]}</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(job)}
+                        className="flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm"
+                        disabled={job.status === 'completed' || job.status === 'cancelled'}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        {t.delete}
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
-            </Card>
-          ))}
-        </div>
+            </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination for List Views */}
+          {isListView && totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-sm text-gray-600">
+                Showing {(listPage - 1) * listLimit + 1} to {Math.min(listPage * listLimit, filteredJobs.length)} of {filteredJobs.length} jobs
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setListPage(p => Math.max(1, p - 1))}
+                  disabled={listPage === 1}
+                >
+                  {t.previous || 'Previous'}
+                </Button>
+                <span className="flex items-center px-3 text-sm text-gray-600">
+                  {t.page || 'Page'} {listPage} {t.ofPages || 'of'} {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setListPage(p => Math.min(totalPages, p + 1))}
+                  disabled={listPage === totalPages}
+                >
+                  {t.next || 'Next'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Delete Confirmation Modal */}

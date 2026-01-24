@@ -310,6 +310,8 @@ const JobDetails = () => {
     },
   });
 
+  const isSubmitting = applyMutation.isPending;
+
   const onSubmit = (data) => {
     // Validate required fields before submission
     if (!id) {
@@ -625,6 +627,7 @@ const JobDetails = () => {
               { value: 'custom', label: t.customProposal },
             ]}
             error={errors.proposalType?.message}
+            disabled={isSubmitting}
             {...register('proposalType', { required: t.proposalTypeRequired })}
           />
 
@@ -642,6 +645,7 @@ const JobDetails = () => {
                 rows="4"
                 placeholder={t.proposalMessagePlaceholder}
                 maxLength="1000"
+                disabled={isSubmitting}
                 {...register('proposalText', {
                   maxLength: { value: 1000, message: t.proposalMessageMaxLength },
                 })}
@@ -662,6 +666,7 @@ const JobDetails = () => {
               min="1"
               step="0.01"
               error={errors.proposedBudget?.message}
+              disabled={isSubmitting}
               {...register('proposedBudget', {
                 required: t.proposedBudgetRequired,
                 min: { value: 1, message: t.budgetMin },
@@ -675,6 +680,7 @@ const JobDetails = () => {
                 { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
               ]}
               error={errors.proposedBudgetCurrency?.message}
+              disabled={isSubmitting}
               {...register('proposedBudgetCurrency', { required: t.currencyRequired })}
             />
           </div>
@@ -689,6 +695,7 @@ const JobDetails = () => {
               { value: 'More than 3 months', label: t.moreThanThreeMonths },
             ]}
             error={errors.estimatedDuration?.message}
+            disabled={isSubmitting}
             {...register('estimatedDuration', { required: t.durationRequired })}
           />
 
@@ -719,7 +726,7 @@ const JobDetails = () => {
                       <select
                         className="input"
                         value={value ?? ''}
-                        disabled={locked}
+                        disabled={locked || isSubmitting}
                         onChange={(e) =>
                           setCategorySpecAnswers((prev) => ({
                             ...(prev || {}),
@@ -755,7 +762,7 @@ const JobDetails = () => {
                               <input
                                 type="checkbox"
                                 checked={checked}
-                                disabled={locked}
+                                disabled={locked || isSubmitting}
                                 onChange={(e) => {
                                   setCategorySpecAnswers((prev) => {
                                     const prevArr = Array.isArray(prev?.[spec.key]) ? prev[spec.key] : [];
@@ -787,7 +794,7 @@ const JobDetails = () => {
                         className="input"
                         type="number"
                         value={value ?? ''}
-                        disabled={locked}
+                        disabled={locked || isSubmitting}
                         min={spec.min ?? undefined}
                         max={spec.max ?? undefined}
                         onChange={(e) =>
@@ -807,7 +814,7 @@ const JobDetails = () => {
                       <input
                         type="checkbox"
                         checked={value === true}
-                        disabled={locked}
+                        disabled={locked || isSubmitting}
                         onChange={(e) =>
                           setCategorySpecAnswers((prev) => ({
                             ...(prev || {}),
@@ -839,6 +846,7 @@ const JobDetails = () => {
               { value: 'Flexible hours', label: t.flexibleHours },
             ]}
             error={errors.availabilityCommitment?.message}
+            disabled={isSubmitting}
             {...register('availabilityCommitment', { required: t.availabilityRequired })}
           />
 
@@ -847,6 +855,7 @@ const JobDetails = () => {
               type="button"
               variant="secondary"
               onClick={() => setShowApplicationModal(false)}
+              disabled={isSubmitting}
               className="flex-1"
             >
               {t.cancel}
@@ -854,8 +863,8 @@ const JobDetails = () => {
             <Button
               type="submit"
               variant="primary"
-              loading={applyMutation.isPending}
-              disabled={applyMutation.isPending}
+              loading={isSubmitting}
+              disabled={isSubmitting}
               className="flex-1"
             >
               {t.submitApplication}
