@@ -11,7 +11,11 @@ if (!apiBaseUrl && import.meta.env.MODE === 'production') {
 // For development, this may be empty (proxy handles /api routes)
 export const API_BASE_URL = apiBaseUrl ? apiBaseUrl.replace(/\/$/, '') : '';
 
-// Open Graph Image URL for Facebook and WhatsApp link previews
-// Hardcoded to production URL
-export const OG_IMAGE_URL = 'https://freshlancer.online/og-image.png';
+// Canonical site origin for OG/twitter meta and sharing (use one: with or without www)
+// Set VITE_CANONICAL_ORIGIN in .env.production so all shares show same preview (e.g. https://freshlancer.online)
+const canonicalOrigin = (import.meta.env?.VITE_CANONICAL_ORIGIN || 'https://freshlancer.online').replace(/\/$/, '');
+export const CANONICAL_ORIGIN = canonicalOrigin;
+
+// Open Graph image: always absolute URL on canonical origin so social crawlers get same image for www and non-www
+export const OG_IMAGE_URL = `${canonicalOrigin}/og-image.png`;
 

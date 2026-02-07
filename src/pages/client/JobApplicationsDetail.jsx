@@ -168,7 +168,6 @@ const translations = {
     languages: 'Languages',
     certifications: 'Certifications',
     socialLinks: 'Social Links',
-    portfolio: 'Portfolio',
   },
   it: {
     loading: 'Caricamento candidature...',
@@ -298,7 +297,6 @@ const translations = {
     languages: 'Lingue',
     certifications: 'Certificazioni',
     socialLinks: 'Link Social',
-    portfolio: 'Portfolio',
   },
 };
 

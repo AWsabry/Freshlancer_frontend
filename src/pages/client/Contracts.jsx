@@ -163,7 +163,7 @@ const Contracts = () => {
   });
 
   const fundMutation = useMutation({
-    mutationFn: ({ milestoneId }) => contractService.fundMilestone(selectedId, milestoneId),
+    mutationFn: ({ milestoneId }) => contractService.fundMilestone(selectedId, milestoneId, { redirectBaseUrl: window.location.origin }),
     onSuccess: async (resp) => {
       const data = resp?.data;
       if (data?.gateway === 'paymob' && data?.clientSecret) {

@@ -115,7 +115,6 @@ const translations = {
     detailedView: 'Vista Dettagliata',
     listView1: 'Vista Lista 1',
     listView2: 'Vista Lista 2',
-    viewDetails: 'Visualizza Dettagli',
   },
 };
 

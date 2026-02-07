@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import Button from '../components/common/Button';
 import { contactService } from '../services/contactService';
 import Alert from '../components/common/Alert';
-import { OG_IMAGE_URL } from '../config/env';
+import { OG_IMAGE_URL, CANONICAL_ORIGIN } from '../config/env';
 import Studentimage from '../assets/images/student.png';
 import Clientimage from '../assets/images/client.png';
 import logo from '../assets/logos/01.png';
@@ -884,19 +884,9 @@ const Landing = () => {
       ogDescription.content = seo.ogDescription;
     }
 
-    // Open Graph Image - Required for Facebook and WhatsApp previews
+    // Open Graph Image - use canonical origin so previews work for both www and non-www
     const ogImage = document.querySelector('meta[property="og:image"]');
-    const baseUrl = window.location.origin;
-    // Use network image URL from environment if available, otherwise use local path
-    // Ensure absolute HTTPS URL for WhatsApp and Facebook
-    let imageUrl = OG_IMAGE_URL.startsWith('http') 
-      ? OG_IMAGE_URL 
-      : `${baseUrl}${OG_IMAGE_URL.startsWith('/') ? OG_IMAGE_URL : '/' + OG_IMAGE_URL}`;
-    
-    // Force HTTPS for production
-    if (imageUrl.startsWith('http://') && window.location.protocol === 'https:') {
-      imageUrl = imageUrl.replace('http://', 'https://');
-    }
+    const imageUrl = OG_IMAGE_URL.startsWith('http') ? OG_IMAGE_URL : `${CANONICAL_ORIGIN}${OG_IMAGE_URL.startsWith('/') ? OG_IMAGE_URL : '/' + OG_IMAGE_URL}`;
     
     if (!ogImage) {
       const meta = document.createElement('meta');
@@ -953,15 +943,16 @@ const Landing = () => {
       document.head.appendChild(meta);
     }
 
-    // Open Graph URL - Important for proper link sharing
+    // Open Graph URL - use canonical origin so same preview for www and non-www
+    const canonicalUrl = `${CANONICAL_ORIGIN}/`;
     const ogUrl = document.querySelector('meta[property="og:url"]');
     if (!ogUrl) {
       const meta = document.createElement('meta');
       meta.setAttribute('property', 'og:url');
-      meta.content = baseUrl;
+      meta.content = canonicalUrl;
       document.head.appendChild(meta);
     } else {
-      ogUrl.content = baseUrl;
+      ogUrl.content = canonicalUrl;
     }
 
     // Open Graph Type
@@ -1006,8 +997,10 @@ const Landing = () => {
     if (!canonical) {
       const link = document.createElement('link');
       link.rel = 'canonical';
-      link.href = window.location.origin;
+      link.href = canonicalUrl;
       document.head.appendChild(link);
+    } else {
+      canonical.href = canonicalUrl;
     }
 
   }, [t, language]);
@@ -1776,7 +1769,7 @@ const Landing = () => {
                 <a href="https://www.linkedin.com/company/110654958/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Linkedin className="w-6 h-6" />
                 </a>
-                <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
+                <a href="https://instagram.com/freshlancer__" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Instagram className="w-6 h-6" />
                 </a>
               </div>
@@ -1853,7 +1846,7 @@ const Landing = () => {
                   <a href="https://www.linkedin.com/company/110654958/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Linkedin className="w-5 h-5" />
                   </a>
-                  <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
+                  <a href="https://instagram.com/freshlancer__" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Instagram className="w-5 h-5" />
                   </a>
                 </div>

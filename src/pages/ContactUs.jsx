@@ -56,7 +56,7 @@ const translations = {
     enterAmount: 'Please enter an amount',
     learnMore: 'Learn more about why we need your support',
     whySupport: 'Why We Need Your Support',
-    processingFeeNote: 'Note: A 3% processing fee will be added to your donation amount.',
+    processingFeeNote: 'Note: A 3% processing fee will be added to your donation amount (EGP). USD payments use PayPal with a 2.9% + $0.30 fee.',
   },
   it: {
     heading: 'Contattaci',
@@ -93,7 +93,7 @@ const translations = {
     enterAmount: 'Inserisci un importo',
     learnMore: 'Scopri di più sul perché abbiamo bisogno del tuo supporto',
     whySupport: 'Perché Abbiamo Bisogno del Tuo Supporto',
-    processingFeeNote: 'Nota: Verrà aggiunta una commissione di elaborazione del 3% all\'importo della tua donazione.',
+    processingFeeNote: 'Nota: EGP: commissione 3%. I pagamenti in USD usano PayPal (2,9% + 0,30 USD).',
   },
 };
 
@@ -217,26 +217,40 @@ const ContactUs = () => {
         return;
       }
 
-      // Create granting
+      // Create granting (send origin so redirect after PayPal goes back to this app, e.g. localhost)
       const response = await grantingService.createGranting({
         amount,
         currency: supportData.currency,
         message: supportData.message || '',
+        redirectBaseUrl: window.location.origin,
       });
 
-      // Check for paymentUrl or construct from clientSecret
-      // API interceptor returns response.data, so structure is: { status, data: { granting: {...} } }
-      const granting = response?.data?.granting || response?.granting;
+      // API may return { data: { granting, gateway, approvalUrl } } or interceptor may flatten
+      const data = response?.data ?? response;
+      const payload = data?.data ?? data;
+      const gateway = payload?.gateway ?? data?.gateway;
+      const approvalUrl = payload?.approvalUrl ?? data?.approvalUrl;
+
+      // USD: PayPal – redirect to approval URL
+      if (gateway === 'paypal' && approvalUrl) {
+        setSupportSuccess(t.supportSuccess);
+        setTimeout(() => {
+          window.location.href = approvalUrl;
+        }, 1500);
+        setIsProcessingSupport(false);
+        return;
+      }
+
+      // EGP: Paymob – paymentUrl or clientSecret
+      const granting = payload?.granting ?? data?.granting ?? response?.granting;
       let paymentUrl = granting?.paymentUrl;
       const clientSecret = granting?.clientSecret;
 
-      // If no paymentUrl but we have clientSecret, construct it
       if (!paymentUrl && clientSecret) {
         const publicKey = import.meta.env.VITE_PAYMOB_PUBLIC_KEY || 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
         paymentUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
       }
 
-      // Validate the payment URL before proceeding
       if (!paymentUrl || !isValidPaymobUrl(paymentUrl)) {
         console.error('Invalid or missing Paymob payment URL:', paymentUrl);
         setSupportError(t.invalidPaymentUrl || 'Invalid payment URL. Please contact support.');
@@ -244,10 +258,7 @@ const ContactUs = () => {
         return;
       }
 
-      // Show success message
       setSupportSuccess(t.supportSuccess);
-      
-      // Wait 3 seconds, then redirect to payment
       setTimeout(() => {
         window.location.href = paymentUrl;
       }, 3000);
@@ -456,6 +467,9 @@ const ContactUs = () => {
               <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-blue-800">
                 {t.processingFeeNote}
+              </p>
+              <p className="text-sm text-blue-800 mt-1">
+                {supportData.currency === 'USD' ? (language === 'it' ? 'Pagamento sicuro tramite PayPal.' : 'Secure payment via PayPal.') : (language === 'it' ? 'Pagamento tramite Paymob.' : 'Payment via Paymob.')}
               </p>
             </div>
           </div>

@@ -25,8 +25,8 @@ export const contractService = {
     return api.post(`/contracts/${id}/confirm-changes`);
   },
 
-  fundMilestone: async (id, milestoneId) => {
-    return api.post(`/contracts/${id}/milestones/${milestoneId}/fund`);
+  fundMilestone: async (id, milestoneId, body = {}) => {
+    return api.post(`/contracts/${id}/milestones/${milestoneId}/fund`, body);
   },
 
   submitMilestone: async (id, milestoneId) => {

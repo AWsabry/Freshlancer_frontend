@@ -197,15 +197,18 @@ const Packages = () => {
         </div>
       </Card>
 
-      {/* Currency Selection - USD disabled for now */}
+      {/* Currency Selection */}
       <Card title={t.selectCurrency}>
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
                 <button
                   type="button"
-                  disabled
-                  className="px-6 py-2 rounded-md font-medium border border-transparent text-gray-400 bg-gray-100 cursor-not-allowed opacity-60"
-                  title={t.usdComingSoon}
+                  onClick={() => setSelectedCurrency('USD')}
+                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
+                    selectedCurrency === 'USD'
+                      ? 'bg-primary-500 text-[#2f00c0] border-primary-500 shadow-md'
+                      : 'text-gray-700 border-transparent hover:bg-gray-100'
+                  }`}
                 >
                   USD ($)
                 </button>
@@ -223,7 +226,7 @@ const Packages = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 text-center mt-3">
-              {t.paymobDescription}
+              {selectedCurrency === 'USD' ? t.paypalDescription : t.paymobDescription}
             </p>
         </Card>
 
