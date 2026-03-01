@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import Button from '../components/common/Button';
 import { contactService } from '../services/contactService';
 import Alert from '../components/common/Alert';
-import { OG_IMAGE_URL } from '../config/env';
+import { OG_IMAGE_URL, CANONICAL_ORIGIN } from '../config/env';
 import Studentimage from '../assets/images/student.png';
 import Clientimage from '../assets/images/client.png';
 import logo from '../assets/logos/01.png';
@@ -39,7 +39,12 @@ import {
   Phone,
   MapPin,
   Send,
-  LogOut
+  LogOut,
+  Lock,
+  AlertCircle,
+  Eye,
+  Server,
+  CreditCard
 } from 'lucide-react';
 
 const translations = {
@@ -48,11 +53,11 @@ const translations = {
     languageOptions: { en: 'English', it: 'Italiano' },
     seo: {
       title: 'Freshlancer - Hire Talented Students & Find Freelance Jobs | #1 Student Freelance Platform',
-      description: 'Connect with skilled student freelancers for your projects or find freelance jobs as a student. 10,000+ verified students, secure payments, and quality guaranteed. Join Freshlancer today!',
-      keywords: 'student freelancers, hire students, freelance jobs for students, student marketplace, freelance platform, find student talent, student jobs online, remote student work, hire freelance students, student gigs',
-      ogDescription: 'The premier platform connecting skilled students with clients worldwide. Find freelance work or hire top student talent.',
-      organizationDescription: 'Leading student freelance marketplace connecting talented students with businesses worldwide',
-      schemaDescription: 'Premier platform connecting skilled student freelancers with clients worldwide for remote work opportunities'
+      description: 'Connect with skilled student freelancers for your projects or find freelance jobs as a student. 10,000+ verified students, secure escrow payments, client wallet protection, and quality guaranteed. Join Freshlancer today!',
+      keywords: 'student freelancers, hire students, freelance jobs for students, student marketplace, freelance platform, find student talent, student jobs online, remote student work, hire freelance students, student gigs, secure escrow payments, client wallet, milestone payments, secure payment gateway, PayMob, PayPal, payment protection',
+      ogDescription: 'The premier platform connecting skilled students with clients worldwide. Secure escrow payments, client wallet protection, and milestone-based transactions. Find freelance work or hire top student talent.',
+      organizationDescription: 'Leading student freelance marketplace connecting talented students with businesses worldwide. Secure payment system with escrow protection and client wallet management.',
+      schemaDescription: 'Premier platform connecting skilled student freelancers with clients worldwide for remote work opportunities. Secure escrow payments, milestone funding, and PCI-DSS compliant payment processing.'
     },
     nav: {
       features: 'Features',
@@ -102,7 +107,7 @@ const translations = {
       },
       {
         title: 'Secure Payment Protection',
-        description: 'Industry-leading secure payment system with escrow protection, verified profiles, and fraud prevention for safe transactions'
+        description: 'Industry-leading secure payment system with escrow protection, client wallet management, milestone-based payments, and PCI-DSS compliant gateways (PayMob, PayPal) for safe transactions'
       },
       {
         title: 'Fast Hiring Process',
@@ -141,8 +146,8 @@ const translations = {
         intro: 'Gain experience and earn money while studying',
         list: [
           'Apply to many freelance jobs per month with Premium membership',
-          'Get verified student badge to increase profile visibility',
-          'Build professional portfolio with real client testimonials',
+          'Get verified student badge to increase profile visibility and get more jobs',
+          'Build professional portfolio with real client testimonials and gain real-world experience',
           'Flexible remote working hours that fit your study schedule',
           'Gain valuable real-world experience and industry skills in early stages of your career',
           'Direct client communication and long-term project opportunities'
@@ -157,9 +162,9 @@ const translations = {
           'Access to world wide verified student freelancers with diverse skills',
           'Post unlimited job listings in programming, design, marketing, writing',
           'Review detailed profiles, portfolios, and ratings before hiring',
-          'Secure escrow payment system with secure payment gateways',
-          'Average response time from qualified freelancers',
-          'Quality guarantee with project milestone tracking'
+          'Secure client wallet with escrow protection for milestone payments',
+          'Full transaction transparency with detailed wallet and payment history',
+          'Quality guarantee with project milestone tracking and secure fund releases'
         ],
         cta: 'Hire Student Talent Today'
       }
@@ -195,6 +200,125 @@ const translations = {
         { title: 'Work & Succeed', description: 'Complete projects with secure payments and build lasting success' }
       ]
     },
+    clientPaymentSecurity: {
+      heading: 'Your Payments Are Protected',
+      subheading: 'Complete payment security and dispute resolution for peace of mind',
+      intro: 'We understand that payment security is your top priority. That\'s why we\'ve built a comprehensive protection system that ensures your funds are safe at every step of the project.',
+      features: [
+        {
+          title: 'Secure Escrow System',
+          description: 'All milestone payments are held in secure escrow accounts. Funds are only released when you approve the completed work, giving you full control over payments.',
+          icon: 'Shield'
+        },
+        {
+          title: 'Client Wallet Management',
+          description: 'Manage all your project funds through your secure client wallet. Track deposits, view transaction history, and monitor escrow balances in real-time.',
+          icon: 'CreditCard'
+        },
+        {
+          title: 'Milestone-Based Payments',
+          description: 'Break projects into milestones and fund each one separately. Pay only for completed work that meets your approval, reducing financial risk.',
+          icon: 'CheckCircle'
+        },
+        {
+          title: 'PCI-DSS Compliant Gateways',
+          description: 'We use certified payment processors (PayMob for EGP, PayPal for USD) that meet the highest security standards. Your payment information is never stored on our servers.',
+          icon: 'Lock'
+        },
+        {
+          title: 'Dispute Resolution System',
+          description: 'If issues arise, our appeal system provides a fair resolution process. File appeals for non-payment, poor quality work, or contract violations with full support.',
+          icon: 'AlertCircle'
+        },
+        {
+          title: 'Full Transaction Transparency',
+          description: 'View detailed records of all transactions, fees, and payments. Complete transparency on platform fees and transaction charges before you pay.',
+          icon: 'Eye'
+        },
+        {
+          title: 'Money-Back Guarantee',
+          description: 'If work doesn\'t meet agreed standards, our appeal process can result in refunds. Your satisfaction is protected through our comprehensive guarantee system.',
+          icon: 'DollarSign'
+        },
+        {
+          title: '24/7 Security Monitoring',
+          description: 'Our systems continuously monitor for fraud and suspicious activity. Real-time alerts and automated security checks protect your account and transactions.',
+          icon: 'Server'
+        }
+      ],
+      cta: 'Start Hiring with Confidence'
+    },
+    studentGrowth: {
+      heading: 'Gain Knowledge, Money & Experience',
+      subheading: 'Build your career while earning income and developing real-world skills',
+      intro: 'As a student freelancer on Freshlancer, you don\'t just earn money—you build a foundation for your future career through real projects, client interactions, and professional growth.',
+      pillars: [
+        {
+          title: 'Earn Money',
+          icon: 'DollarSign',
+          color: 'bg-green-600',
+          description: 'Start earning income while you study',
+          benefits: [
+            'Competitive rates for student freelancers',
+            'Flexible payment options (USD and EGP)',
+            'Secure milestone-based payments',
+            'Direct deposits to your wallet',
+            'Track earnings and transaction history',
+            'Withdraw funds when you need them'
+          ]
+        },
+        {
+          title: 'Gain Experience',
+          icon: 'Briefcase',
+          color: 'bg-blue-600',
+          description: 'Work on real projects with real clients',
+          benefits: [
+            'Build a professional portfolio with actual client work',
+            'Work on diverse projects across multiple industries',
+            'Learn industry-standard tools and practices',
+            'Develop time management and project delivery skills',
+            'Experience different work styles and client expectations',
+            'Add real-world projects to your resume'
+          ]
+        },
+        {
+          title: 'Acquire Knowledge',
+          icon: 'Award',
+          color: 'bg-purple-600',
+          description: 'Learn from every project and client interaction',
+          benefits: [
+            'Learn from client feedback and reviews',
+            'Exposure to cutting-edge technologies and trends',
+            'Develop problem-solving and critical thinking skills',
+            'Understand business requirements and client needs',
+            'Build communication and collaboration skills',
+            'Gain insights into various industries and markets'
+          ]
+        }
+      ],
+      additionalBenefits: {
+        title: 'Additional Growth Opportunities',
+        items: [
+          {
+            title: 'Professional Portfolio',
+            description: 'Showcase your completed projects to future employers and clients, building credibility and demonstrating your capabilities.'
+          },
+          {
+            title: 'Client Testimonials',
+            description: 'Collect authentic reviews and ratings that validate your skills and help you stand out in the marketplace.'
+          },
+          {
+            title: 'Career Networking',
+            description: 'Connect with clients who may offer long-term opportunities, internships, or full-time positions after graduation.'
+          },
+          {
+            title: 'Skill Development',
+            description: 'Work on projects that challenge you and help you learn new technologies, methodologies, and best practices.'
+          }
+        ]
+      },
+      cta: 'Start Your Freelance Journey'
+    },
     about: {
       heading: 'About Freshlancer',
       subheading: 'Empowering students and businesses to connect, collaborate, and succeed together',
@@ -205,7 +329,7 @@ const translations = {
       ],
       cards: [
         { title: 'Verified Students', description: 'Our platform hosts thousands of verified student freelancers from universities worldwide, each with unique skills and fresh perspectives.' },
-        { title: 'Secure Payment System', description: 'We use industry-leading escrow protection to ensure safe transactions for both students and clients, with money-back guarantees.' },
+        { title: 'Secure Payment System', description: 'We use industry-leading escrow protection with client wallet management, milestone-based payments, and PCI-DSS compliant gateways (PayMob, PayPal) to ensure safe transactions for both students and clients, with full transparency and money-back guarantees.' },
         { title: 'Market competitive prices', description: 'We offer competitive rates for students, allowing you to earn more while learning and building your portfolio.' }
       ]
     },
@@ -256,7 +380,7 @@ const translations = {
         },
         {
           q: 'How does payment protection work on Freshlancer?',
-          a: 'We use secure escrow payment systems (Paymob for EGP, PayPal for USD) to protect both parties. Funds are held securely and released upon project completion, ensuring safe transactions for students and clients.'
+          a: 'We use secure escrow payment systems with client wallet management (PayMob for EGP, PayPal for USD) to protect both parties. Funds are held securely in escrow accounts until milestone completion. Clients can fund milestones through their secure wallet, and funds are only released upon approval. All transactions are PCI-DSS compliant and encrypted for maximum security.'
         }
       ]
     },
@@ -280,11 +404,11 @@ const translations = {
     languageOptions: { en: 'Inglese', it: 'Italiano' },
     seo: {
       title: 'Freshlancer - Assumi studenti talentuosi e trova lavori freelance | Piattaforma n.1 per studenti freelance',
-      description: 'Metti in contatto studenti freelance qualificati con i tuoi progetti oppure trova lavori freelance come studente. Oltre 10.000 studenti verificati, pagamenti sicuri e qualità garantita. Unisciti a Freshlancer oggi.',
-      keywords: 'studenti freelance, assumere studenti, lavori freelance per studenti, marketplace studenti, piattaforma freelance, trovare talenti studenti, lavori online per studenti, lavoro remoto studenti, assumere studenti freelance, incarichi per studenti',
-      ogDescription: 'La principale piattaforma che mette in contatto studenti qualificati con clienti in tutto il mondo. Trova lavoro freelance o assumi i migliori talenti studenti.',
-      organizationDescription: 'Marketplace leader per studenti freelance che collega studenti di talento con aziende in tutto il mondo',
-      schemaDescription: 'Piattaforma leader che collega studenti freelance qualificati con clienti in tutto il mondo per opportunità di lavoro remoto'
+      description: 'Metti in contatto studenti freelance qualificati con i tuoi progetti oppure trova lavori freelance come studente. Oltre 10.000 studenti verificati, pagamenti escrow sicuri, protezione del portafoglio clienti e qualità garantita. Unisciti a Freshlancer oggi.',
+      keywords: 'studenti freelance, assumere studenti, lavori freelance per studenti, marketplace studenti, piattaforma freelance, trovare talenti studenti, lavori online per studenti, lavoro remoto studenti, assumere studenti freelance, incarichi per studenti, pagamenti escrow sicuri, portafoglio clienti, pagamenti milestone, gateway di pagamento sicuro, PayMob, PayPal, protezione pagamenti',
+      ogDescription: 'La principale piattaforma che mette in contatto studenti qualificati con clienti in tutto il mondo. Pagamenti escrow sicuri, protezione del portafoglio clienti e transazioni basate su milestone. Trova lavoro freelance o assumi i migliori talenti studenti.',
+      organizationDescription: 'Marketplace leader per studenti freelance che collega studenti di talento con aziende in tutto il mondo. Sistema di pagamento sicuro con protezione escrow e gestione del portafoglio clienti.',
+      schemaDescription: 'Piattaforma leader che collega studenti freelance qualificati con clienti in tutto il mondo per opportunità di lavoro remoto. Pagamenti escrow sicuri, finanziamento milestone e elaborazione pagamenti conforme PCI-DSS.'
     },
     nav: {
       features: 'Caratteristiche',
@@ -334,7 +458,7 @@ const translations = {
       },
       {
         title: 'Pagamenti sicuri con protezione',
-        description: 'Sistema di pagamento sicuro con escrow, profili verificati e prevenzione delle frodi per transazioni protette'
+        description: 'Sistema di pagamento sicuro all\'avanguardia con protezione escrow, gestione del portafoglio clienti, pagamenti basati su milestone e gateway conformi PCI-DSS (PayMob, PayPal) per transazioni sicure'
       },
       {
         title: 'Assunzioni rapide',
@@ -373,8 +497,8 @@ const translations = {
         intro: 'Fai esperienza e guadagna mentre studi',
         list: [
           "Candidati a oltre 100 lavori freelance al mese con l'abbonamento Premium",
-          'Ottieni il badge studente verificato per aumentare la visibilità del profilo',
-          'Costruisci un portfolio professionale con testimonianze reali dei clienti',
+          'Ottieni il badge studente verificato per aumentare la visibilità del profilo e ottenere più lavori',
+          'Costruisci un portfolio professionale con testimonianze reali dei clienti e acquisisci esperienza reale',
           'Orari di lavoro flessibili da remoto che si adattano allo studio',
           "Acquisisci esperienza reale e competenze richieste nelle prime fasi della carriera",
           'Comunicazione diretta con i clienti e opportunità di progetti a lungo termine'
@@ -389,9 +513,9 @@ const translations = {
           'Accesso a studenti freelance verificati in tutto il mondo con competenze diverse',
           'Pubblica offerte di lavoro illimitate in programmazione, design, marketing, scrittura',
           'Consulta profili dettagliati, portfolio e recensioni prima di assumere',
-          'Sistema di pagamento sicuro con escrow e gateway affidabili',
-          'Tempi di risposta rapidi da freelancer qualificati',
-          'Garanzia di qualità con tracciamento delle milestone di progetto'
+          'Portafoglio cliente sicuro con protezione escrow per pagamenti milestone',
+          'Trasparenza completa delle transazioni con cronologia dettagliata del portafoglio e dei pagamenti',
+          'Garanzia di qualità con tracciamento delle milestone di progetto e rilascio sicuro dei fondi'
         ],
         cta: 'Assumi studenti di talento oggi'
       }
@@ -427,6 +551,125 @@ const translations = {
         { title: 'Lavora e cresci', description: 'Completa i progetti con pagamenti sicuri e costruisci il tuo successo' }
       ]
     },
+    clientPaymentSecurity: {
+      heading: 'I Tuoi Pagamenti Sono Protetti',
+      subheading: 'Sicurezza completa dei pagamenti e risoluzione delle controversie per la tua tranquillità',
+      intro: 'Comprendiamo che la sicurezza dei pagamenti è la tua priorità. Per questo abbiamo costruito un sistema di protezione completo che garantisce che i tuoi fondi siano al sicuro in ogni fase del progetto.',
+      features: [
+        {
+          title: 'Sistema Escrow Sicuro',
+          description: 'Tutti i pagamenti delle milestone sono conservati in account escrow sicuri. I fondi vengono rilasciati solo quando approvi il lavoro completato, dandoti il controllo completo sui pagamenti.',
+          icon: 'Shield'
+        },
+        {
+          title: 'Gestione Portafoglio Clienti',
+          description: 'Gestisci tutti i fondi del progetto tramite il tuo portafoglio cliente sicuro. Traccia depositi, visualizza la cronologia delle transazioni e monitora i saldi escrow in tempo reale.',
+          icon: 'CreditCard'
+        },
+        {
+          title: 'Pagamenti Basati su Milestone',
+          description: 'Dividi i progetti in milestone e finanzia ciascuna separatamente. Paga solo per il lavoro completato che soddisfa la tua approvazione, riducendo il rischio finanziario.',
+          icon: 'CheckCircle'
+        },
+        {
+          title: 'Gateway Conformi PCI-DSS',
+          description: 'Utilizziamo processori di pagamento certificati (PayMob per EGP, PayPal per USD) che soddisfano i più alti standard di sicurezza. Le tue informazioni di pagamento non sono mai memorizzate sui nostri server.',
+          icon: 'Lock'
+        },
+        {
+          title: 'Sistema di Risoluzione Controversie',
+          description: 'Se sorgono problemi, il nostro sistema di ricorso fornisce un processo di risoluzione equo. Presenta ricorsi per mancato pagamento, lavoro di scarsa qualità o violazioni contrattuali con supporto completo.',
+          icon: 'AlertCircle'
+        },
+        {
+          title: 'Trasparenza Completa delle Transazioni',
+          description: 'Visualizza registri dettagliati di tutte le transazioni, commissioni e pagamenti. Trasparenza completa su commissioni della piattaforma e addebiti di transazione prima di pagare.',
+          icon: 'Eye'
+        },
+        {
+          title: 'Garanzia di Rimborso',
+          description: 'Se il lavoro non soddisfa gli standard concordati, il nostro processo di ricorso può comportare rimborsi. La tua soddisfazione è protetta attraverso il nostro sistema di garanzia completo.',
+          icon: 'DollarSign'
+        },
+        {
+          title: 'Monitoraggio Sicurezza 24/7',
+          description: 'I nostri sistemi monitorano continuamente frodi e attività sospette. Avvisi in tempo reale e controlli di sicurezza automatizzati proteggono il tuo account e le transazioni.',
+          icon: 'Server'
+        }
+      ],
+      cta: 'Inizia ad Assumere con Fiducia'
+    },
+    studentGrowth: {
+      heading: 'Acquisisci Conoscenza, Denaro ed Esperienza',
+      subheading: 'Costruisci la tua carriera mentre guadagni e sviluppi competenze reali',
+      intro: 'Come studente freelance su Freshlancer, non guadagni solo denaro—costruisci una base per la tua futura carriera attraverso progetti reali, interazioni con i clienti e crescita professionale.',
+      pillars: [
+        {
+          title: 'Guadagna Denaro',
+          icon: 'DollarSign',
+          color: 'bg-green-600',
+          description: 'Inizia a guadagnare mentre studi',
+          benefits: [
+            'Tariffe competitive per studenti freelance',
+            'Opzioni di pagamento flessibili (USD e EGP)',
+            'Pagamenti sicuri basati su milestone',
+            'Depositi diretti nel tuo portafoglio',
+            'Traccia guadagni e cronologia transazioni',
+            'Preleva fondi quando ne hai bisogno'
+          ]
+        },
+        {
+          title: 'Acquisisci Esperienza',
+          icon: 'Briefcase',
+          color: 'bg-blue-600',
+          description: 'Lavora su progetti reali con clienti reali',
+          benefits: [
+            'Costruisci un portfolio professionale con lavoro reale dei clienti',
+            'Lavora su progetti diversi in più settori',
+            'Impara strumenti e pratiche standard del settore',
+            'Sviluppa competenze di gestione del tempo e consegna progetti',
+            'Sperimenta diversi stili di lavoro e aspettative dei clienti',
+            'Aggiungi progetti reali al tuo curriculum'
+          ]
+        },
+        {
+          title: 'Acquisisci Conoscenza',
+          icon: 'Award',
+          color: 'bg-purple-600',
+          description: 'Impara da ogni progetto e interazione con i clienti',
+          benefits: [
+            'Impara dal feedback e dalle recensioni dei clienti',
+            'Esposizione a tecnologie e tendenze all\'avanguardia',
+            'Sviluppa competenze di problem-solving e pensiero critico',
+            'Comprendi i requisiti aziendali e le esigenze dei clienti',
+            'Costruisci competenze di comunicazione e collaborazione',
+            'Ottieni approfondimenti su vari settori e mercati'
+          ]
+        }
+      ],
+      additionalBenefits: {
+        title: 'Opportunità di Crescita Aggiuntive',
+        items: [
+          {
+            title: 'Portfolio Professionale',
+            description: 'Mostra i tuoi progetti completati a futuri datori di lavoro e clienti, costruendo credibilità e dimostrando le tue capacità.'
+          },
+          {
+            title: 'Testimonianze dei Clienti',
+            description: 'Raccogli recensioni e valutazioni autentiche che convalidano le tue competenze e ti aiutano a distinguerti nel marketplace.'
+          },
+          {
+            title: 'Networking di Carriera',
+            description: 'Connettiti con clienti che possono offrire opportunità a lungo termine, stage o posizioni a tempo pieno dopo la laurea.'
+          },
+          {
+            title: 'Sviluppo Competenze',
+            description: 'Lavora su progetti che ti sfidano e ti aiutano a imparare nuove tecnologie, metodologie e best practice.'
+          }
+        ]
+      },
+      cta: 'Inizia il Tuo Percorso Freelance'
+    },
     about: {
       heading: 'Chi è Freshlancer',
       subheading: 'Mettiamo in contatto studenti e aziende per collaborare e avere successo insieme',
@@ -437,7 +680,7 @@ const translations = {
       ],
       cards: [
         { title: 'Studenti verificati', description: 'Ospitiamo migliaia di studenti freelance verificati da università di tutto il mondo, ciascuno con competenze uniche e idee fresche.' },
-        { title: 'Pagamenti sicuri', description: 'Usiamo protezione escrow di livello enterprise per garantire transazioni sicure per studenti e clienti, con garanzie di rimborso.' },
+        { title: 'Pagamenti sicuri', description: 'Usiamo protezione escrow di livello enterprise con gestione del portafoglio clienti, pagamenti basati su milestone e gateway conformi PCI-DSS (PayMob, PayPal) per garantire transazioni sicure per studenti e clienti, con piena trasparenza e garanzie di rimborso.' },
         { title: 'Prezzi competitivi', description: 'Offriamo tariffe competitive per gli studenti, permettendoti di guadagnare di più mentre impari e costruisci il tuo portfolio.' }
       ]
     },
@@ -488,7 +731,7 @@ const translations = {
         },
         {
           q: 'Come funziona la protezione dei pagamenti su Freshlancer?',
-          a: 'Usiamo sistemi di pagamento sicuri con escrow (Paymob per EGP, PayPal per USD) per proteggere entrambe le parti. I fondi sono conservati in sicurezza e rilasciati al completamento del progetto, garantendo transazioni sicure.'
+          a: 'Usiamo sistemi di pagamento sicuri con escrow e gestione del portafoglio clienti (PayMob per EGP, PayPal per USD) per proteggere entrambe le parti. I fondi sono conservati in sicurezza in account escrow fino al completamento delle milestone. I clienti possono finanziare le milestone tramite il loro portafoglio sicuro, e i fondi vengono rilasciati solo con approvazione. Tutte le transazioni sono conformi PCI-DSS e crittografate per massima sicurezza.'
         }
       ]
     },
@@ -572,6 +815,8 @@ const Landing = () => {
   const howItWorksSteps = t.howItWorks.steps;
   const faqItems = t.faq.list;
   const benefits = t.benefits;
+  const clientPaymentSecurity = t.clientPaymentSecurity;
+  const studentGrowth = t.studentGrowth;
 
   // Get dashboard path based on user role
   const getDashboardPath = () => {
@@ -639,19 +884,9 @@ const Landing = () => {
       ogDescription.content = seo.ogDescription;
     }
 
-    // Open Graph Image - Required for Facebook and WhatsApp previews
+    // Open Graph Image - use canonical origin so previews work for both www and non-www
     const ogImage = document.querySelector('meta[property="og:image"]');
-    const baseUrl = window.location.origin;
-    // Use network image URL from environment if available, otherwise use local path
-    // Ensure absolute HTTPS URL for WhatsApp and Facebook
-    let imageUrl = OG_IMAGE_URL.startsWith('http') 
-      ? OG_IMAGE_URL 
-      : `${baseUrl}${OG_IMAGE_URL.startsWith('/') ? OG_IMAGE_URL : '/' + OG_IMAGE_URL}`;
-    
-    // Force HTTPS for production
-    if (imageUrl.startsWith('http://') && window.location.protocol === 'https:') {
-      imageUrl = imageUrl.replace('http://', 'https://');
-    }
+    const imageUrl = OG_IMAGE_URL.startsWith('http') ? OG_IMAGE_URL : `${CANONICAL_ORIGIN}${OG_IMAGE_URL.startsWith('/') ? OG_IMAGE_URL : '/' + OG_IMAGE_URL}`;
     
     if (!ogImage) {
       const meta = document.createElement('meta');
@@ -708,15 +943,16 @@ const Landing = () => {
       document.head.appendChild(meta);
     }
 
-    // Open Graph URL - Important for proper link sharing
+    // Open Graph URL - use canonical origin so same preview for www and non-www
+    const canonicalUrl = `${CANONICAL_ORIGIN}/`;
     const ogUrl = document.querySelector('meta[property="og:url"]');
     if (!ogUrl) {
       const meta = document.createElement('meta');
       meta.setAttribute('property', 'og:url');
-      meta.content = baseUrl;
+      meta.content = canonicalUrl;
       document.head.appendChild(meta);
     } else {
-      ogUrl.content = baseUrl;
+      ogUrl.content = canonicalUrl;
     }
 
     // Open Graph Type
@@ -761,8 +997,10 @@ const Landing = () => {
     if (!canonical) {
       const link = document.createElement('link');
       link.rel = 'canonical';
-      link.href = window.location.origin;
+      link.href = canonicalUrl;
       document.head.appendChild(link);
+    } else {
+      canonical.href = canonicalUrl;
     }
 
   }, [t, language]);
@@ -812,7 +1050,93 @@ const Landing = () => {
           "name": "Freshlancer",
           "url": window.location.origin,
           "logo": `${window.location.origin}/logo.png`,
-          "description": t.seo.organizationDescription
+          "description": t.seo.organizationDescription,
+          "paymentAccepted": ["PayMob", "PayPal"],
+          "currenciesAccepted": "EGP, USD"
+        })}
+      </script>
+
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "serviceType": "Freelance Marketplace",
+          "provider": {
+            "@type": "Organization",
+            "name": "Freshlancer"
+          },
+          "areaServed": "Worldwide",
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Freelance Services",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Secure Escrow Payment System",
+                  "description": "Industry-leading escrow protection with client wallet management, milestone-based payments, and PCI-DSS compliant payment gateways"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Client Wallet Management",
+                  "description": "Secure wallet system for clients to manage funds, track transactions, and fund project milestones with full transparency"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Dispute Resolution System",
+                  "description": "Fair appeal process for non-payment, poor quality work, contract violations, and missed deadlines with full support"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Student Career Development",
+                  "description": "Opportunities for students to earn money, gain real-world experience, and acquire knowledge through freelance projects"
+                }
+              }
+            ]
+          }
+        })}
+      </script>
+
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How are client payments protected on Freshlancer?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We use secure escrow payment systems with client wallet management. All milestone payments are held in secure escrow accounts until project completion. Clients fund milestones through their secure wallet, and funds are only released upon approval. We use PCI-DSS compliant payment gateways (PayMob for EGP, PayPal for USD) and provide a comprehensive dispute resolution system for appeals."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What happens if there's a dispute with a project?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Our appeal system provides a fair resolution process. Clients can file appeals for non-payment, poor quality work, contract violations, or missed deadlines. Our support team reviews all appeals and can facilitate refunds or work corrections. The escrow system ensures funds are protected until disputes are resolved."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How can students benefit from Freshlancer?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Students can earn money, gain real-world experience, and acquire knowledge through freelance projects. They build professional portfolios with actual client work, develop industry skills, learn from client feedback, and connect with potential long-term employers. The platform offers flexible remote work that fits study schedules."
+              }
+            }
+          ]
         })}
       </script>
 
@@ -1267,6 +1591,155 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Client Payment Security Section */}
+      <section id="payment-security" className="py-24 bg-gradient-to-br from-blue-50 to-indigo-50" aria-labelledby="payment-security-heading">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#065084] rounded-full mb-6">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h2 id="payment-security-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              {t.clientPaymentSecurity.heading}
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+              {t.clientPaymentSecurity.subheading}
+            </p>
+            <p className="text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
+              {t.clientPaymentSecurity.intro}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {t.clientPaymentSecurity.features.map((feature, index) => {
+              const iconMap = {
+                Shield: Shield,
+                CreditCard: CreditCard,
+                CheckCircle: CheckCircle,
+                Lock: Lock,
+                AlertCircle: AlertCircle,
+                Eye: Eye,
+                DollarSign: DollarSign,
+                Server: Server
+              };
+              const IconComponent = iconMap[feature.icon] || Shield;
+              return (
+                <article
+                  key={index}
+                  className="bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all"
+                >
+                  <div className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center mb-4">
+                    <IconComponent className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed text-sm">
+                    {feature.description}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="text-center">
+            <Button
+              size="lg"
+              onClick={() => navigate('/register')}
+              className="bg-[#065084] text-white hover:bg-[#043d6b] text-lg px-10 py-6 font-semibold"
+            >
+              {t.clientPaymentSecurity.cta}
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Student Growth Section */}
+      <section id="student-growth" className="py-24 bg-white" aria-labelledby="student-growth-heading">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#25aaad] rounded-full mb-6">
+              <TrendingUp className="w-8 h-8 text-white" />
+            </div>
+            <h2 id="student-growth-heading" className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              {t.studentGrowth.heading}
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+              {t.studentGrowth.subheading}
+            </p>
+            <p className="text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
+              {t.studentGrowth.intro}
+            </p>
+          </div>
+
+          {/* Three Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {t.studentGrowth.pillars.map((pillar, index) => {
+              const iconMap = {
+                DollarSign: DollarSign,
+                Briefcase: Briefcase,
+                Award: Award
+              };
+              const IconComponent = iconMap[pillar.icon] || Award;
+              return (
+                <article
+                  key={index}
+                  className="bg-white p-8 rounded-lg border-2 border-gray-200 hover:border-[#25aaad] shadow-lg hover:shadow-xl transition-all"
+                >
+                  <div className={`w-16 h-16 ${pillar.color} rounded-lg flex items-center justify-center mb-6 mx-auto`}>
+                    <IconComponent className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-gray-600 text-center mb-6">
+                    {pillar.description}
+                  </p>
+                  <ul className="space-y-3">
+                    {pillar.benefits.map((benefit, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-[#25aaad] mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Additional Benefits */}
+          <div className="bg-gradient-to-br from-[#25aaad]/10 to-blue-50 rounded-lg p-8 mb-12">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              {t.studentGrowth.additionalBenefits.title}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {t.studentGrowth.additionalBenefits.items.map((item, index) => (
+                <div key={index} className="bg-white p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">
+                    {item.title}
+                  </h4>
+                  <p className="text-gray-600 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Button
+              size="lg"
+              onClick={() => navigate('/register')}
+              className="bg-[#25aaad] text-white hover:bg-[#1a8b8d] text-lg px-10 py-6 font-semibold"
+            >
+              {t.studentGrowth.cta}
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* About Us Section */}
       <section id="about" className="py-24 bg-white" aria-labelledby="about-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1296,7 +1769,7 @@ const Landing = () => {
                 <a href="https://www.linkedin.com/company/110654958/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Linkedin className="w-6 h-6" />
                 </a>
-                <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
+                <a href="https://instagram.com/freshlancer__" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#065084] rounded-lg flex items-center justify-center text-white hover:bg-[#043d6b] transition-colors">
                   <Instagram className="w-6 h-6" />
                 </a>
               </div>
@@ -1373,7 +1846,7 @@ const Landing = () => {
                   <a href="https://www.linkedin.com/company/110654958/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Linkedin className="w-5 h-5" />
                   </a>
-                  <a href="https://instagram.com/freshlancer" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
+                  <a href="https://instagram.com/freshlancer__" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center text-gray-700 hover:bg-[#065084] hover:text-white transition-colors">
                     <Instagram className="w-5 h-5" />
                   </a>
                 </div>

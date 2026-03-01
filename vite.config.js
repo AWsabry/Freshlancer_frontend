@@ -6,9 +6,18 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   // Use ngrok URL if provided, otherwise fall back to localhost (for development only)
   const apiBaseUrl = env.VITE_API_BASE_URL || "https://backend.freshlancer.online" || "http://localhost:8080";
+  const canonicalOrigin = (env.VITE_CANONICAL_ORIGIN || 'https://freshlancer.online').replace(/\/$/, '');
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      {
+        name: 'html-canonical-origin',
+        transformIndexHtml(html) {
+          return html.replace(/__CANONICAL_ORIGIN__/g, canonicalOrigin);
+        },
+      },
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

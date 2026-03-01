@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { jobService } from '../../services/jobService';
 import { applicationService } from '../../services/applicationService';
 import { subscriptionService } from '../../services/subscriptionService';
+import { categoryService } from '../../services/categoryService';
 import { useToast } from '../../contexts/ToastContext';
 import { translateError } from '../../utils/errorTranslations';
 import Button from '../../components/common/Button';
@@ -199,6 +200,7 @@ const JobDetails = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [categorySpecAnswers, setCategorySpecAnswers] = useState({});
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -238,6 +240,12 @@ const JobDetails = () => {
     queryFn: () => jobService.getJob(id),
   });
 
+  // Fetch categories (to render dynamic category specs)
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+
   // Check subscription
   const { data: subscriptionData } = useQuery({
     queryKey: ['subscription'],
@@ -273,6 +281,7 @@ const JobDetails = () => {
       queryClient.invalidateQueries(['jobs']); // Invalidate jobs list to update Available/Applied tabs
       setShowApplicationModal(false);
       reset();
+      setCategorySpecAnswers({});
       showSuccess(t.applicationSuccess);
       navigate('/student/jobs');
     },
@@ -300,6 +309,8 @@ const JobDetails = () => {
       }
     },
   });
+
+  const isSubmitting = applyMutation.isPending;
 
   const onSubmit = (data) => {
     // Validate required fields before submission
@@ -331,14 +342,8 @@ const JobDetails = () => {
         currency: data.proposedBudgetCurrency || 'USD',
       },
       estimatedDuration: data.estimatedDuration,
-      approachSelections: {
-        methodology: data.methodology || null,
-        deliveryFrequency: data.deliveryFrequency || null,
-        revisions: data.revisions ? parseInt(data.revisions) : 2,
-        communicationPreference: data.communicationPreference || 'Flexible',
-      },
       availabilityCommitment: data.availabilityCommitment,
-      relevantExperienceLevel: data.relevantExperienceLevel || null,
+      categorySpecAnswers: categorySpecAnswers || {},
     };
 
     // Add optional proposal text if provided (premium feature)
@@ -349,11 +354,60 @@ const JobDetails = () => {
     applyMutation.mutate(applicationData);
   };
 
+  const job = jobData?.data?.jobPost;
+  const categoriesList = useMemo(() => {
+    return categoriesData?.data?.categories || categoriesData?.categories || [];
+  }, [categoriesData]);
+
+  const category = useMemo(() => {
+    if (!job?.category) return null;
+    return categoriesList.find((c) => c.name === job.category) || null;
+  }, [categoriesList, job?.category]);
+
+  const applicationSpecs = useMemo(() => {
+    const specs = Array.isArray(category?.specs) ? category.specs : [];
+    return specs
+      .filter((s) => s && s.isActive !== false && s.useInApplication === true)
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [category]);
+
+  const jobRequirements = job?.categorySpecRequirements || {};
+  const jobRequirementsKey = useMemo(() => {
+    try {
+      return JSON.stringify(job?.categorySpecRequirements || {});
+    } catch {
+      return '';
+    }
+  }, [job?.categorySpecRequirements]);
+
+  // Initialize/lock answers based on job requirements and defaults
+  useEffect(() => {
+    if (!job || !category) return;
+    setCategorySpecAnswers((prev) => {
+      const next = { ...(prev || {}) };
+      applicationSpecs.forEach((spec) => {
+        const isLocked =
+          spec.useInJobPost === true &&
+          jobRequirements &&
+          jobRequirements[spec.key] !== undefined;
+
+        if (isLocked) {
+          next[spec.key] = jobRequirements[spec.key];
+          return;
+        }
+
+        if (next[spec.key] === undefined && spec.defaultValue !== undefined) {
+          next[spec.key] = spec.defaultValue;
+        }
+      });
+      return next;
+    });
+  }, [job?._id, category?.name, jobRequirementsKey, applicationSpecs]);
+
   if (isLoading) {
     return <Loading text={t.loading} />;
   }
-
-  const job = jobData?.data?.jobPost;
   const canApply = limitData?.data?.canApply;
   const currentUsage = limitData?.data?.currentUsage || 0;
   const monthlyLimit = limitData?.data?.limit || 10;
@@ -573,6 +627,7 @@ const JobDetails = () => {
               { value: 'custom', label: t.customProposal },
             ]}
             error={errors.proposalType?.message}
+            disabled={isSubmitting}
             {...register('proposalType', { required: t.proposalTypeRequired })}
           />
 
@@ -590,6 +645,7 @@ const JobDetails = () => {
                 rows="4"
                 placeholder={t.proposalMessagePlaceholder}
                 maxLength="1000"
+                disabled={isSubmitting}
                 {...register('proposalText', {
                   maxLength: { value: 1000, message: t.proposalMessageMaxLength },
                 })}
@@ -610,6 +666,7 @@ const JobDetails = () => {
               min="1"
               step="0.01"
               error={errors.proposedBudget?.message}
+              disabled={isSubmitting}
               {...register('proposedBudget', {
                 required: t.proposedBudgetRequired,
                 min: { value: 1, message: t.budgetMin },
@@ -620,43 +677,10 @@ const JobDetails = () => {
               label={t.currency}
               options={[
                 { value: 'USD', label: 'USD ($) - US Dollar' },
-                { value: 'EUR', label: 'EUR (€) - Euro' },
                 { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
-                { value: 'GBP', label: 'GBP (£) - British Pound' },
-                { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
-                { value: 'SAR', label: 'SAR (﷼) - Saudi Riyal' },
-                { value: 'QAR', label: 'QAR (﷼) - Qatari Riyal' },
-                { value: 'KWD', label: 'KWD (د.ك) - Kuwaiti Dinar' },
-                { value: 'BHD', label: 'BHD (.د.ب) - Bahraini Dinar' },
-                { value: 'OMR', label: 'OMR (﷼) - Omani Rial' },
-                { value: 'JOD', label: 'JOD (د.ا) - Jordanian Dinar' },
-                { value: 'LBP', label: 'LBP (ل.ل) - Lebanese Pound' },
-                { value: 'ILS', label: 'ILS (₪) - Israeli Shekel' },
-                { value: 'TRY', label: 'TRY (₺) - Turkish Lira' },
-                { value: 'ZAR', label: 'ZAR (R) - South African Rand' },
-                { value: 'MAD', label: 'MAD (د.م.) - Moroccan Dirham' },
-                { value: 'TND', label: 'TND (د.ت) - Tunisian Dinar' },
-                { value: 'DZD', label: 'DZD (د.ج) - Algerian Dinar' },
-                { value: 'NGN', label: 'NGN (₦) - Nigerian Naira' },
-                { value: 'KES', label: 'KES (KSh) - Kenyan Shilling' },
-                { value: 'GHS', label: 'GHS (₵) - Ghanaian Cedi' },
-                { value: 'UGX', label: 'UGX (USh) - Ugandan Shilling' },
-                { value: 'TZS', label: 'TZS (TSh) - Tanzanian Shilling' },
-                { value: 'ETB', label: 'ETB (Br) - Ethiopian Birr' },
-                { value: 'CHF', label: 'CHF (Fr) - Swiss Franc' },
-                { value: 'SEK', label: 'SEK (kr) - Swedish Krona' },
-                { value: 'NOK', label: 'NOK (kr) - Norwegian Krone' },
-                { value: 'DKK', label: 'DKK (kr) - Danish Krone' },
-                { value: 'PLN', label: 'PLN (zł) - Polish Zloty' },
-                { value: 'CZK', label: 'CZK (Kč) - Czech Koruna' },
-                { value: 'HUF', label: 'HUF (Ft) - Hungarian Forint' },
-                { value: 'RON', label: 'RON (lei) - Romanian Leu' },
-                { value: 'BGN', label: 'BGN (лв) - Bulgarian Lev' },
-                { value: 'HRK', label: 'HRK (kn) - Croatian Kuna' },
-                { value: 'RUB', label: 'RUB (₽) - Russian Ruble' },
-                { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
               ]}
               error={errors.proposedBudgetCurrency?.message}
+              disabled={isSubmitting}
               {...register('proposedBudgetCurrency', { required: t.currencyRequired })}
             />
           </div>
@@ -671,52 +695,146 @@ const JobDetails = () => {
               { value: 'More than 3 months', label: t.moreThanThreeMonths },
             ]}
             error={errors.estimatedDuration?.message}
+            disabled={isSubmitting}
             {...register('estimatedDuration', { required: t.durationRequired })}
           />
 
-          <Select
-            label={t.methodology}
-            options={[
-              { value: 'Agile', label: 'Agile' },
-              { value: 'Waterfall', label: 'Waterfall' },
-              { value: 'Iterative', label: 'Iterative' },
-              { value: 'Prototype-First', label: 'Prototype-First' },
-              { value: 'Standard', label: 'Standard' },
-            ]}
-            {...register('methodology')}
-          />
+          {/* Category Specs (dynamic, no free-text) */}
+          {applicationSpecs.length > 0 && (
+            <div className="pt-4 border-t space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Category Questions</h3>
+              <p className="text-sm text-gray-600">
+                Answer the category-specific questions for this job.
+              </p>
 
-          <Select
-            label={t.deliveryFrequency}
-            options={[
-              { value: 'Daily updates', label: t.dailyUpdates },
-              { value: 'Weekly updates', label: t.weeklyUpdates },
-              { value: 'Bi-weekly updates', label: t.biWeeklyUpdates },
-              { value: 'Monthly updates', label: t.monthlyUpdates },
-              { value: 'Upon completion', label: t.uponCompletion },
-            ]}
-            {...register('deliveryFrequency')}
-          />
+              {applicationSpecs.map((spec) => {
+                const required = spec.requiredInApplication === true;
+                const locked =
+                  spec.useInJobPost === true &&
+                  jobRequirements &&
+                  jobRequirements[spec.key] !== undefined;
+                const value = categorySpecAnswers?.[spec.key];
 
-          <Input
-            label={t.numberOfRevisions}
-            type="number"
-            min="0"
-            max="10"
-            defaultValue="2"
-            {...register('revisions')}
-          />
+                if (spec.type === 'select') {
+                  const options = Array.isArray(spec.options) ? spec.options : [];
+                  return (
+                    <div key={spec.key}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
+                      </label>
+                      <select
+                        className="input"
+                        value={value ?? ''}
+                        disabled={locked || isSubmitting}
+                        onChange={(e) =>
+                          setCategorySpecAnswers((prev) => ({
+                            ...(prev || {}),
+                            [spec.key]: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {options.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
 
-          <Select
-            label={t.communicationPreference}
-            options={[
-              { value: 'Email only', label: t.emailOnly },
-              { value: 'Chat preferred', label: t.chatPreferred },
-              { value: 'Video calls available', label: t.videoCallsAvailable },
-              { value: 'Flexible', label: t.flexible },
-            ]}
-            {...register('communicationPreference')}
-          />
+                if (spec.type === 'multi_select') {
+                  const options = Array.isArray(spec.options) ? spec.options : [];
+                  const arr = Array.isArray(value) ? value : [];
+                  return (
+                    <div key={spec.key}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {options.map((o) => {
+                          const checked = arr.includes(o);
+                          return (
+                            <label key={o} className="flex items-center gap-2 text-sm text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={locked || isSubmitting}
+                                onChange={(e) => {
+                                  setCategorySpecAnswers((prev) => {
+                                    const prevArr = Array.isArray(prev?.[spec.key]) ? prev[spec.key] : [];
+                                    const nextArr = e.target.checked
+                                      ? Array.from(new Set([...prevArr, o]))
+                                      : prevArr.filter((x) => x !== o);
+                                    return { ...(prev || {}), [spec.key]: nextArr };
+                                  });
+                                }}
+                                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 disabled:opacity-50"
+                              />
+                              {o}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (spec.type === 'number') {
+                  return (
+                    <div key={spec.key}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
+                      </label>
+                      <input
+                        className="input"
+                        type="number"
+                        value={value ?? ''}
+                        disabled={locked || isSubmitting}
+                        min={spec.min ?? undefined}
+                        max={spec.max ?? undefined}
+                        onChange={(e) =>
+                          setCategorySpecAnswers((prev) => ({
+                            ...(prev || {}),
+                            [spec.key]: e.target.value === '' ? undefined : Number(e.target.value),
+                          }))
+                        }
+                      />
+                    </div>
+                  );
+                }
+
+                if (spec.type === 'boolean') {
+                  return (
+                    <div key={spec.key} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={value === true}
+                        disabled={locked || isSubmitting}
+                        onChange={(e) =>
+                          setCategorySpecAnswers((prev) => ({
+                            ...(prev || {}),
+                            [spec.key]: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                        {locked && <span className="ml-2 text-xs text-gray-500">(locked)</span>}
+                      </span>
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+          )}
 
           <Select
             label={t.availabilityCommitment}
@@ -728,19 +846,8 @@ const JobDetails = () => {
               { value: 'Flexible hours', label: t.flexibleHours },
             ]}
             error={errors.availabilityCommitment?.message}
+            disabled={isSubmitting}
             {...register('availabilityCommitment', { required: t.availabilityRequired })}
-          />
-
-          <Select
-            label={t.relevantExperienceLevel}
-            options={[
-              { value: 'This is my first project in this category', label: t.firstProject },
-              { value: 'I have 1-3 similar projects', label: t.oneToThreeProjects },
-              { value: 'I have 3-5 similar projects', label: t.threeToFiveProjects },
-              { value: 'I have 5+ similar projects', label: t.fivePlusProjects },
-              { value: 'I am an expert in this field', label: t.expertInField },
-            ]}
-            {...register('relevantExperienceLevel')}
           />
 
           <div className="flex gap-3 pt-4">
@@ -748,6 +855,7 @@ const JobDetails = () => {
               type="button"
               variant="secondary"
               onClick={() => setShowApplicationModal(false)}
+              disabled={isSubmitting}
               className="flex-1"
             >
               {t.cancel}
@@ -755,8 +863,8 @@ const JobDetails = () => {
             <Button
               type="submit"
               variant="primary"
-              loading={applyMutation.isPending}
-              disabled={applyMutation.isPending}
+              loading={isSubmitting}
+              disabled={isSubmitting}
               className="flex-1"
             >
               {t.submitApplication}

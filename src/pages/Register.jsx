@@ -12,34 +12,8 @@ import Alert from '../components/common/Alert';
 import logo from '../assets/logos/01.png';
 import { RefreshCw, CheckCircle, XCircle, Eye, EyeOff, Briefcase, Users, Shield, Zap, Star, Globe } from 'lucide-react';
 
-// Country to Currency mapping
-const COUNTRY_CURRENCY_MAP = {
-  // Americas
-  'United States': 'USD', 'Canada': 'USD', 'Mexico': 'USD', 'Brazil': 'USD',
-  'Argentina': 'USD', 'Chile': 'USD', 'Colombia': 'USD', 'Peru': 'USD',
-  // Middle East
-  'Egypt': 'EGP', 'Saudi Arabia': 'SAR', 'United Arab Emirates': 'AED',
-  'Kuwait': 'KWD', 'Qatar': 'QAR', 'Bahrain': 'BHD', 'Oman': 'OMR',
-  'Jordan': 'JOD', 'Lebanon': 'LBP', 'Palestine': 'USD', 'Turkey': 'TRY',
-  // Africa
-  'South Africa': 'ZAR', 'Morocco': 'MAD', 'Tunisia': 'TND', 'Algeria': 'DZD',
-  'Nigeria': 'NGN', 'Kenya': 'KES', 'Ghana': 'GHS', 'Uganda': 'UGX',
-  'Tanzania': 'TZS', 'Ethiopia': 'ETB',
-  // Europe
-  'United Kingdom': 'GBP', 'Switzerland': 'CHF', 'Sweden': 'SEK', 'Norway': 'NOK', 
-  'Denmark': 'DKK', 'Poland': 'PLN', 'Czech Republic': 'CZK', 'Hungary': 'HUF',
-  'Romania': 'RON', 'Bulgaria': 'BGN', 'Croatia': 'HRK', 'Russia': 'RUB', 
-  'Ukraine': 'UAH', 'Germany': 'EUR', 'France': 'EUR', 'Italy': 'EUR', 
-  'Spain': 'EUR', 'Netherlands': 'EUR', 'Belgium': 'EUR', 'Austria': 'EUR', 
-  'Greece': 'EUR', 'Portugal': 'EUR', 'Ireland': 'EUR', 'Finland': 'EUR', 
-  'Slovakia': 'EUR',
-  // Asia
-  'China': 'USD', 'Japan': 'USD', 'South Korea': 'USD', 'India': 'USD',
-  'Pakistan': 'USD', 'Bangladesh': 'USD', 'Indonesia': 'USD', 'Philippines': 'USD',
-  'Vietnam': 'USD', 'Thailand': 'USD', 'Malaysia': 'USD', 'Singapore': 'USD',
-  // Oceania
-  'Australia': 'USD', 'New Zealand': 'USD',
-};
+// Country to Currency mapping (USD and EGP only; Egypt -> EGP, others -> USD)
+const COUNTRY_CURRENCY_MAP = { Egypt: 'EGP' };
 
 // Country name to ISO country code mapping (for university filtering)
 const COUNTRY_TO_ISO_CODE = {

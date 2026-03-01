@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '../../services/profileService';
+import { getUniversityName } from '../../utils/universityHelpers';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
@@ -156,6 +157,7 @@ const StudentProfileView = () => {
 
   // State for image error
   const [photoLoadError, setPhotoLoadError] = useState(false);
+  const [downloadingCV, setDownloadingCV] = useState(false);
 
   // Fetch student profile
   const { data: profileData, isLoading, error } = useQuery({
@@ -189,6 +191,37 @@ const StudentProfileView = () => {
   }
 
   const profile = student.studentProfile || {};
+
+  const handleDownloadCV = async () => {
+    const resume = profile?.resume;
+    if (!resume?.url) return;
+    const url = `${API_BASE_URL}${resume.url}`;
+    const filename = resume.filename || 'resume.pdf';
+    setDownloadingCV(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'same-origin',
+      });
+      if (!res.ok) throw new Error('Failed to fetch file');
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error('CV download error:', err);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } finally {
+      setDownloadingCV(false);
+    }
+  };
 
   return (
     <div className="space-y-6 px-4 sm:px-0">
@@ -392,17 +425,15 @@ const StudentProfileView = () => {
                 )}
               </div>
             </div>
-            <a
-              href={`${API_BASE_URL}${profile.resume.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Button
+              variant="primary"
+              onClick={handleDownloadCV}
+              loading={downloadingCV}
               className="inline-flex items-center gap-2"
             >
-              <Button variant="primary">
-                <Download className="w-4 h-4 mr-2" />
-                {t.downloadCV}
-              </Button>
-            </a>
+              <Download className="w-4 h-4 mr-2" />
+              {t.downloadCV}
+            </Button>
           </div>
         </Card>
       )}

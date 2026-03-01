@@ -21,6 +21,7 @@ const translations = {
     applicationsRemaining: '{remaining} of {limit} applications remaining this month',
     nextBilling: 'Next billing: {date}',
     selectCurrency: 'Select Currency',
+    usdComingSoon: 'USD coming soon',
     payWithPayPal: 'Pay securely with PayPal in US Dollars',
     payWithPaymob: 'Pay securely with Paymob in Egyptian Pounds',
     currentPlan: 'Current Plan',
@@ -69,6 +70,7 @@ const translations = {
     applicationsRemaining: '{remaining} di {limit} candidature rimanenti questo mese',
     nextBilling: 'Prossimo addebito: {date}',
     selectCurrency: 'Seleziona Valuta',
+    usdComingSoon: 'USD in arrivo',
     payWithPayPal: 'Paga in sicurezza con PayPal in Dollari USA',
     payWithPaymob: 'Paga in sicurezza con Paymob in Sterline Egiziane',
     currentPlan: 'Piano Attuale',
@@ -198,11 +200,11 @@ const Subscription = () => {
   const handleUpgrade = () => {
     // Navigate to payment page based on selected currency
     if (selectedCurrency === 'USD') {
-      // Navigate to PayPal payment page for USD
       navigate('/student/payment-usd', {
         state: {
           currency: 'USD',
           amount: monthlyPrice,
+          billingCycle: 'monthly',
         },
       });
     } else {
@@ -314,6 +316,7 @@ const Subscription = () => {
             <div className="flex justify-center">
               <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
                 <button
+                  type="button"
                   onClick={() => setSelectedCurrency('USD')}
                   className={`px-6 py-2 rounded-md font-medium transition-all border ${
                     selectedCurrency === 'USD'
@@ -324,6 +327,7 @@ const Subscription = () => {
                   USD ($)
                 </button>
                 <button
+                  type="button"
                   onClick={() => setSelectedCurrency('EGP')}
                   className={`px-6 py-2 rounded-md font-medium transition-all border ${
                     selectedCurrency === 'EGP'
@@ -336,9 +340,7 @@ const Subscription = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 text-center mt-3">
-              {selectedCurrency === 'USD'
-                ? t.payWithPayPal
-                : t.payWithPaymob}
+              {selectedCurrency === 'USD' ? t.payWithPayPal : t.payWithPaymob}
             </p>
           </Card>
 

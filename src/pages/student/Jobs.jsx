@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { jobService } from '../../services/jobService';
@@ -232,6 +232,27 @@ const Jobs = () => {
 
   const allJobs = data?.pages.flatMap((page) => page.data.jobPosts) || [];
 
+  // Helper function to get location from job or client
+  const getJobLocation = useCallback((job) => {
+    // First try job.location (if backend adds it)
+    if (job.location) {
+      return job.location;
+    }
+    // Try to construct from client location
+    if (job.client && job.client.location) {
+      const { city, country } = job.client.location;
+      const parts = [];
+      if (city) parts.push(city);
+      if (country) parts.push(country);
+      return parts.length > 0 ? parts.join(', ') : null;
+    }
+    // Try clientProfile location if available
+    if (job.client?.clientProfile?.location) {
+      return job.client.clientProfile.location;
+    }
+    return null;
+  }, []);
+
   // Fetch full details for applied jobs
   const appliedJobIds = useMemo(
     () => userAppliedJobs.map(job => job.jobId?.toString()).filter(Boolean),
@@ -289,13 +310,13 @@ const Jobs = () => {
         const skillsMatch = job.skillsRequired?.some(skill => 
           skill?.toLowerCase().includes(searchLower)
         );
-        const locationMatch = job.location?.toLowerCase().includes(searchLower);
+        const locationMatch = getJobLocation(job)?.toLowerCase().includes(searchLower);
         return titleMatch || descriptionMatch || categoryMatch || skillsMatch || locationMatch;
       });
     }
     
     return jobs;
-  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium, currency, searchInput]);
+  }, [allJobs, appliedJobIdsSet, startupsOnly, isPremium, currency, searchInput, getJobLocation]);
 
   // Build applied jobs array with application metadata
   // ONLY show jobs that are in studentProfile.appliedJobs (source of truth)
@@ -341,14 +362,14 @@ const Jobs = () => {
         const skillsMatch = job.skillsRequired?.some(skill => 
           skill?.toLowerCase().includes(searchLower)
         );
-        const locationMatch = job.location?.toLowerCase().includes(searchLower);
+        const locationMatch = getJobLocation(job)?.toLowerCase().includes(searchLower);
         const statusMatch = job.applicationStatus?.toLowerCase().includes(searchLower);
         return titleMatch || descriptionMatch || categoryMatch || skillsMatch || locationMatch || statusMatch;
       });
     }
 
     return jobs;
-  }, [appliedJobsFromAPI, userAppliedJobs, startupsOnly, isPremium, searchInput]);
+  }, [appliedJobsFromAPI, userAppliedJobs, startupsOnly, isPremium, searchInput, getJobLocation]);
 
   const jobs = activeTab === 'available' ? availableJobs : appliedJobs;
 
@@ -614,41 +635,7 @@ const Jobs = () => {
                   options={[
                     { value: '', label: t.allCurrencies },
                     { value: 'USD', label: 'USD ($) - US Dollar' },
-                    { value: 'EUR', label: 'EUR (€) - Euro' },
                     { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
-                    { value: 'GBP', label: 'GBP (£) - British Pound' },
-                    { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
-                    { value: 'SAR', label: 'SAR (﷼) - Saudi Riyal' },
-                    { value: 'QAR', label: 'QAR (﷼) - Qatari Riyal' },
-                    { value: 'KWD', label: 'KWD (د.ك) - Kuwaiti Dinar' },
-                    { value: 'BHD', label: 'BHD (.د.ب) - Bahraini Dinar' },
-                    { value: 'OMR', label: 'OMR (﷼) - Omani Rial' },
-                    { value: 'JOD', label: 'JOD (د.ا) - Jordanian Dinar' },
-                    { value: 'LBP', label: 'LBP (ل.ل) - Lebanese Pound' },
-                    { value: 'ILS', label: 'ILS (₪) - Israeli Shekel' },
-                    { value: 'TRY', label: 'TRY (₺) - Turkish Lira' },
-                    { value: 'ZAR', label: 'ZAR (R) - South African Rand' },
-                    { value: 'MAD', label: 'MAD (د.م.) - Moroccan Dirham' },
-                    { value: 'TND', label: 'TND (د.ت) - Tunisian Dinar' },
-                    { value: 'DZD', label: 'DZD (د.ج) - Algerian Dinar' },
-                    { value: 'NGN', label: 'NGN (₦) - Nigerian Naira' },
-                    { value: 'KES', label: 'KES (KSh) - Kenyan Shilling' },
-                    { value: 'GHS', label: 'GHS (₵) - Ghanaian Cedi' },
-                    { value: 'UGX', label: 'UGX (USh) - Ugandan Shilling' },
-                    { value: 'TZS', label: 'TZS (TSh) - Tanzanian Shilling' },
-                    { value: 'ETB', label: 'ETB (Br) - Ethiopian Birr' },
-                    { value: 'CHF', label: 'CHF (Fr) - Swiss Franc' },
-                    { value: 'SEK', label: 'SEK (kr) - Swedish Krona' },
-                    { value: 'NOK', label: 'NOK (kr) - Norwegian Krone' },
-                    { value: 'DKK', label: 'DKK (kr) - Danish Krone' },
-                    { value: 'PLN', label: 'PLN (zł) - Polish Zloty' },
-                    { value: 'CZK', label: 'CZK (Kč) - Czech Koruna' },
-                    { value: 'HUF', label: 'HUF (Ft) - Hungarian Forint' },
-                    { value: 'RON', label: 'RON (lei) - Romanian Leu' },
-                    { value: 'BGN', label: 'BGN (лв) - Bulgarian Lev' },
-                    { value: 'HRK', label: 'HRK (kn) - Croatian Kuna' },
-                    { value: 'RUB', label: 'RUB (₽) - Russian Ruble' },
-                    { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
                   ]}
                   value={currency}
                   onChange={(e) => {
@@ -783,7 +770,7 @@ const Jobs = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-xs text-gray-500 truncate max-w-[120px]">
-                        {job.location || 'N/A'}
+                        {getJobLocation(job) || 'Remote'}
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -840,10 +827,10 @@ const Jobs = () => {
                               : (job.client?.message || t.premiumMembersOnly)}
                           </span>
                         </span>
-                        {job.location && (
+                        {getJobLocation(job) && (
                           <span className="flex items-center gap-1 truncate">
                             <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                            <span className="truncate">{job.location}</span>
+                            <span className="truncate">{getJobLocation(job)}</span>
                           </span>
                         )}
                         <span className="flex items-center gap-1">

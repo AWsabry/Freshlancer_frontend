@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../../services/notificationService';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
@@ -23,7 +22,6 @@ import {
   Star,
   Shield,
   Calendar,
-  ArrowRight,
 } from 'lucide-react';
 
 const translations = {
@@ -86,7 +84,6 @@ const translations = {
 };
 
 const Notifications = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
   const [page, setPage] = useState(1);
@@ -365,18 +362,6 @@ const Notifications = () => {
                       {/* Message */}
                       <p className="text-sm sm:text-base text-gray-700">{notification.message}</p>
 
-                      {/* Action button */}
-                      {notification.actionUrl && (
-                        <div>
-                          <button
-                            onClick={() => navigate(notification.actionUrl)}
-                            className="text-sm sm:text-base text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
-                          >
-                            {notification.actionText || t.viewDetails}
-                            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </button>
-                        </div>
-                      )}
 
                       {/* Actions */}
                       <div className="flex items-center justify-end gap-2 pt-2 border-t">

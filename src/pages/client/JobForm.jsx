@@ -175,6 +175,7 @@ const JobForm = () => {
   const [newSkill, setNewSkill] = React.useState('');
   const [isForStartup, setIsForStartup] = React.useState(false);
   const [selectedStartup, setSelectedStartup] = React.useState('');
+  const [categorySpecRequirements, setCategorySpecRequirements] = React.useState({});
 
   // Fetch job if editing
   const { data: jobData, isLoading } = useQuery({
@@ -201,13 +202,55 @@ const JobForm = () => {
   // The API interceptor returns response.data, so categoriesData is already the unwrapped response
   // Backend returns: { status: 'success', data: { categories: [...] } }
   // So we need: categoriesData.data.categories
+  const categoriesList = useMemo(() => {
+    return categoriesData?.data?.categories || categoriesData?.categories || [];
+  }, [categoriesData]);
+
   const categories = useMemo(() => {
-    const categoriesList = categoriesData?.data?.categories || categoriesData?.categories || [];
     return categoriesList.map((cat) => ({
       value: cat.name,
       label: cat.name,
     }));
-  }, [categoriesData]);
+  }, [categoriesList]);
+
+  const selectedCategoryName = watch('category');
+  const selectedCategory = useMemo(() => {
+    if (!selectedCategoryName) return null;
+    return categoriesList.find((c) => c.name === selectedCategoryName) || null;
+  }, [categoriesList, selectedCategoryName]);
+
+  const jobSpecs = useMemo(() => {
+    const specs = Array.isArray(selectedCategory?.specs) ? selectedCategory.specs : [];
+    return specs
+      .filter((s) => s && s.isActive !== false && s.useInJobPost === true)
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [selectedCategory]);
+
+  // Reset spec values when category changes (new job or category switched)
+  useEffect(() => {
+    if (!selectedCategoryName) return;
+    const specs = jobSpecs;
+    const defaults = {};
+    specs.forEach((s) => {
+      if (s.defaultValue !== undefined) {
+        defaults[s.key] = s.defaultValue;
+      }
+    });
+    setCategorySpecRequirements((prev) => {
+      // If category was already set and user hasn't interacted, keep existing values.
+      // But if category changed, it's safer to reset to defaults.
+      // Heuristic: if prev has any keys not in current specs, reset.
+      const prevKeys = Object.keys(prev || {});
+      const specKeySet = new Set(specs.map((s) => s.key));
+      const hasForeignKey = prevKeys.some((k) => !specKeySet.has(k));
+      if (hasForeignKey) return defaults;
+      // If empty, set defaults; otherwise keep current values.
+      if (prevKeys.length === 0) return defaults;
+      return prev;
+    });
+  }, [selectedCategoryName, jobSpecs]);
+
   // Populate form when job data is loaded
   React.useEffect(() => {
     if (jobData?.data?.jobPost && isEditing) {
@@ -243,6 +286,9 @@ const JobForm = () => {
 
       // Reset form with all job data
       reset(formData);
+
+      // Populate category specs (if any)
+      setCategorySpecRequirements(job.categorySpecRequirements || {});
     }
   }, [jobData, isEditing, reset]);
 
@@ -307,6 +353,7 @@ const JobForm = () => {
       description: data.description,
       category: data.category,
       skillsRequired: skills,
+      categorySpecRequirements,
       budget: {
         min: parseFloat(data.budgetMin),
         max: parseFloat(data.budgetMax),
@@ -391,6 +438,127 @@ const JobForm = () => {
             {...register('category', { required: t.categoryRequired })}
           />
 
+          {/* Category Specs (Job Requirements) */}
+          {jobSpecs.length > 0 && (
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-lg font-semibold text-gray-900">Category Requirements</h3>
+              <p className="text-sm text-gray-600">
+                Fill the category-specific requirements for this job.
+              </p>
+
+              {jobSpecs.map((spec) => {
+                const value = categorySpecRequirements?.[spec.key];
+                const required = spec.requiredInJobPost === true;
+
+                if (spec.type === 'select') {
+                  const options = Array.isArray(spec.options) ? spec.options : [];
+                  return (
+                    <div key={spec.key}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                      </label>
+                      <select
+                        className="input"
+                        value={value ?? ''}
+                        onChange={(e) =>
+                          setCategorySpecRequirements((prev) => ({
+                            ...(prev || {}),
+                            [spec.key]: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {options.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+
+                if (spec.type === 'multi_select') {
+                  const options = Array.isArray(spec.options) ? spec.options : [];
+                  const arr = Array.isArray(value) ? value : [];
+                  return (
+                    <div key={spec.key}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {options.map((o) => {
+                          const checked = arr.includes(o);
+                          return (
+                            <label key={o} className="flex items-center gap-2 text-sm text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => {
+                                  setCategorySpecRequirements((prev) => {
+                                    const prevArr = Array.isArray(prev?.[spec.key]) ? prev[spec.key] : [];
+                                    const nextArr = e.target.checked
+                                      ? Array.from(new Set([...prevArr, o]))
+                                      : prevArr.filter((x) => x !== o);
+                                    return { ...(prev || {}), [spec.key]: nextArr };
+                                  });
+                                }}
+                                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                              />
+                              {o}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (spec.type === 'number') {
+                  return (
+                    <Input
+                      key={spec.key}
+                      label={`${spec.label}${required ? ' *' : ''}`}
+                      type="number"
+                      value={value ?? ''}
+                      onChange={(e) =>
+                        setCategorySpecRequirements((prev) => ({
+                          ...(prev || {}),
+                          [spec.key]: e.target.value === '' ? undefined : Number(e.target.value),
+                        }))
+                      }
+                      min={spec.min ?? undefined}
+                      max={spec.max ?? undefined}
+                    />
+                  );
+                }
+
+                if (spec.type === 'boolean') {
+                  return (
+                    <div key={spec.key} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={value === true}
+                        onChange={(e) =>
+                          setCategorySpecRequirements((prev) => ({
+                            ...(prev || {}),
+                            [spec.key]: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {spec.label} {required && <span className="text-red-500">*</span>}
+                      </span>
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t.skillsRequired}
@@ -458,41 +626,7 @@ const JobForm = () => {
               label={t.currency}
               options={[
                 { value: 'USD', label: 'USD ($) - US Dollar' },
-                { value: 'EUR', label: 'EUR (€) - Euro' },
                 { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
-                { value: 'GBP', label: 'GBP (£) - British Pound' },
-                { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
-                { value: 'SAR', label: 'SAR (﷼) - Saudi Riyal' },
-                { value: 'QAR', label: 'QAR (﷼) - Qatari Riyal' },
-                { value: 'KWD', label: 'KWD (د.ك) - Kuwaiti Dinar' },
-                { value: 'BHD', label: 'BHD (.د.ب) - Bahraini Dinar' },
-                { value: 'OMR', label: 'OMR (﷼) - Omani Rial' },
-                { value: 'JOD', label: 'JOD (د.ا) - Jordanian Dinar' },
-                { value: 'LBP', label: 'LBP (ل.ل) - Lebanese Pound' },
-                { value: 'ILS', label: 'ILS (₪) - Israeli Shekel' },
-                { value: 'TRY', label: 'TRY (₺) - Turkish Lira' },
-                { value: 'ZAR', label: 'ZAR (R) - South African Rand' },
-                { value: 'MAD', label: 'MAD (د.م.) - Moroccan Dirham' },
-                { value: 'TND', label: 'TND (د.ت) - Tunisian Dinar' },
-                { value: 'DZD', label: 'DZD (د.ج) - Algerian Dinar' },
-                { value: 'NGN', label: 'NGN (₦) - Nigerian Naira' },
-                { value: 'KES', label: 'KES (KSh) - Kenyan Shilling' },
-                { value: 'GHS', label: 'GHS (₵) - Ghanaian Cedi' },
-                { value: 'UGX', label: 'UGX (USh) - Ugandan Shilling' },
-                { value: 'TZS', label: 'TZS (TSh) - Tanzanian Shilling' },
-                { value: 'ETB', label: 'ETB (Br) - Ethiopian Birr' },
-                { value: 'CHF', label: 'CHF (Fr) - Swiss Franc' },
-                { value: 'SEK', label: 'SEK (kr) - Swedish Krona' },
-                { value: 'NOK', label: 'NOK (kr) - Norwegian Krone' },
-                { value: 'DKK', label: 'DKK (kr) - Danish Krone' },
-                { value: 'PLN', label: 'PLN (zł) - Polish Zloty' },
-                { value: 'CZK', label: 'CZK (Kč) - Czech Koruna' },
-                { value: 'HUF', label: 'HUF (Ft) - Hungarian Forint' },
-                { value: 'RON', label: 'RON (lei) - Romanian Leu' },
-                { value: 'BGN', label: 'BGN (лв) - Bulgarian Lev' },
-                { value: 'HRK', label: 'HRK (kn) - Croatian Kuna' },
-                { value: 'RUB', label: 'RUB (₽) - Russian Ruble' },
-                { value: 'UAH', label: 'UAH (₴) - Ukrainian Hryvnia' },
               ]}
               error={errors.budgetCurrency?.message}
               {...register('budgetCurrency', { required: t.currencyRequired })}

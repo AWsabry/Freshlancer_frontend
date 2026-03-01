@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -33,6 +33,8 @@ import {
   Activity,
   GraduationCap,
   Clock,
+  Wallet,
+  Percent,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 import Modal from '../components/common/Modal';
@@ -44,6 +46,7 @@ const translations = {
     myApplications: 'My Applications',
     subscription: 'Subscription',
     transactions: 'Transactions',
+    contracts: 'Contracts',
     profile: 'Profile',
     myJobs: 'My Jobs',
     applications: 'Applications',
@@ -57,15 +60,19 @@ const translations = {
     universities: 'Universities',
     clientPackages: 'Client Packages',
     clientTransactions: 'Client Transactions',
+    platformFees: 'Platform Fees',
     studentSubscriptions: 'Student Subscriptions',
     coupons: 'Coupons',
     startups: 'Startups',
     contactUs: 'Contact Us',
     grantings: 'Support & Donations',
     logs: 'Audit Logs',
+    withdrawals: 'Withdrawals',
     logout: 'Logout',
     welcomeBack: 'Welcome back, {name}!',
     points: 'Points',
+    wallet: 'Wallet',
+    appeals: 'Appeals',
     applicationCountInfo: 'How Applications Are Counted',
     applicationCountInfoDesc: 'Understanding your application limit',
     applicationCountRule1: 'All applications you submit count toward your monthly limit.',
@@ -88,6 +95,7 @@ const translations = {
     myApplications: 'Le Mie Candidature',
     subscription: 'Abbonamento',
     transactions: 'Transazioni',
+    contracts: 'Contratti',
     profile: 'Profilo',
     myJobs: 'I Miei Lavori',
     applications: 'Candidature',
@@ -101,15 +109,19 @@ const translations = {
     universities: 'Università',
     clientPackages: 'Pacchetti Clienti',
     clientTransactions: 'Transazioni Clienti',
+    platformFees: 'Commissioni Piattaforma',
     studentSubscriptions: 'Abbonamenti Studenti',
     coupons: 'Coupon',
     startups: 'Startup',
     contactUs: 'Contattaci',
     grantings: 'Supporto e Donazioni',
     logs: 'Log di Audit',
+    withdrawals: 'Prelievi',
     logout: 'Esci',
     welcomeBack: 'Bentornato, {name}!',
     points: 'Punti',
+    wallet: 'Portafoglio',
+    appeals: 'Ricorsi',
     applicationCountInfo: 'Come Vengono Contate le Candidature',
     applicationCountInfoDesc: 'Comprendere il tuo limite di candidature',
     applicationCountRule1: 'Tutte le candidature che invii contano verso il tuo limite mensile.',
@@ -134,6 +146,7 @@ const DashboardLayout = () => {
   const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showApplicationInfo, setShowApplicationInfo] = useState(false);
+  const [walletCurrency, setWalletCurrency] = useState(() => localStorage.getItem('walletCurrency') || 'EGP');
   const [language, setLanguage] = useState(() => {
     // Get language from localStorage or default to 'en'
     return localStorage.getItem('dashboardLanguage') || 'en';
@@ -147,20 +160,11 @@ const DashboardLayout = () => {
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
   }, [language]);
 
-  const t = translations[language] || translations.en;
+  useEffect(() => {
+    localStorage.setItem('walletCurrency', walletCurrency);
+  }, [walletCurrency]);
 
-  // Get unread notification count - optimized polling
-  const { data: unreadCount } = useQuery({
-    queryKey: ['unreadNotifications'],
-    queryFn: () => notificationService.getUnreadCount(),
-    refetchInterval: (query) => {
-      // Only poll when tab is visible and user is authenticated
-      if (document.hidden || !user) return false;
-      return 120000; // Refetch every 2 minutes (reduced from 30 seconds)
-    },
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
-    refetchOnMount: true,
-  });
+  const t = translations[language] || translations.en;
 
   // Get user data (including points for clients and applications for students) - optimized polling
   const { data: userData } = useQuery({
@@ -171,6 +175,63 @@ const DashboardLayout = () => {
       // Only poll when tab is visible and user is authenticated
       if (document.hidden || !user) return false;
       return 300000; // Refetch every 5 minutes (reduced from 60 seconds)
+    },
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true,
+  });
+
+  const getVal = (obj, key) => {
+    if (!obj) return 0;
+    if (typeof obj.get === 'function') return Number(obj.get(key) || 0);
+    return typeof obj[key] === 'number' ? obj[key] : 0;
+  };
+
+  const getKeys = (obj) => {
+    if (!obj) return [];
+    if (typeof obj.keys === 'function') return Array.from(obj.keys());
+    return Object.keys(obj);
+  };
+
+  const walletOptions = useMemo(() => {
+    const u = userData?.data?.user;
+    const wallet = u?.wallet;
+    const balances = wallet?.balances || {};
+    const escrow = wallet?.escrow || {};
+    const candidates = ['EGP', 'USD'];
+
+    const keys = Array.from(new Set([...candidates, ...getKeys(balances), ...getKeys(escrow)]));
+    const nonZero = keys.filter((cur) => getVal(balances, cur) !== 0 || getVal(escrow, cur) !== 0);
+    return nonZero.length > 0 ? nonZero : ['EGP', 'USD'];
+  }, [userData?.data?.user?.wallet]);
+
+  useEffect(() => {
+    if (!walletOptions.includes(walletCurrency)) {
+      setWalletCurrency(walletOptions[0] || 'EGP');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletOptions.join('|')]);
+
+  const selectedWallet = useMemo(() => {
+    const u = userData?.data?.user;
+    const wallet = u?.wallet;
+    const balances = wallet?.balances || {};
+    const escrow = wallet?.escrow || {};
+    const cur = walletCurrency || 'EGP';
+    return {
+      currency: cur,
+      available: getVal(balances, cur),
+      escrow: getVal(escrow, cur),
+    };
+  }, [userData?.data?.user?.wallet, walletCurrency]);
+
+  // Get unread notification count - optimized polling
+  const { data: unreadCount } = useQuery({
+    queryKey: ['unreadNotifications'],
+    queryFn: () => notificationService.getUnreadCount(),
+    refetchInterval: (query) => {
+      // Only poll when tab is visible and user is authenticated
+      if (document.hidden || !user) return false;
+      return 120000; // Refetch every 2 minutes (reduced from 30 seconds)
     },
     refetchOnWindowFocus: true, // Refetch when user returns to tab
     refetchOnMount: true,
@@ -224,6 +285,9 @@ const DashboardLayout = () => {
         { name: t.myApplications, icon: FileText, path: '/student/applications' },
         { name: t.subscription, icon: CreditCard, path: '/student/subscription' },
         { name: t.transactions, icon: DollarSign, path: '/student/transactions' },
+        { name: t.wallet, icon: Wallet, path: '/student/wallet' },
+        { name: t.contracts, icon: FileText, path: '/student/contracts' },
+        { name: t.appeals, icon: AlertCircle, path: '/student/appeals' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         { name: t.contactUs, icon: Mail, path: '/student/contact-us' },
         { name: t.internship, icon: GraduationCap, path: '#', disabled: true, comingSoon: true },
@@ -240,6 +304,9 @@ const DashboardLayout = () => {
         { name: t.applications, icon: FileText, path: '/client/applications' },
         { name: t.packages, icon: CreditCard, path: '/client/packages' },
         { name: t.transactions, icon: DollarSign, path: '/client/transactions' },
+        { name: t.wallet, icon: Wallet, path: '/client/wallet' },
+        { name: t.contracts, icon: FileText, path: '/client/contracts' },
+        { name: t.appeals, icon: AlertCircle, path: '/client/appeals' },
         { name: t.profile, icon: User, path: `/${user?.role}/profile` },
         { name: t.contactUs, icon: Mail, path: '/client/contact-us' },
         ...baseItems.slice(1),
@@ -264,7 +331,11 @@ const DashboardLayout = () => {
         { name: t.universities, icon: GraduationCap, path: '/admin/universities' },
         { name: t.clientPackages, icon: CreditCard, path: '/admin/client-packages' },
         { name: t.clientTransactions, icon: DollarSign, path: '/admin/client-transactions' },
+        { name: t.platformFees, icon: Percent, path: '/admin/platform-fees' },
         { name: t.studentSubscriptions, icon: User, path: '/admin/student-packages' },
+        { name: t.contracts, icon: FileText, path: '/admin/contracts' },
+        { name: t.withdrawals, icon: Wallet, path: '/admin/withdrawals' },
+        { name: t.appeals, icon: AlertCircle, path: '/admin/appeals' },
         { name: t.coupons, icon: Tag, path: '/admin/coupons' },
         { name: t.startups, icon: Star, path: '/admin/startups' },
         { name: t.contactUs, icon: Mail, path: '/admin/contact-us' },
@@ -482,6 +553,37 @@ const DashboardLayout = () => {
               </div>
             )}
 
+            {/* Wallet Display for Clients (money) */}
+            {user?.role === 'client' && userData?.data?.user?.wallet && (
+              <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                <div className="leading-tight">
+                  <p className="text-[10px] sm:text-xs text-gray-600 font-medium">{t.wallet}</p>
+                  <div
+                    className="flex items-center gap-2"
+                    title={`Available: ${selectedWallet.currency} ${Number(selectedWallet.available || 0).toFixed(2)} • Escrow: ${selectedWallet.currency} ${Number(selectedWallet.escrow || 0).toFixed(2)}`}
+                  >
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 tabular-nums">
+                      {Number(selectedWallet.available || 0).toFixed(2)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (walletOptions.length <= 1) return;
+                        const idx = walletOptions.indexOf(walletCurrency);
+                        const next = walletOptions[(idx + 1) % walletOptions.length] || walletOptions[0] || 'EGP';
+                        setWalletCurrency(next);
+                      }}
+                      className="text-[10px] sm:text-xs px-2 py-1 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                      title="Change currency"
+                    >
+                      {selectedWallet.currency}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Applications Display for Students */}
             {user?.role === 'student' && userData?.data?.user?.studentProfile && (
               <div className="hidden md:flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
@@ -502,6 +604,37 @@ const DashboardLayout = () => {
                 >
                   <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
+              </div>
+            )}
+
+            {/* Wallet Display for Students (money) */}
+            {user?.role === 'student' && userData?.data?.user?.wallet && (
+              <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                <div className="leading-tight">
+                  <p className="text-[10px] sm:text-xs text-gray-600 font-medium">{t.wallet}</p>
+                  <div
+                    className="flex items-center gap-2"
+                    title={`Available: ${selectedWallet.currency} ${Number(selectedWallet.available || 0).toFixed(2)} • Escrow: ${selectedWallet.currency} ${Number(selectedWallet.escrow || 0).toFixed(2)}`}
+                  >
+                    <p className="text-sm sm:text-lg font-bold text-gray-900 tabular-nums">
+                      {Number(selectedWallet.available || 0).toFixed(2)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (walletOptions.length <= 1) return;
+                        const idx = walletOptions.indexOf(walletCurrency);
+                        const next = walletOptions[(idx + 1) % walletOptions.length] || walletOptions[0] || 'EGP';
+                        setWalletCurrency(next);
+                      }}
+                      className="text-[10px] sm:text-xs px-2 py-1 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                      title="Change currency"
+                    >
+                      {selectedWallet.currency}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -6,7 +6,7 @@ import couponService from '../../services/couponService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X, DollarSign } from 'lucide-react';
+import { ArrowLeft, Lock, CheckCircle, Tag, X, DollarSign } from 'lucide-react';
 import paypalImage from '../../assets/images/paypal.png';
 
 const translations = {
@@ -158,28 +158,23 @@ const PaymentUSD = () => {
   const purchaseMutation = useMutation({
     mutationFn: (paymentData) => packageService.purchasePackage(packageType, paymentData),
     onSuccess: async (response) => {
-      try {
-        console.log('PayPal payment response received:', response);
-        console.log('Response data:', response?.data);
-
-        // TODO: Integrate PayPal SDK here
-        // For now, show placeholder
-        alert(t.paypalComingSoon);
-
-        // After successful PayPal payment:
-        // queryClient.invalidateQueries(['myPackages']);
-        // queryClient.invalidateQueries(['activePackage']);
-        // queryClient.invalidateQueries(['pointsBalance']);
-        // navigate('/client/packages');
-      } catch (error) {
-        console.error('Error processing PayPal payment:', error);
-        alert(t.paymentProcessingError);
+      // API interceptor returns response.data, so response = { status, data }
+      const data = response?.data;
+      if (data?.gateway === 'paypal' && data?.approvalUrl) {
+        window.location.href = data.approvalUrl;
+        return;
       }
+      alert(t.paymentProcessingError);
     },
     onError: (error) => {
-      console.error('Payment mutation error:', error);
-      console.error('Error response:', error.response);
-      alert(error.response?.data?.message || t.paymentFailed);
+      // Interceptor may reject with error.response.data (e.g. { message, status, errorCode })
+      const message = error?.message || error?.response?.data?.message || t.paymentFailed;
+      const isPayPalConfig = error?.errorCode === 'PAYPAL_NOT_CONFIGURED' || (error?.response?.status === 503 && String(message).toLowerCase().includes('paypal'));
+      if (isPayPalConfig) {
+        alert(t.paymentProcessingError + ' (PayPal is not configured on the server. Add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET to the API .env.)');
+      } else {
+        alert(message);
+      }
     },
   });
 
@@ -199,28 +194,14 @@ const PaymentUSD = () => {
   };
 
   const handlePayment = () => {
-    // Store package info in sessionStorage for later retrieval after payment
-    sessionStorage.setItem('pendingPackage', JSON.stringify({
-      points,
-      packageName,
-      packageType,
-      packageId,
-    }));
-
-    // Store coupon info if applied
-    if (appliedCoupon) {
-      sessionStorage.setItem('appliedCoupon', JSON.stringify(appliedCoupon));
-    }
-
-    // TODO: Implement PayPal payment flow
-    // Process payment
     const paymentData = {
       amount: total,
-      currency: currency,
-      packageId: packageId,
+      currency,
+      packageId,
+      packageType,
+      redirectBaseUrl: window.location.origin,
+      ...(appliedCoupon?.code && { couponCode: appliedCoupon.code }),
     };
-    console.log('Processing PayPal payment with data:', paymentData);
-
     purchaseMutation.mutate(paymentData);
   };
 
@@ -275,33 +256,9 @@ const PaymentUSD = () => {
                 </div>
               </div>
 
-              {/* PayPal Integration Placeholder */}
-              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-full">
-                    <CreditCard className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-yellow-900 mb-2">
-                      {t.paypalIntegrationArea}
-                    </p>
-                    <p className="text-xs text-yellow-700 mb-3">
-                      {t.paypalIntegrationDesc}
-                    </p>
-                    <div className="p-4 bg-white border border-yellow-300 rounded-lg">
-                      <p className="text-sm text-gray-600 mb-2">{t.implementationSteps}</p>
-                      <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
-                        <li>Install PayPal SDK: <code className="bg-gray-100 px-1 rounded">npm install @paypal/react-paypal-js</code></li>
-                        <li>Get PayPal Client ID from PayPal Developer Dashboard</li>
-                        <li>Wrap app with PayPalScriptProvider in App.jsx</li>
-                        <li>Add PayPalButtons component here</li>
-                        <li>Handle onApprove and onError callbacks</li>
-                        <li>Send payment confirmation to backend</li>
-                      </ol>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <p className="text-sm text-gray-600">
+                Click &quot;Pay with PayPal&quot; below to complete your purchase. You will be redirected to PayPal to pay securely.
+              </p>
 
               {/* Payment Methods Info */}
               <div className="space-y-3">
@@ -464,20 +421,19 @@ const PaymentUSD = () => {
                 </ul>
               </div>
 
-              {/* Pay Button - Placeholder */}
               <div className="space-y-3">
                 <Button
                   variant="primary"
                   className="w-full mt-6"
                   onClick={handlePayment}
                   loading={purchaseMutation.isPending}
-                  disabled={true}
+                  disabled={purchaseMutation.isPending}
                 >
                   <Lock className="w-5 h-5 mr-2" />
-                  {t.paypalIntegrationPending}
+                  {t.completePayment}
                 </Button>
                 <p className="text-xs text-center text-gray-500">
-                  {t.paypalButtonNote}
+                  {t.securePaymentPowered}
                 </p>
               </div>
 

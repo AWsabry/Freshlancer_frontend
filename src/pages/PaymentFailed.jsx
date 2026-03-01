@@ -12,6 +12,8 @@ const translations = {
     transactionNotFound: 'Transaction not found in our system.',
     paymentNotCompleted: 'Payment was not completed successfully.',
     processingError: 'An error occurred while processing your payment.',
+    captureFailed: 'We could not complete the payment on our side. If your card was charged, PayPal will refund you automatically within a few days. Please try again or contact support if the amount is not refunded.',
+    invalidRequest: 'Invalid payment link or session. Please start the payment again.',
     defaultError: 'Payment could not be completed. Please try again.',
     commonReasons: 'Common reasons for payment failure:',
     insufficientFunds: 'Insufficient funds in your account',
@@ -31,6 +33,8 @@ const translations = {
     transactionNotFound: 'Transazione non trovata nel nostro sistema.',
     paymentNotCompleted: 'Il pagamento non è stato completato con successo.',
     processingError: 'Si è verificato un errore durante l\'elaborazione del pagamento.',
+    captureFailed: 'Non siamo riusciti a completare il pagamento. Se la carta è stata addebitata, PayPal rimborserà automaticamente. Riprova o contatta il supporto.',
+    invalidRequest: 'Link o sessione di pagamento non validi. Avvia di nuovo il pagamento.',
     defaultError: 'Il pagamento non può essere completato. Riprova.',
     commonReasons: 'Motivi comuni per il fallimento del pagamento:',
     insufficientFunds: 'Fondi insufficienti nel tuo account',
@@ -50,7 +54,7 @@ const PaymentFailed = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
-  const error = searchParams.get('error');
+  const error = searchParams.get('error') || searchParams.get('reason');
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
@@ -84,6 +88,12 @@ const PaymentFailed = () => {
         return t.paymentNotCompleted;
       case 'processing_error':
         return t.processingError;
+      case 'capture_failed':
+        return t.captureFailed;
+      case 'invalid_request':
+        return t.invalidRequest;
+      case 'failed':
+        return t.paymentNotCompleted;
       default:
         return t.defaultError;
     }
