@@ -161,11 +161,11 @@ const Packages = () => {
   const isLoading = loadingPoints || loadingPackages;
 
   const handlePurchase = (packageData) => {
-    // Route to USD payment page if USD is selected, otherwise to regular payment page
-    const paymentPath = selectedCurrency === 'USD' ? '/client/payment-usd' : '/client/payment';
+    // Always route to regular payment page (EGP via Paymob)
+    const paymentPath = '/client/payment';
     navigate(paymentPath, {
       state: {
-        currency: selectedCurrency,
+        currency: 'EGP',
         amount: packageData.price,
         packageType: packageData.type,
         packageId: packageData._id,
@@ -199,35 +199,9 @@ const Packages = () => {
 
       {/* Currency Selection */}
       <Card title={t.selectCurrency}>
-            <div className="flex justify-center">
-              <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency('USD')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
-                    selectedCurrency === 'USD'
-                      ? 'bg-primary-500 text-[#2f00c0] border-primary-500 shadow-md'
-                      : 'text-gray-700 border-transparent hover:bg-gray-100'
-                  }`}
-                >
-                  USD ($)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency('EGP')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
-                    selectedCurrency === 'EGP'
-                      ? 'bg-primary-500 text-[#2f00c0] border-primary-500 shadow-md'
-                      : 'text-gray-700 border-transparent hover:bg-gray-100'
-                  }`}
-                >
-                  EGP (E£)
-                </button>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 text-center mt-3">
-              {selectedCurrency === 'USD' ? t.paypalDescription : t.paymobDescription}
-            </p>
+        <p className="text-sm text-gray-600 text-center">
+          {t.paymobDescription}
+        </p>
         </Card>
 
       {/* Points Packages */}

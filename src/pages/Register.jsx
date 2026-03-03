@@ -12,7 +12,7 @@ import Alert from '../components/common/Alert';
 import logo from '../assets/logos/01.png';
 import { RefreshCw, CheckCircle, XCircle, Eye, EyeOff, Briefcase, Users, Shield, Zap, Star, Globe } from 'lucide-react';
 
-// Country to Currency mapping (USD and EGP only; Egypt -> EGP, others -> USD)
+// Currency for students: EGP is used for all countries
 const COUNTRY_CURRENCY_MAP = { Egypt: 'EGP' };
 
 // Country name to ISO country code mapping (for university filtering)
@@ -701,14 +701,11 @@ const Register = () => {
     setShowConfirmPassword(true);
   };
 
-  // Auto-detect currency when country of study changes
+  // Auto-detect currency when country of study changes (default EGP for all countries)
   useEffect(() => {
-    if (countryOfStudy && COUNTRY_CURRENCY_MAP[countryOfStudy]) {
-      const currency = COUNTRY_CURRENCY_MAP[countryOfStudy];
+    if (countryOfStudy) {
+      const currency = COUNTRY_CURRENCY_MAP[countryOfStudy] || 'EGP';
       setValue('currency', currency);
-    } else if (countryOfStudy) {
-      // Default to USD if country not in map
-      setValue('currency', 'USD');
     }
   }, [countryOfStudy, setValue]);
 
@@ -781,10 +778,10 @@ const Register = () => {
           userData.country = data.countryOfStudy;
         }
         
-        // Determine currency based on country of study
-        const currency = data.countryOfStudy && COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
-          ? COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
-          : 'USD'; // Default to USD if country not found
+        // Determine currency (EGP for all countries)
+        const currency = data.countryOfStudy && COUNTRY_CURRENCY_MAP[data.countryOfStudy]
+          ? COUNTRY_CURRENCY_MAP[data.countryOfStudy]
+          : 'EGP';
         
         // Handle custom university - store the name, backend will create it during registration
         let universityName = data.university?.trim() || '';
@@ -1206,7 +1203,7 @@ const Register = () => {
                     </p>
                     <ul className="text-xs text-blue-700 mt-1 space-y-1">
                       <li>• {t.phoneCode} {COUNTRY_PHONE_CODE_MAP[countryOfStudy] || '+1'}</li>
-                      <li>• {t.currency} {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'USD'}</li>
+                      <li>• {t.currency} {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'EGP'}</li>
                     </ul>
                   </div>
                 )}

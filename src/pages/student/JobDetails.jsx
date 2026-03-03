@@ -230,7 +230,7 @@ const JobDetails = () => {
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
-      proposedBudgetCurrency: 'USD',
+      proposedBudgetCurrency: 'EGP',
     },
   });
 
@@ -339,7 +339,7 @@ const JobDetails = () => {
       proposalType: data.proposalType || 'standard',
       proposedBudget: {
         amount: parseFloat(data.proposedBudget),
-        currency: data.proposedBudgetCurrency || 'USD',
+        currency: data.proposedBudgetCurrency || 'EGP',
       },
       estimatedDuration: data.estimatedDuration,
       availabilityCommitment: data.availabilityCommitment,
@@ -676,7 +676,6 @@ const JobDetails = () => {
             <Select
               label={t.currency}
               options={[
-                { value: 'USD', label: 'USD ($) - US Dollar' },
                 { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
               ]}
               error={errors.proposedBudgetCurrency?.message}
