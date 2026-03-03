@@ -47,6 +47,8 @@ import {
   CreditCard
 } from 'lucide-react';
 
+const currentYear = new Date().getFullYear();
+
 const translations = {
   en: {
     languageLabel: 'Language',
@@ -71,7 +73,7 @@ const translations = {
       welcome: 'Welcome'
     },
     hero: {
-      badge: 'Top-Rated Student Freelance Marketplace 2025',
+      badge: `Top-Rated Student Freelance Marketplace ${currentYear}`,
       headingLine1: 'Hire Talented',
       headingHighlight: 'Student Freelancers',
       description: 'Connect with skilled university students for your projects or discover freelance opportunities. Join 10,000+ students and businesses building success together.',
@@ -396,7 +398,7 @@ const translations = {
       studentsLinks: ['Find Jobs', 'Build Portfolio', 'Premium Plans', 'Success Stories'],
       clientsTitle: 'For Clients',
       clientsLinks: ['Post Jobs', 'Find Talent', 'Pricing', 'How It Works'],
-      copyright: '© 2025 Freshlancer - Premier Student Freelance Platform. All rights reserved.'
+      copyright: `© ${currentYear} Freshlancer - Premier Student Freelance Platform. All rights reserved.`
     }
   },
   it: {
@@ -422,7 +424,7 @@ const translations = {
       welcome: 'Ciao'
     },
     hero: {
-      badge: 'Marketplace freelance per studenti valutato al top 2025',
+      badge: `Marketplace freelance per studenti valutato al top ${currentYear}`,
       headingLine1: 'Assumi talentuosi',
       headingHighlight: 'studenti freelance',
       description: 'Metti in contatto studenti universitari qualificati con i tuoi progetti oppure scopri opportunità freelance. Oltre 10.000 studenti e aziende che costruiscono il successo insieme.',
@@ -747,7 +749,7 @@ const translations = {
       studentsLinks: ['Trova lavori', 'Crea portfolio', 'Piani Premium', 'Storie di successo'],
       clientsTitle: 'Per clienti',
       clientsLinks: ['Pubblica lavori', 'Trova talenti', 'Prezzi', 'Come funziona'],
-      copyright: '© 2025 Freshlancer - Piattaforma leader per studenti freelance. Tutti i diritti riservati.'
+      copyright: `© ${currentYear} Freshlancer - Piattaforma leader per studenti freelance. Tutti i diritti riservati.`
     }
   }
 };
