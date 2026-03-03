@@ -42,6 +42,7 @@ import StudentAppeals from './pages/student/Appeals';
 import ContactUs from './pages/ContactUs';
 import WhySupport from './pages/WhySupport';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import RefundPolicy from './pages/RefundPolicy';
 
 // Client pages
 import ClientDashboard from './pages/client/Dashboard';
@@ -134,6 +135,7 @@ function App() {
 
       {/* Public legal pages */}
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/refund-policy" element={<RefundPolicy />} />
 
       {/* Student routes */}
       <Route
@@ -163,6 +165,7 @@ function App() {
         <Route path="contact-us" element={<ContactUs />} />
         <Route path="why-support" element={<WhySupport />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="refund-policy" element={<RefundPolicy />} />
       </Route>
 
       {/* Client routes */}
