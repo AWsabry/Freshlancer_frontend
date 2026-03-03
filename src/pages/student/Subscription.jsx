@@ -198,24 +198,14 @@ const Subscription = () => {
   const monthlyPrice = pricing?.plans?.premium?.billingCycles?.monthly?.price?.amount || 9.99;
 
   const handleUpgrade = () => {
-    // Navigate to payment page based on selected currency
-    if (selectedCurrency === 'USD') {
-      navigate('/student/payment-usd', {
-        state: {
-          currency: 'USD',
-          amount: monthlyPrice,
-          billingCycle: 'monthly',
-        },
-      });
-    } else {
-      // Navigate to Paymob payment page for EGP
-      navigate('/student/payment', {
-        state: {
-          currency: selectedCurrency,
-          amount: monthlyPrice,
-        },
-      });
-    }
+    // Always navigate to Paymob payment page for EGP
+    navigate('/student/payment', {
+      state: {
+        currency: 'EGP',
+        amount: monthlyPrice,
+        billingCycle: 'monthly',
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -311,36 +301,10 @@ const Subscription = () => {
       {/* Pricing Plans */}
       {!isPremium && (
         <>
-          {/* Currency Selection */}
+          {/* Payment information (EGP only via Paymob) */}
           <Card title={t.selectCurrency}>
-            <div className="flex justify-center">
-              <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency('USD')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
-                    selectedCurrency === 'USD'
-                      ? 'bg-primary-500 text-[#8904aa] border-primary-500 shadow-md'
-                      : 'text-gray-700 border-transparent hover:bg-gray-100'
-                  }`}
-                >
-                  USD ($)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency('EGP')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all border ${
-                    selectedCurrency === 'EGP'
-                      ? 'bg-primary-500 text-[#8904aa] border-primary-500 shadow-md'
-                      : 'text-gray-700 border-transparent hover:bg-gray-100'
-                  }`}
-                >
-                  EGP (E£)
-                </button>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 text-center mt-3">
-              {selectedCurrency === 'USD' ? t.payWithPayPal : t.payWithPaymob}
+            <p className="text-sm text-gray-600 text-center">
+              {t.payWithPaymob}
             </p>
           </Card>
 
