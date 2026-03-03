@@ -1773,6 +1773,24 @@ const Landing = () => {
                   <Instagram className="w-6 h-6" />
                 </a>
               </div>
+
+              {/* Legal Links */}
+              <div className="mt-10 pt-6 border-t border-gray-200 flex flex-wrap gap-6 text-sm">
+                <Link
+                  to="/privacy-policy"
+                  className="text-gray-600 hover:text-[#065084] font-medium transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+
+                <Link
+                  to="/refund-policy"
+                  className="text-gray-600 hover:text-[#065084] font-medium transition-colors"
+                >
+                  Refund Policy
+                </Link>
+              </div>
+              
             </div>
             <div className="space-y-6">
               {t.about.cards.map((card) => (
@@ -1836,6 +1854,15 @@ const Landing = () => {
                     </a>
                   </div>
                 </div>
+
+
+                      {/* Location */}
+                    <div className="flex items-start gap-4">
+                      <MapPin className="w-6 h-6 text-[#065084]" />
+                      <span>Cairo, Egypt</span>
+                    </div>
+
+
               </div>
               <div className="mt-8">
                 <h4 className="font-bold text-gray-900 mb-4">{t.contact.followUs}</h4>
