@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { contactService } from '../services/contactService';
 import { grantingService } from '../services/grantingService';
+import { getPaymobPublicKey } from '../config/paymob';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
@@ -247,8 +248,10 @@ const ContactUs = () => {
       const clientSecret = granting?.clientSecret;
 
       if (!paymentUrl && clientSecret) {
-        const publicKey = import.meta.env.VITE_PAYMOB_PUBLIC_KEY || 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
-        paymentUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
+        const publicKey = getPaymobPublicKey();
+        paymentUrl = publicKey
+          ? `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(clientSecret)}`
+          : '';
       }
 
       if (!paymentUrl || !isValidPaymobUrl(paymentUrl)) {

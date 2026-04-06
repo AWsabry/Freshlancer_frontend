@@ -14,8 +14,7 @@ import MilestonesPanel from '../../components/contracts/MilestonesPanel';
 import Modal from '../../components/common/Modal';
 import { useAuthStore } from '../../stores/authStore';
 import { AlertCircle } from 'lucide-react';
-
-const PAYMOB_PUBLIC_KEY = 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
+import { getPaymobPublicKey } from '../../config/paymob';
 
 const Contracts = () => {
   const queryClient = useQueryClient();
@@ -167,7 +166,12 @@ const Contracts = () => {
     onSuccess: async (resp) => {
       const data = resp?.data;
       if (data?.gateway === 'paymob' && data?.clientSecret) {
-        const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${PAYMOB_PUBLIC_KEY}&clientSecret=${data.clientSecret}`;
+        const publicKey = getPaymobPublicKey();
+        if (!publicKey) {
+          showError('Paymob public key is not configured (VITE_PAYMOB_PUBLIC_KEY).');
+          return;
+        }
+        const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(data.clientSecret)}`;
         window.location.href = paymobUrl;
         return;
       }
