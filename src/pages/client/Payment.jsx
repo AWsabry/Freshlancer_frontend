@@ -8,6 +8,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X } from 'lucide-react';
 import paymobImage from '../../assets/images/paymob.png';
+import { getPaymobPublicKey } from '../../config/paymob';
 
 const translations = {
   en: {
@@ -167,8 +168,13 @@ const Payment = () => {
             console.log('Stored intention ID in sessionStorage:', intentionId);
           }
 
-          const publicKey = 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
-          const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
+          const publicKey = getPaymobPublicKey();
+          if (!publicKey) {
+            console.error('VITE_PAYMOB_PUBLIC_KEY is not set; cannot open Paymob checkout.');
+            alert(t.paymentProcessingError);
+            return;
+          }
+          const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(clientSecret)}`;
 
           console.log('Client Secret received:', clientSecret);
           console.log('Intention ID received:', intentionId);
