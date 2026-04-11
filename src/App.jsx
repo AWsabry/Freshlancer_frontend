@@ -1,5 +1,6 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { registerAppNavigation, clearAppNavigation } from './services/appNavigation';
 import { useAuthStore } from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -88,6 +89,18 @@ import AdminWithdrawals from './pages/admin/Withdrawals';
 import AdminAppeals from './pages/admin/Appeals';
 import AdminPlatformFees from './pages/admin/PlatformFees';
 
+function AppNavigationBridge() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    registerAppNavigation(
+      (to, options) => navigate(to, options),
+      () => useAuthStore.getState().setUser(null)
+    );
+    return () => clearAppNavigation();
+  }, [navigate]);
+  return null;
+}
+
 function App() {
   const { isAuthenticated, user } = useAuthStore();
 
@@ -107,7 +120,9 @@ function App() {
   };
 
   return (
-    <Routes>
+    <>
+      <AppNavigationBridge />
+      <Routes>
       {/* Landing Page - Accessible to everyone */}
       <Route path="/" element={<Landing />} />
 
@@ -235,6 +250,7 @@ function App() {
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
+    </>
   );
 }
 

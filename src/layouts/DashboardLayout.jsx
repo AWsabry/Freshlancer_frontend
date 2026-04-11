@@ -248,17 +248,15 @@ const DashboardLayout = () => {
       
       // Clear all storage and call backend logout
       await logout();
-      
-      // Navigate to login and force reload to ensure complete state reset
+
+      // Client-side navigation avoids a full GET /login (fixes 404 on hosts without SPA fallback)
       navigate('/login', { replace: true });
-      window.location.reload();
     } catch (error) {
       // Even if there's an error, clear everything and redirect
       queryClient.clear();
       queryClient.removeQueries();
       await logout();
       navigate('/login', { replace: true });
-      window.location.reload();
     }
   };
 
