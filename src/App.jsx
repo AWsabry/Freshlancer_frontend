@@ -7,7 +7,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import { ToastProvider } from './contexts/ToastContext';
 
 // Public pages
-import Landing from './pages/Landing';
+import ClientLanding from './pages/ClientLanding';
+import StudentLanding from './pages/StudentLanding';
 
 // Auth pages
 import Login from './pages/Login';
@@ -123,8 +124,9 @@ function App() {
     <>
       <AppNavigationBridge />
       <Routes>
-      {/* Landing Page - Accessible to everyone */}
-      <Route path="/" element={<Landing />} />
+      {/* Landing Pages - Accessible to everyone */}
+      <Route path="/" element={<ClientLanding />} />
+      <Route path="/students" element={<StudentLanding />} />
 
       {/* Public routes */}
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to={getDashboardPath()} />} />

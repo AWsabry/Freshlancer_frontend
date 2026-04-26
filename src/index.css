@@ -2,8 +2,48 @@
 
 @font-face {
   font-family: 'Lama Sans';
+  src: url('./assets/fonts/LamaSans-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lama Sans';
+  src: url('./assets/fonts/LamaSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lama Sans';
+  src: url('./assets/fonts/LamaSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lama Sans';
   src: url('./assets/fonts/LamaSans-SemiBold.ttf') format('truetype');
   font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lama Sans';
+  src: url('./assets/fonts/LamaSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lama Sans';
+  src: url('./assets/fonts/LamaSans-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
@@ -19,6 +59,25 @@
   --color-primary-700: 3 105 161;
   --color-primary-800: 7 89 133;
   --color-primary-900: 12 74 110;
+}
+
+:root {
+  --color-teal:       #25aaad;
+  --color-teal-dark:  #0f828c;
+  --color-blue:       #065084;
+  --color-blue-dark:  #074368;
+  --color-bg-dark:    #0a0a0a;
+  --color-bg-card:    #0d1117;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease forwards;
+  opacity: 0;
 }
 
 @keyframes bounce-slow {
