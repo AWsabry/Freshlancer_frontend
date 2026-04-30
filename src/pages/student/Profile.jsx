@@ -681,7 +681,7 @@ const Profile = () => {
         setValue('studentProfile.availability', studentProfile.availability || 'Available');
         setValue('studentProfile.hourlyRate.min', studentProfile.hourlyRate?.min || '');
         setValue('studentProfile.hourlyRate.max', studentProfile.hourlyRate?.max || '');
-        setValue('studentProfile.hourlyRate.currency', studentProfile.hourlyRate?.currency || 'USD');
+        setValue('studentProfile.hourlyRate.currency', studentProfile.hourlyRate?.currency || 'EGP');
         setValue('studentProfile.socialLinks.github', studentProfile.socialLinks?.github || '');
         setValue('studentProfile.socialLinks.linkedin', studentProfile.socialLinks?.linkedin || '');
         setValue('studentProfile.socialLinks.website', studentProfile.socialLinks?.website || '');
@@ -2755,7 +2755,6 @@ const Profile = () => {
                   {...register('studentProfile.hourlyRate.currency')}
                   error={errors.studentProfile?.hourlyRate?.currency?.message}
                   options={[
-                    { value: 'USD', label: 'USD - US Dollar' },
                     { value: 'EGP', label: 'EGP - Egyptian Pound' },
                   ]}
                   placeholder={t.selectCurrency}

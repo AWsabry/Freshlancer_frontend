@@ -27,7 +27,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
   const [projectDescription, setProjectDescription] = useState('');
   const [expectedDuration, setExpectedDuration] = useState('1-2 weeks');
   const [totalAmount, setTotalAmount] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('EGP');
   const [milestones, setMilestones] = useState([]);
 
   const initialSnapshot = useMemo(() => {
@@ -37,7 +37,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
       projectDescription: normalizeText(contract.projectDescription),
       expectedDuration: contract.expectedDuration || '1-2 weeks',
       totalAmount: round2(contract.totalAmount),
-      currency: contract.currency || 'USD',
+      currency: contract.currency || 'EGP',
       milestones: ms.map((m) => ({
         title: normalizeText(m.title),
         description: normalizeText(m.description),
@@ -52,7 +52,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
     setProjectDescription(contract.projectDescription || '');
     setExpectedDuration(contract.expectedDuration || '1-2 weeks');
     setTotalAmount(contract.totalAmount ?? '');
-    setCurrency(contract.currency || 'USD');
+    setCurrency(contract.currency || 'EGP');
     setMilestones(normalizeMilestonesForForm(contract));
   }, [contract?._id]);
 
@@ -68,7 +68,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
       projectDescription: normalizeText(projectDescription),
       expectedDuration: expectedDuration || '1-2 weeks',
       totalAmount: round2(totalAmount),
-      currency: currency || 'USD',
+      currency: currency || 'EGP',
       milestones: (Array.isArray(milestones) ? milestones : []).map((m) => ({
         title: normalizeText(m.title),
         description: normalizeText(m.description),
@@ -121,7 +121,6 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
             disabled={!canEdit}
           >
             <option value="EGP">EGP</option>
-            <option value="USD">USD</option>
           </select>
         </div>
         <div>

@@ -31,7 +31,6 @@ import StudentApplications from './pages/student/Applications';
 import StudentApplicationDetails from './pages/student/ApplicationDetails';
 import StudentSubscription from './pages/student/Subscription';
 import StudentPayment from './pages/student/Payment';
-import StudentPaymentUSD from './pages/student/PaymentUSD';
 import StudentNotifications from './pages/student/Notifications';
 import StudentProfile from './pages/student/Profile';
 import StudentReviews from './pages/student/Reviews';
@@ -53,7 +52,6 @@ import ClientApplications from './pages/client/Applications';
 import JobApplicationsDetail from './pages/client/JobApplicationsDetail';
 import ClientPackages from './pages/client/Packages';
 import ClientPayment from './pages/client/Payment';
-import ClientPaymentUSD from './pages/client/PaymentUSD';
 import ClientNotifications from './pages/client/Notifications';
 import ClientProfile from './pages/client/Profile';
 import ClientStartupProfile from './pages/client/StartupProfile';
@@ -157,7 +155,6 @@ function App() {
         <Route path="appeals" element={<StudentAppeals />} />
         <Route path="subscription" element={<StudentSubscription />} />
         <Route path="payment" element={<StudentPayment />} />
-        <Route path="payment-usd" element={<StudentPaymentUSD />} />
         <Route path="notifications" element={<StudentNotifications />} />
         <Route path="profile" element={<StudentProfile />} />
         <Route path="reviews" element={<StudentReviews />} />
@@ -190,7 +187,6 @@ function App() {
         <Route path="students/:studentId" element={<StudentProfileView />} />
         <Route path="packages" element={<ClientPackages />} />
         <Route path="payment" element={<ClientPayment />} />
-        <Route path="payment-usd" element={<ClientPaymentUSD />} />
         <Route path="notifications" element={<ClientNotifications />} />
         <Route path="profile" element={<ClientProfile />} />
         <Route path="startup-profile" element={<ClientStartupProfile />} />

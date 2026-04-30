@@ -167,7 +167,7 @@ const JobForm = () => {
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
     defaultValues: {
       skillsRequired: [],
-      budgetCurrency: 'USD',
+      budgetCurrency: 'EGP',
     },
   });
 
@@ -272,7 +272,7 @@ const JobForm = () => {
         category: job.category || '',
         budgetMin: job.budget?.min || '',
         budgetMax: job.budget?.max || '',
-        budgetCurrency: job.budget?.currency || 'USD',
+        budgetCurrency: job.budget?.currency || 'EGP',
         projectDuration: job.projectDuration || '',
         experienceLevel: job.experienceLevel || '',
       };
@@ -357,7 +357,7 @@ const JobForm = () => {
       budget: {
         min: parseFloat(data.budgetMin),
         max: parseFloat(data.budgetMax),
-        currency: data.budgetCurrency || 'USD',
+        currency: data.budgetCurrency || 'EGP',
       },
       projectDuration: data.projectDuration,
       experienceLevel: data.experienceLevel,
@@ -625,7 +625,6 @@ const JobForm = () => {
             <Select
               label={t.currency}
               options={[
-                { value: 'USD', label: 'USD ($) - US Dollar' },
                 { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
               ]}
               error={errors.budgetCurrency?.message}

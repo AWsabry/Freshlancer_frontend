@@ -12,7 +12,7 @@ import Alert from '../components/common/Alert';
 import logo from '../assets/logos/01.png';
 import { RefreshCw, CheckCircle, XCircle, Eye, EyeOff, Briefcase, Users, Shield, Zap, Star, Globe } from 'lucide-react';
 
-// Country to Currency mapping (USD and EGP only; Egypt -> EGP, others -> USD)
+// Currency for students: EGP is used for all countries
 const COUNTRY_CURRENCY_MAP = { Egypt: 'EGP' };
 
 // Country name to ISO country code mapping (for university filtering)
@@ -701,14 +701,11 @@ const Register = () => {
     setShowConfirmPassword(true);
   };
 
-  // Auto-detect currency when country of study changes
+  // Auto-detect currency when country of study changes (default EGP for all countries)
   useEffect(() => {
-    if (countryOfStudy && COUNTRY_CURRENCY_MAP[countryOfStudy]) {
-      const currency = COUNTRY_CURRENCY_MAP[countryOfStudy];
+    if (countryOfStudy) {
+      const currency = COUNTRY_CURRENCY_MAP[countryOfStudy] || 'EGP';
       setValue('currency', currency);
-    } else if (countryOfStudy) {
-      // Default to USD if country not in map
-      setValue('currency', 'USD');
     }
   }, [countryOfStudy, setValue]);
 
@@ -781,10 +778,10 @@ const Register = () => {
           userData.country = data.countryOfStudy;
         }
         
-        // Determine currency based on country of study
-        const currency = data.countryOfStudy && COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
-          ? COUNTRY_CURRENCY_MAP[data.countryOfStudy] 
-          : 'USD'; // Default to USD if country not found
+        // Determine currency (EGP for all countries)
+        const currency = data.countryOfStudy && COUNTRY_CURRENCY_MAP[data.countryOfStudy]
+          ? COUNTRY_CURRENCY_MAP[data.countryOfStudy]
+          : 'EGP';
         
         // Handle custom university - store the name, backend will create it during registration
         let universityName = data.university?.trim() || '';
@@ -1206,7 +1203,7 @@ const Register = () => {
                     </p>
                     <ul className="text-xs text-blue-700 mt-1 space-y-1">
                       <li>• {t.phoneCode} {COUNTRY_PHONE_CODE_MAP[countryOfStudy] || '+1'}</li>
-                      <li>• {t.currency} {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'USD'}</li>
+                      <li>• {t.currency} {COUNTRY_CURRENCY_MAP[countryOfStudy] || 'EGP'}</li>
                     </ul>
                   </div>
                 )}
@@ -1272,105 +1269,7 @@ const Register = () => {
                 </p>
               </div>
 
-              <div className="md:col-span-2">
-                <Controller
-                  name="university"
-                  control={control}
-                  rules={{ 
-                    required: isOtherUniversity ? (universityAdded ? false : t.customUniversityRequired) : t.universityRequired 
-                  }}
-                  render={({ field }) => (
-                    <>
-                      <UniversitySelect
-                        label={t.university}
-                        placeholder={t.universityPlaceholder}
-                        error={errors.university?.message}
-                        name="university"
-                        value={field.value || ''}
-                        countryCode={countryOfStudy ? COUNTRY_TO_ISO_CODE[countryOfStudy] : undefined}
-                        onChange={(e) => {
-                          console.log('[Register] University onChange called:', e);
-                          console.log('[Register] Event target:', e.target);
-                          const value = e.target?.value || '';
-                          const isOther = e.target?.isOther || value === '__OTHER__';
-                          
-                          console.log('[Register] University value:', value, 'isOther:', isOther);
-                          
-                          setIsOtherUniversity(isOther);
-                          if (isOther) {
-                            field.onChange('__OTHER__');
-                            setCustomUniversityName('');
-                            setUniversityAdded(false);
-                          } else {
-                            field.onChange(value);
-                            setCustomUniversityName('');
-                            setUniversityAdded(false);
-                          }
-                        }}
-                        onBlur={field.onBlur}
-                        required
-                      />
-                      {isOtherUniversity && (
-                        <div className="mt-2">
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <Input
-                                label={t.customUniversity}
-                                placeholder={t.customUniversityPlaceholder}
-                                error={errors.university?.message}
-                                value={customUniversityName}
-                                onChange={(e) => {
-                                  setCustomUniversityName(e.target.value);
-                                  setUniversityAdded(false);
-                                  field.onChange(e.target.value);
-                                }}
-                                onBlur={field.onBlur}
-                                required
-                                disabled={universityAdded}
-                              />
-                            </div>
-                            <div className="flex items-end pb-1">
-                              <Button
-                                type="button"
-                                onClick={async () => {
-                                  if (!customUniversityName || !customUniversityName.trim()) {
-                                    setError(t.customUniversityRequired);
-                                    return;
-                                  }
-                                  if (!countryOfStudy) {
-                                    setError(t.countryOfStudyRequired);
-                                    return;
-                                  }
-                                  
-                                  // Store the university name - backend will create it during registration
-                                  setUniversityAdded(true);
-                                  field.onChange(customUniversityName.trim());
-                                  setError('');
-                                }}
-                                disabled={!customUniversityName?.trim() || !countryOfStudy || universityAdded}
-                                size="sm"
-                              >
-                                {universityAdded ? <CheckCircle className="w-4 h-4" /> : 'Add'}
-                              </Button>
-                            </div>
-                          </div>
-                          {universityAdded && (
-                            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" />
-                              University "{customUniversityName}" will be added after registration
-                            </p>
-                          )}
-                          {!universityAdded && (
-                            <p className="mt-1 text-xs text-gray-500">
-                              Enter your university name and click "Add" to include it
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  )}
-                />
-              </div>
+            
 
               <Input
                 label={t.major}

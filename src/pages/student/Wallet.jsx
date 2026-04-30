@@ -93,10 +93,10 @@ const Wallet = () => {
   const escrow = wallet?.escrow || {};
 
   const currencies = useMemo(() => {
-    const candidates = ['EGP', 'USD'];
+    const candidates = ['EGP'];
     const keys = new Set([...candidates, ...getKeys(balances), ...getKeys(escrow)]);
     const list = Array.from(keys).filter((cur) => getVal(balances, cur) !== 0 || getVal(escrow, cur) !== 0);
-    return list.length > 0 ? list : ['EGP', 'USD'];
+    return list.length > 0 ? list : ['EGP'];
   }, [balances, escrow]);
 
   const minimums = minimumsResp?.data?.minimums || { EGP: 500 };
@@ -194,7 +194,7 @@ const Wallet = () => {
         contractId: c?._id,
         jobTitle: c?.jobPost?.title || 'Project',
         projectDescription: c?.projectDescription || '',
-        currency: c?.currency || 'USD',
+        currency: c?.currency || 'EGP',
         totalAmount: c?.totalAmount || 0,
         contractStatus: c?.status || 'draft',
         otherPartyName: c?.client?.name || 'Client',

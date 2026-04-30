@@ -230,7 +230,7 @@ const JobDetails = () => {
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
-      proposedBudgetCurrency: 'USD',
+      proposedBudgetCurrency: 'EGP',
     },
   });
 
@@ -339,7 +339,7 @@ const JobDetails = () => {
       proposalType: data.proposalType || 'standard',
       proposedBudget: {
         amount: parseFloat(data.proposedBudget),
-        currency: data.proposedBudgetCurrency || 'USD',
+        currency: data.proposedBudgetCurrency || 'EGP',
       },
       estimatedDuration: data.estimatedDuration,
       availabilityCommitment: data.availabilityCommitment,
@@ -381,24 +381,23 @@ const JobDetails = () => {
     }
   }, [job?.categorySpecRequirements]);
 
-  // Initialize/lock answers based on job requirements and defaults
+  // Initialize answers: category default first, else job value as non-binding suggestion only
   useEffect(() => {
     if (!job || !category) return;
     setCategorySpecAnswers((prev) => {
       const next = { ...(prev || {}) };
       applicationSpecs.forEach((spec) => {
-        const isLocked =
-          spec.useInJobPost === true &&
-          jobRequirements &&
-          jobRequirements[spec.key] !== undefined;
+        if (next[spec.key] !== undefined) return;
 
-        if (isLocked) {
-          next[spec.key] = jobRequirements[spec.key];
+        if (spec.defaultValue !== undefined) {
+          next[spec.key] = spec.defaultValue;
           return;
         }
 
-        if (next[spec.key] === undefined && spec.defaultValue !== undefined) {
-          next[spec.key] = spec.defaultValue;
+        const jr = jobRequirements?.[spec.key];
+        if (jr !== undefined && jr !== null && jr !== '') {
+          if (Array.isArray(jr) && jr.length === 0) return;
+          next[spec.key] = jr;
         }
       });
       return next;
@@ -676,7 +675,6 @@ const JobDetails = () => {
             <Select
               label={t.currency}
               options={[
-                { value: 'USD', label: 'USD ($) - US Dollar' },
                 { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
               ]}
               error={errors.proposedBudgetCurrency?.message}
@@ -709,10 +707,6 @@ const JobDetails = () => {
 
               {applicationSpecs.map((spec) => {
                 const required = spec.requiredInApplication === true;
-                const locked =
-                  spec.useInJobPost === true &&
-                  jobRequirements &&
-                  jobRequirements[spec.key] !== undefined;
                 const value = categorySpecAnswers?.[spec.key];
 
                 if (spec.type === 'select') {
@@ -721,12 +715,11 @@ const JobDetails = () => {
                     <div key={spec.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
                       </label>
                       <select
                         className="input"
                         value={value ?? ''}
-                        disabled={locked || isSubmitting}
+                        disabled={isSubmitting}
                         onChange={(e) =>
                           setCategorySpecAnswers((prev) => ({
                             ...(prev || {}),
@@ -752,7 +745,6 @@ const JobDetails = () => {
                     <div key={spec.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {options.map((o) => {
@@ -762,7 +754,7 @@ const JobDetails = () => {
                               <input
                                 type="checkbox"
                                 checked={checked}
-                                disabled={locked || isSubmitting}
+                                disabled={isSubmitting}
                                 onChange={(e) => {
                                   setCategorySpecAnswers((prev) => {
                                     const prevArr = Array.isArray(prev?.[spec.key]) ? prev[spec.key] : [];
@@ -788,13 +780,12 @@ const JobDetails = () => {
                     <div key={spec.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
                       </label>
                       <input
                         className="input"
                         type="number"
                         value={value ?? ''}
-                        disabled={locked || isSubmitting}
+                        disabled={isSubmitting}
                         min={spec.min ?? undefined}
                         max={spec.max ?? undefined}
                         onChange={(e) =>
@@ -814,7 +805,7 @@ const JobDetails = () => {
                       <input
                         type="checkbox"
                         checked={value === true}
-                        disabled={locked || isSubmitting}
+                        disabled={isSubmitting}
                         onChange={(e) =>
                           setCategorySpecAnswers((prev) => ({
                             ...(prev || {}),
@@ -825,7 +816,6 @@ const JobDetails = () => {
                       />
                       <span className="text-sm font-medium text-gray-700">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked)</span>}
                       </span>
                     </div>
                   );

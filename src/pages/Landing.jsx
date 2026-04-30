@@ -47,6 +47,8 @@ import {
   CreditCard
 } from 'lucide-react';
 
+const currentYear = new Date().getFullYear();
+
 const translations = {
   en: {
     languageLabel: 'Language',
@@ -54,7 +56,7 @@ const translations = {
     seo: {
       title: 'Freshlancer - Hire Talented Students & Find Freelance Jobs | #1 Student Freelance Platform',
       description: 'Connect with skilled student freelancers for your projects or find freelance jobs as a student. 10,000+ verified students, secure escrow payments, client wallet protection, and quality guaranteed. Join Freshlancer today!',
-      keywords: 'student freelancers, hire students, freelance jobs for students, student marketplace, freelance platform, find student talent, student jobs online, remote student work, hire freelance students, student gigs, secure escrow payments, client wallet, milestone payments, secure payment gateway, PayMob, PayPal, payment protection',
+      keywords: 'student freelancers, hire students, freelance jobs for students, student marketplace, freelance platform, find student talent, student jobs online, remote student work, hire freelance students, student gigs, secure escrow payments, client wallet, milestone payments, secure payment gateway, PayMob, payment protection',
       ogDescription: 'The premier platform connecting skilled students with clients worldwide. Secure escrow payments, client wallet protection, and milestone-based transactions. Find freelance work or hire top student talent.',
       organizationDescription: 'Leading student freelance marketplace connecting talented students with businesses worldwide. Secure payment system with escrow protection and client wallet management.',
       schemaDescription: 'Premier platform connecting skilled student freelancers with clients worldwide for remote work opportunities. Secure escrow payments, milestone funding, and PCI-DSS compliant payment processing.'
@@ -71,7 +73,7 @@ const translations = {
       welcome: 'Welcome'
     },
     hero: {
-      badge: 'Top-Rated Student Freelance Marketplace 2025',
+      badge: `Top-Rated Student Freelance Marketplace ${currentYear}`,
       headingLine1: 'Hire Talented',
       headingHighlight: 'Student Freelancers',
       description: 'Connect with skilled university students for your projects or discover freelance opportunities. Join 10,000+ students and businesses building success together.',
@@ -107,7 +109,7 @@ const translations = {
       },
       {
         title: 'Secure Payment Protection',
-        description: 'Industry-leading secure payment system with escrow protection, client wallet management, milestone-based payments, and PCI-DSS compliant gateways (PayMob, PayPal) for safe transactions'
+        description: 'Industry-leading secure payment system with escrow protection, client wallet management, milestone-based payments, and PCI-DSS compliant gateways (PayMob) for safe transactions'
       },
       {
         title: 'Fast Hiring Process',
@@ -222,7 +224,7 @@ const translations = {
         },
         {
           title: 'PCI-DSS Compliant Gateways',
-          description: 'We use certified payment processors (PayMob for EGP, PayPal for USD) that meet the highest security standards. Your payment information is never stored on our servers.',
+          description: 'We use certified payment processors (PayMob for EGP) that meet the highest security standards. Your payment information is never stored on our servers.',
           icon: 'Lock'
         },
         {
@@ -260,7 +262,7 @@ const translations = {
           description: 'Start earning income while you study',
           benefits: [
             'Competitive rates for student freelancers',
-            'Flexible payment options (USD and EGP)',
+            'Secure payments in EGP via PayMob',
             'Secure milestone-based payments',
             'Direct deposits to your wallet',
             'Track earnings and transaction history',
@@ -329,7 +331,7 @@ const translations = {
       ],
       cards: [
         { title: 'Verified Students', description: 'Our platform hosts thousands of verified student freelancers from universities worldwide, each with unique skills and fresh perspectives.' },
-        { title: 'Secure Payment System', description: 'We use industry-leading escrow protection with client wallet management, milestone-based payments, and PCI-DSS compliant gateways (PayMob, PayPal) to ensure safe transactions for both students and clients, with full transparency and money-back guarantees.' },
+        { title: 'Secure Payment System', description: 'We use industry-leading escrow protection with client wallet management, milestone-based payments, and PCI-DSS compliant gateways (PayMob) to ensure safe transactions for both students and clients, with full transparency and money-back guarantees.' },
         { title: 'Market competitive prices', description: 'We offer competitive rates for students, allowing you to earn more while learning and building your portfolio.' }
       ]
     },
@@ -368,7 +370,7 @@ const translations = {
       list: [
         {
           q: 'How much does it cost to use Freshlancer?',
-          a: 'Creating an account is 100% free for both students and clients. Students can apply to 10 jobs per month on the free plan, or upgrade to Premium for $4.99/month to apply to 100 jobs. Clients can post unlimited jobs and only pay when they hire.'
+          a: 'Creating an account is 100% free for both students and clients. Students can apply to 10 jobs per month on the free plan, or upgrade to Premium (EGP) to apply to 100 jobs. Clients can post unlimited jobs and only pay when they hire.'
         },
         {
           q: 'Are student freelancers on Freshlancer verified?',
@@ -380,7 +382,7 @@ const translations = {
         },
         {
           q: 'How does payment protection work on Freshlancer?',
-          a: 'We use secure escrow payment systems with client wallet management (PayMob for EGP, PayPal for USD) to protect both parties. Funds are held securely in escrow accounts until milestone completion. Clients can fund milestones through their secure wallet, and funds are only released upon approval. All transactions are PCI-DSS compliant and encrypted for maximum security.'
+          a: 'We use secure escrow payment systems with client wallet management (PayMob for EGP) to protect both parties. Funds are held securely in escrow accounts until milestone completion. Clients can fund milestones through their secure wallet, and funds are only released upon approval. All transactions are PCI-DSS compliant and encrypted for maximum security.'
         }
       ]
     },
@@ -396,7 +398,7 @@ const translations = {
       studentsLinks: ['Find Jobs', 'Build Portfolio', 'Premium Plans', 'Success Stories'],
       clientsTitle: 'For Clients',
       clientsLinks: ['Post Jobs', 'Find Talent', 'Pricing', 'How It Works'],
-      copyright: '© 2025 Freshlancer - Premier Student Freelance Platform. All rights reserved.'
+      copyright: `© ${currentYear} Freshlancer - Premier Student Freelance Platform. All rights reserved.`
     }
   },
   it: {
@@ -405,7 +407,7 @@ const translations = {
     seo: {
       title: 'Freshlancer - Assumi studenti talentuosi e trova lavori freelance | Piattaforma n.1 per studenti freelance',
       description: 'Metti in contatto studenti freelance qualificati con i tuoi progetti oppure trova lavori freelance come studente. Oltre 10.000 studenti verificati, pagamenti escrow sicuri, protezione del portafoglio clienti e qualità garantita. Unisciti a Freshlancer oggi.',
-      keywords: 'studenti freelance, assumere studenti, lavori freelance per studenti, marketplace studenti, piattaforma freelance, trovare talenti studenti, lavori online per studenti, lavoro remoto studenti, assumere studenti freelance, incarichi per studenti, pagamenti escrow sicuri, portafoglio clienti, pagamenti milestone, gateway di pagamento sicuro, PayMob, PayPal, protezione pagamenti',
+      keywords: 'studenti freelance, assumere studenti, lavori freelance per studenti, marketplace studenti, piattaforma freelance, trovare talenti studenti, lavori online per studenti, lavoro remoto studenti, assumere studenti freelance, incarichi per studenti, pagamenti escrow sicuri, portafoglio clienti, pagamenti milestone, gateway di pagamento sicuro, PayMob, protezione pagamenti',
       ogDescription: 'La principale piattaforma che mette in contatto studenti qualificati con clienti in tutto il mondo. Pagamenti escrow sicuri, protezione del portafoglio clienti e transazioni basate su milestone. Trova lavoro freelance o assumi i migliori talenti studenti.',
       organizationDescription: 'Marketplace leader per studenti freelance che collega studenti di talento con aziende in tutto il mondo. Sistema di pagamento sicuro con protezione escrow e gestione del portafoglio clienti.',
       schemaDescription: 'Piattaforma leader che collega studenti freelance qualificati con clienti in tutto il mondo per opportunità di lavoro remoto. Pagamenti escrow sicuri, finanziamento milestone e elaborazione pagamenti conforme PCI-DSS.'
@@ -422,7 +424,7 @@ const translations = {
       welcome: 'Ciao'
     },
     hero: {
-      badge: 'Marketplace freelance per studenti valutato al top 2025',
+      badge: `Marketplace freelance per studenti valutato al top ${currentYear}`,
       headingLine1: 'Assumi talentuosi',
       headingHighlight: 'studenti freelance',
       description: 'Metti in contatto studenti universitari qualificati con i tuoi progetti oppure scopri opportunità freelance. Oltre 10.000 studenti e aziende che costruiscono il successo insieme.',
@@ -458,7 +460,7 @@ const translations = {
       },
       {
         title: 'Pagamenti sicuri con protezione',
-        description: 'Sistema di pagamento sicuro all\'avanguardia con protezione escrow, gestione del portafoglio clienti, pagamenti basati su milestone e gateway conformi PCI-DSS (PayMob, PayPal) per transazioni sicure'
+        description: 'Sistema di pagamento sicuro all\'avanguardia con protezione escrow, gestione del portafoglio clienti, pagamenti basati su milestone e gateway conformi PCI-DSS (PayMob) per transazioni sicure'
       },
       {
         title: 'Assunzioni rapide',
@@ -573,7 +575,7 @@ const translations = {
         },
         {
           title: 'Gateway Conformi PCI-DSS',
-          description: 'Utilizziamo processori di pagamento certificati (PayMob per EGP, PayPal per USD) che soddisfano i più alti standard di sicurezza. Le tue informazioni di pagamento non sono mai memorizzate sui nostri server.',
+          description: 'Utilizziamo processori di pagamento certificati (PayMob per EGP) che soddisfano i più alti standard di sicurezza. Le tue informazioni di pagamento non sono mai memorizzate sui nostri server.',
           icon: 'Lock'
         },
         {
@@ -611,7 +613,7 @@ const translations = {
           description: 'Inizia a guadagnare mentre studi',
           benefits: [
             'Tariffe competitive per studenti freelance',
-            'Opzioni di pagamento flessibili (USD e EGP)',
+            'Pagamenti sicuri in EGP tramite PayMob',
             'Pagamenti sicuri basati su milestone',
             'Depositi diretti nel tuo portafoglio',
             'Traccia guadagni e cronologia transazioni',
@@ -680,7 +682,7 @@ const translations = {
       ],
       cards: [
         { title: 'Studenti verificati', description: 'Ospitiamo migliaia di studenti freelance verificati da università di tutto il mondo, ciascuno con competenze uniche e idee fresche.' },
-        { title: 'Pagamenti sicuri', description: 'Usiamo protezione escrow di livello enterprise con gestione del portafoglio clienti, pagamenti basati su milestone e gateway conformi PCI-DSS (PayMob, PayPal) per garantire transazioni sicure per studenti e clienti, con piena trasparenza e garanzie di rimborso.' },
+        { title: 'Pagamenti sicuri', description: 'Usiamo protezione escrow di livello enterprise con gestione del portafoglio clienti, pagamenti basati su milestone e gateway conformi PCI-DSS (PayMob) per garantire transazioni sicure per studenti e clienti, con piena trasparenza e garanzie di rimborso.' },
         { title: 'Prezzi competitivi', description: 'Offriamo tariffe competitive per gli studenti, permettendoti di guadagnare di più mentre impari e costruisci il tuo portfolio.' }
       ]
     },
@@ -719,7 +721,7 @@ const translations = {
       list: [
         {
           q: 'Quanto costa usare Freshlancer?',
-          a: "Creare un account è gratuito al 100% per studenti e clienti. Gli studenti possono candidarsi a 10 lavori al mese con il piano gratuito o passare a Premium a 4,99 $/mese per candidarsi a 100 lavori. I clienti possono pubblicare lavori illimitati e pagano solo quando assumono."
+          a: "Creare un account è gratuito al 100% per studenti e clienti. Gli studenti possono candidarsi a 10 lavori al mese con il piano gratuito o passare a Premium (EGP) per candidarsi a 100 lavori. I clienti possono pubblicare lavori illimitati e pagano solo quando assumono."
         },
         {
           q: 'Gli studenti freelance su Freshlancer sono verificati?',
@@ -731,7 +733,7 @@ const translations = {
         },
         {
           q: 'Come funziona la protezione dei pagamenti su Freshlancer?',
-          a: 'Usiamo sistemi di pagamento sicuri con escrow e gestione del portafoglio clienti (PayMob per EGP, PayPal per USD) per proteggere entrambe le parti. I fondi sono conservati in sicurezza in account escrow fino al completamento delle milestone. I clienti possono finanziare le milestone tramite il loro portafoglio sicuro, e i fondi vengono rilasciati solo con approvazione. Tutte le transazioni sono conformi PCI-DSS e crittografate per massima sicurezza.'
+          a: 'Usiamo sistemi di pagamento sicuri con escrow e gestione del portafoglio clienti (PayMob per EGP) per proteggere entrambe le parti. I fondi sono conservati in sicurezza in account escrow fino al completamento delle milestone. I clienti possono finanziare le milestone tramite il loro portafoglio sicuro, e i fondi vengono rilasciati solo con approvazione. Tutte le transazioni sono conformi PCI-DSS e crittografate per massima sicurezza.'
         }
       ]
     },
@@ -747,7 +749,7 @@ const translations = {
       studentsLinks: ['Trova lavori', 'Crea portfolio', 'Piani Premium', 'Storie di successo'],
       clientsTitle: 'Per clienti',
       clientsLinks: ['Pubblica lavori', 'Trova talenti', 'Prezzi', 'Come funziona'],
-      copyright: '© 2025 Freshlancer - Piattaforma leader per studenti freelance. Tutti i diritti riservati.'
+      copyright: `© ${currentYear} Freshlancer - Piattaforma leader per studenti freelance. Tutti i diritti riservati.`
     }
   }
 };
@@ -1051,8 +1053,8 @@ const Landing = () => {
           "url": window.location.origin,
           "logo": `${window.location.origin}/logo.png`,
           "description": t.seo.organizationDescription,
-          "paymentAccepted": ["PayMob", "PayPal"],
-          "currenciesAccepted": "EGP, USD"
+          "paymentAccepted": ["PayMob"],
+          "currenciesAccepted": "EGP"
         })}
       </script>
 
@@ -1117,7 +1119,7 @@ const Landing = () => {
               "name": "How are client payments protected on Freshlancer?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "We use secure escrow payment systems with client wallet management. All milestone payments are held in secure escrow accounts until project completion. Clients fund milestones through their secure wallet, and funds are only released upon approval. We use PCI-DSS compliant payment gateways (PayMob for EGP, PayPal for USD) and provide a comprehensive dispute resolution system for appeals."
+                "text": "We use secure escrow payment systems with client wallet management. All milestone payments are held in secure escrow accounts until project completion. Clients fund milestones through their secure wallet, and funds are only released upon approval. We use PCI-DSS compliant payment gateways (PayMob for EGP) and provide a comprehensive dispute resolution system for appeals."
               }
             },
             {

@@ -634,7 +634,6 @@ const Jobs = () => {
                 <Select
                   options={[
                     { value: '', label: t.allCurrencies },
-                    { value: 'USD', label: 'USD ($) - US Dollar' },
                     { value: 'EGP', label: 'EGP (£) - Egyptian Pound' },
                   ]}
                   value={currency}
