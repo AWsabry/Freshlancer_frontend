@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Button from '../common/Button';
+import { getContractComponentsT, DURATION_VALUES } from '../../locales/contractComponentsLocales';
 
 const round2 = (n) => {
   const num = typeof n === 'string' ? Number(n) : n;
@@ -9,52 +10,68 @@ const round2 = (n) => {
 
 const normalizeText = (s) => (typeof s === 'string' ? s.trim() : '');
 
-function normalizeMilestonesForForm(contract) {
+function normalizeMilestonesForForm(contract, defaultMilestoneTitle, defaultDuration) {
+  const defDur = defaultDuration || DURATION_VALUES.default;
   const ms = contract?.milestones || [];
   if (!Array.isArray(ms) || ms.length === 0) {
-    return [{ title: 'Final delivery', description: '', percent: 100, expectedDuration: contract?.expectedDuration || '1-2 weeks' }];
+    return [
+      {
+        title: defaultMilestoneTitle,
+        description: '',
+        percent: 100,
+        expectedDuration: contract?.expectedDuration || defDur,
+      },
+    ];
   }
   return ms.map((m) => ({
     title: m?.plan?.title ?? m?.title ?? '',
     description: m?.plan?.description ?? m?.description ?? '',
     percent: m?.plan?.percent ?? m?.percent ?? 0,
-    expectedDuration: m?.plan?.expectedDuration ?? m?.expectedDuration ?? contract?.expectedDuration ?? '1-2 weeks',
+    expectedDuration: m?.plan?.expectedDuration ?? m?.expectedDuration ?? contract?.expectedDuration ?? defDur,
     _id: m?._id,
   }));
 }
 
-export default function ContractEditor({ contract, canEdit, onSave, saving, highlightFields = [] }) {
+export default function ContractEditor({
+  contract,
+  canEdit,
+  onSave,
+  saving,
+  highlightFields = [],
+  language = 'en',
+}) {
+  const t = useMemo(() => getContractComponentsT(language), [language]);
   const [projectDescription, setProjectDescription] = useState('');
-  const [expectedDuration, setExpectedDuration] = useState('1-2 weeks');
+  const [expectedDuration, setExpectedDuration] = useState(DURATION_VALUES.default);
   const [totalAmount, setTotalAmount] = useState('');
   const [currency, setCurrency] = useState('EGP');
   const [milestones, setMilestones] = useState([]);
 
   const initialSnapshot = useMemo(() => {
     if (!contract) return null;
-    const ms = normalizeMilestonesForForm(contract);
+    const ms = normalizeMilestonesForForm(contract, t.defaultMilestoneTitle, DURATION_VALUES.default);
     return {
       projectDescription: normalizeText(contract.projectDescription),
-      expectedDuration: contract.expectedDuration || '1-2 weeks',
+      expectedDuration: contract.expectedDuration || DURATION_VALUES.default,
       totalAmount: round2(contract.totalAmount),
       currency: contract.currency || 'EGP',
       milestones: ms.map((m) => ({
         title: normalizeText(m.title),
         description: normalizeText(m.description),
         percent: round2(m.percent),
-        expectedDuration: m.expectedDuration || contract.expectedDuration || '1-2 weeks',
+        expectedDuration: m.expectedDuration || contract.expectedDuration || DURATION_VALUES.default,
       })),
     };
-  }, [contract?._id]);
+  }, [contract?._id, t.defaultMilestoneTitle]);
 
   useEffect(() => {
     if (!contract) return;
     setProjectDescription(contract.projectDescription || '');
-    setExpectedDuration(contract.expectedDuration || '1-2 weeks');
+    setExpectedDuration(contract.expectedDuration || DURATION_VALUES.default);
     setTotalAmount(contract.totalAmount ?? '');
     setCurrency(contract.currency || 'EGP');
-    setMilestones(normalizeMilestonesForForm(contract));
-  }, [contract?._id]);
+    setMilestones(normalizeMilestonesForForm(contract, t.defaultMilestoneTitle, DURATION_VALUES.default));
+  }, [contract?._id, t.defaultMilestoneTitle]);
 
   const percentTotal = useMemo(() => {
     return milestones.reduce((sum, m) => sum + (Number(m.percent) || 0), 0);
@@ -66,14 +83,14 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
     if (!canEdit || !initialSnapshot) return false;
     const currentSnapshot = {
       projectDescription: normalizeText(projectDescription),
-      expectedDuration: expectedDuration || '1-2 weeks',
+      expectedDuration: expectedDuration || DURATION_VALUES.default,
       totalAmount: round2(totalAmount),
       currency: currency || 'EGP',
       milestones: (Array.isArray(milestones) ? milestones : []).map((m) => ({
         title: normalizeText(m.title),
         description: normalizeText(m.description),
         percent: round2(m.percent),
-        expectedDuration: m.expectedDuration || expectedDuration || '1-2 weeks',
+        expectedDuration: m.expectedDuration || expectedDuration || DURATION_VALUES.default,
       })),
     };
     return JSON.stringify(currentSnapshot) !== JSON.stringify(initialSnapshot);
@@ -81,10 +98,21 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
 
   const highlight = (field) => Array.isArray(highlightFields) && highlightFields.includes(field);
 
+  const durationRows = useMemo(
+    () => [
+      { value: DURATION_VALUES.lessThanWeek, label: t.dLess },
+      { value: DURATION_VALUES.w1to2, label: t.d1to2 },
+      { value: DURATION_VALUES.w2to4, label: t.d2to4 },
+      { value: DURATION_VALUES.m1to3, label: t.d1to3 },
+      { value: DURATION_VALUES.moreThan3, label: t.dMore },
+    ],
+    [t]
+  );
+
   return (
     <div className="space-y-4">
       <div className={highlight('projectDescription') ? 'border border-yellow-300 bg-yellow-50 rounded-lg p-3' : ''}>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Project description</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t.projectDescription}</label>
         <textarea
           value={projectDescription}
           onChange={(e) => setProjectDescription(e.target.value)}
@@ -101,7 +129,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
         }`}
       >
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Total amount</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t.totalAmount}</label>
           <input
             value={totalAmount}
             onChange={(e) => setTotalAmount(e.target.value)}
@@ -113,7 +141,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t.currency}</label>
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
@@ -124,18 +152,18 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contract duration</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t.contractDuration}</label>
           <select
             value={expectedDuration}
             onChange={(e) => setExpectedDuration(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
             disabled={!canEdit}
           >
-            <option value="Less than 1 week">Less than 1 week</option>
-            <option value="1-2 weeks">1-2 weeks</option>
-            <option value="2-4 weeks">2-4 weeks</option>
-            <option value="1-3 months">1-3 months</option>
-            <option value="More than 3 months">More than 3 months</option>
+            {durationRows.map((row) => (
+              <option key={row.value} value={row.value}>
+                {row.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -146,27 +174,32 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
         }`}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Installments / milestones</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t.milestonesHeading}</h3>
           {canEdit ? (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setMilestones((prev) => [...prev, { title: '', description: '', percent: 0 }])}
+              onClick={() =>
+                setMilestones((prev) => [
+                  ...prev,
+                  { title: '', description: '', percent: 0, expectedDuration: expectedDuration || DURATION_VALUES.default },
+                ])
+              }
             >
-              Add milestone
+              {t.addMilestone}
             </Button>
           ) : null}
         </div>
 
         <p className={`text-xs ${Math.round(percentTotal * 100) / 100 === 100 ? 'text-green-600' : 'text-red-600'}`}>
-          Percent total: {Math.round(percentTotal * 100) / 100}% (must be 100%)
+          {t.percentTotal(Math.round(percentTotal * 100) / 100)}
         </p>
 
         <div className="space-y-3">
           {milestones.map((m, idx) => (
             <div key={m._id || idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 border rounded-lg p-3">
               <div className="sm:col-span-4">
-                <label className="block text-xs text-gray-600 mb-1">Title</label>
+                <label className="block text-xs text-gray-600 mb-1">{t.fieldTitle}</label>
                 <input
                   value={m.title}
                   onChange={(e) => {
@@ -178,7 +211,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
                 />
               </div>
               <div className="sm:col-span-4">
-                <label className="block text-xs text-gray-600 mb-1">Description</label>
+                <label className="block text-xs text-gray-600 mb-1">{t.fieldDescription}</label>
                 <input
                   value={m.description}
                   onChange={(e) => {
@@ -190,7 +223,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs text-gray-600 mb-1">Percent</label>
+                <label className="block text-xs text-gray-600 mb-1">{t.fieldPercent}</label>
                 <input
                   value={m.percent}
                   onChange={(e) => {
@@ -205,9 +238,9 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs text-gray-600 mb-1">Expected duration</label>
+                <label className="block text-xs text-gray-600 mb-1">{t.fieldExpectedDuration}</label>
                 <select
-                  value={m.expectedDuration}
+                  value={m.expectedDuration || expectedDuration || DURATION_VALUES.default}
                   onChange={(e) => {
                     const v = e.target.value;
                     setMilestones((prev) => prev.map((x, i) => (i === idx ? { ...x, expectedDuration: v } : x)));
@@ -215,11 +248,11 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   disabled={!canEdit}
                 >
-                  <option value="Less than 1 week">Less than 1 week</option>
-                  <option value="1-2 weeks">1-2 weeks</option>
-                  <option value="2-4 weeks">2-4 weeks</option>
-                  <option value="1-3 months">1-3 months</option>
-                  <option value="More than 3 months">More than 3 months</option>
+                  {durationRows.map((row) => (
+                    <option key={row.value} value={row.value}>
+                      {row.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -230,7 +263,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
                     className="text-xs text-red-600 hover:text-red-700"
                     onClick={() => setMilestones((prev) => prev.filter((_, i) => i !== idx))}
                   >
-                    Remove
+                    {t.remove}
                   </button>
                 </div>
               ) : null}
@@ -260,7 +293,7 @@ export default function ContractEditor({ contract, canEdit, onSave, saving, high
             disabled={!canSave || !isDirty || saving}
             loading={saving}
           >
-            Save contract
+            {t.saveContract}
           </Button>
         </div>
       ) : null}

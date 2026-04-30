@@ -21,6 +21,7 @@ import {
   List,
   Crown,
 } from 'lucide-react';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 
 const translations = {
   en: {
@@ -67,6 +68,28 @@ const translations = {
     compactView: 'Vista Compatta',
     viewMode: 'Modalità Visualizzazione',
   },
+  ar: {
+    loading: 'جاري تحميل الطلاب المفتوحين...',
+    error: 'خطأ',
+    failedToLoad: 'تعذر تحميل الطلاب المفتوحين',
+    unlockedStudents: 'الطلاب المفتوحون',
+    allUnlocked: 'كل من فتحت ملفاتهم',
+    student: 'طالب',
+    students: 'طلاب',
+    noUnlockedYet: 'لا يوجد طلاب بعد',
+    noUnlockedMessage: 'لم تفتح بعد أي ملف طالب. تصفح الطلبات لفتح الملفات.',
+    viewApplications: 'عرض الطلبات',
+    skills: 'مهارات',
+    more: 'أخرى',
+    joined: 'انضم',
+    viewFullProfile: 'الملف الكامل',
+    available: 'متاح',
+    busy: 'مشغول',
+    unavailable: 'غير متاح',
+    detailedView: 'عرض مفصّل',
+    compactView: 'عرض مضغوط',
+    viewMode: 'نمط العرض',
+  },
 };
 
 const UnlockedStudents = () => {
@@ -96,6 +119,7 @@ const UnlockedStudents = () => {
   }, []);
 
   const t = translations[language] || translations.en;
+  const dateLoc = getDashboardDateLocale(language);
 
   // Helper function to get photo URL
   const getPhotoUrl = useCallback((photo) => {
@@ -131,7 +155,7 @@ const UnlockedStudents = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'N/A';
-      return date.toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
+      return date.toLocaleDateString(dateLoc, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -139,7 +163,7 @@ const UnlockedStudents = () => {
     } catch (error) {
       return 'N/A';
     }
-  }, [language]);
+  }, [dateLoc]);
 
   // State for image errors
   const [imageErrors, setImageErrors] = useState({});

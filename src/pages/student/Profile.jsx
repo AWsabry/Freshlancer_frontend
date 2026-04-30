@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import Cropper from 'react-easy-crop';
 import { authService } from '../../services/authService';
+import { studentProfileAr } from '../../locales/studentProfileAr';
 import { verificationService } from '../../services/verificationService';
 import { subscriptionService } from '../../services/subscriptionService';
 import Card from '../../components/common/Card';
@@ -16,6 +17,8 @@ import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import TagInput from '../../components/common/TagInput';
 import UniversitySelect from '../../components/common/UniversitySelect';
+import ConnectedPlatformsCard from '../../components/profile/ConnectedPlatformsCard';
+import PlatformBadgesCard from '../../components/profile/PlatformBadgesCard';
 import {
   User,
   Mail,
@@ -49,6 +52,7 @@ import {
 import { API_BASE_URL } from '../../config/env';
 import { logger } from '../../utils/logger';
 import { getUniversityName, getUniversityId } from '../../utils/universityHelpers';
+import { externalProfilesService } from '../../services/externalProfilesService';
 
 // Country name to ISO country code mapping (for university filtering)
 const COUNTRY_TO_ISO_CODE = {
@@ -462,6 +466,7 @@ const translations = {
     completed: 'Completato',
     verificationDocument: 'Documento di Verifica',
   },
+  ar: studentProfileAr,
 };
 
 // Country to Currency mapping (USD and EGP only)
@@ -517,7 +522,7 @@ const Profile = () => {
     };
   }, []);
 
-  const t = translations[language] || translations.en;
+  const t = { ...translations.en, ...(translations[language] || {}) };
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control } = useForm();
   const { register: registerVerification, handleSubmit: handleSubmitVerification, formState: { errors: verificationErrors }, reset: resetVerification, setValue: setValueVerification } = useForm();
@@ -532,9 +537,18 @@ const Profile = () => {
     },
   });
 
+  // Fetch external profiles block (connected platforms)
+  const { data: externalProfilesData } = useQuery({
+    queryKey: ['externalProfilesMe'],
+    queryFn: () => externalProfilesService.getMe(),
+    retry: 1,
+  });
+
   const user = userData?.data?.user;
   const studentProfile = user?.studentProfile;
   const isPremium = studentProfile?.subscriptionTier === 'premium';
+  const externalProfiles =
+    externalProfilesData?.data?.externalProfiles || studentProfile?.externalProfiles || {};
 
   // Auto-fill institution name with university name when user data is loaded
   useEffect(() => {
@@ -620,6 +634,7 @@ const Profile = () => {
     mutationFn: (data) => authService.updateProfile(data),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries(['userProfile']);
+      queryClient.invalidateQueries(['externalProfilesMe']);
       // Only close modal and reset if it was opened (not for skills-only updates)
       if (showEditModal) {
         setShowEditModal(false);
@@ -642,6 +657,33 @@ const Profile = () => {
       if (modalContent) {
         modalContent.scrollTop = 0;
       }
+    },
+  });
+
+  const [syncingProviderKey, setSyncingProviderKey] = useState(null);
+
+  const syncAllPlatformsMutation = useMutation({
+    mutationFn: ({ force = false } = {}) => externalProfilesService.syncAll({ force }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['externalProfilesMe']);
+      queryClient.invalidateQueries(['userProfile']);
+    },
+    onError: (error) => {
+      alert(error?.message || error?.response?.data?.message || 'Sync failed');
+    },
+  });
+
+  const syncOnePlatformMutation = useMutation({
+    mutationFn: ({ provider, force = false }) =>
+      externalProfilesService.syncOne(provider, { force }),
+    onSuccess: () => {
+      setSyncingProviderKey(null);
+      queryClient.invalidateQueries(['externalProfilesMe']);
+      queryClient.invalidateQueries(['userProfile']);
+    },
+    onError: (error) => {
+      setSyncingProviderKey(null);
+      alert(error?.message || error?.response?.data?.message || 'Sync failed');
     },
   });
 
@@ -688,6 +730,24 @@ const Profile = () => {
         setValue('studentProfile.socialLinks.behance', studentProfile.socialLinks?.behance || '');
         setValue('studentProfile.socialLinks.telegram', studentProfile.socialLinks?.telegram || '');
         setValue('studentProfile.socialLinks.whatsapp', studentProfile.socialLinks?.whatsapp || '');
+        // External platforms usernames
+        const providers = externalProfiles?.providers || {};
+        setValue(
+          'studentProfile.externalProfiles.providers.leetcode.username',
+          providers.leetcode?.username || ''
+        );
+        setValue(
+          'studentProfile.externalProfiles.providers.hackerrank.username',
+          providers.hackerrank?.username || ''
+        );
+        setValue(
+          'studentProfile.externalProfiles.providers.codeforces.username',
+          providers.codeforces?.username || ''
+        );
+        setValue(
+          'studentProfile.externalProfiles.providers.github.username',
+          providers.github?.username || ''
+        );
         // Set skills - handle both array of objects and array of strings
         const skills = studentProfile.skills || [];
         setValue('studentProfile.skills', skills);
@@ -1457,6 +1517,19 @@ const Profile = () => {
               )}
             </Card>
           )}
+
+          {/* Platform Badges (from connected platforms) */}
+          <PlatformBadgesCard
+            externalProfiles={externalProfiles}
+            iconMap={{
+              leetcode: '/LeetCode.png.webp',
+              hackerrank: '/hackerrank.svg',
+              codeforces: '/CodeForces.png.webp',
+              github: '/Github.svg',
+            }}
+            syncingAll={syncAllPlatformsMutation.isPending}
+            onSyncAll={() => syncAllPlatformsMutation.mutate({ force: false })}
+          />
         </div>
 
         {/* Right Column - Education, etc. */}
@@ -1679,6 +1752,24 @@ const Profile = () => {
               </div>
             </Card>
           )}
+
+          {/* Connected Platforms */}
+          <ConnectedPlatformsCard
+            externalProfiles={externalProfiles}
+            iconMap={{
+              leetcode: '/LeetCode.png.webp',
+              hackerrank: '/hackerrank.svg',
+              codeforces: '/CodeForces.png.webp',
+              github: '/Github.svg',
+            }}
+            syncingAll={syncAllPlatformsMutation.isPending}
+            syncingProviderKey={syncingProviderKey}
+            onSyncAll={() => syncAllPlatformsMutation.mutate({ force: false })}
+            onSyncProvider={(provider) => {
+              setSyncingProviderKey(provider);
+              syncOnePlatformMutation.mutate({ provider, force: false });
+            }}
+          />
 
           {/* Student Verification */}
           <Card title={t.studentVerification}>
@@ -2828,6 +2919,54 @@ const Profile = () => {
                 error={errors.studentProfile?.socialLinks?.whatsapp?.message}
                 placeholder={t.whatsappPlaceholder}
               />
+            </div>
+          </div>
+
+          {/* Connected Platforms Section */}
+          <div className="pt-2">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
+              Connected Platforms
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-3">
+              Add your usernames so your profile can show badges and public stats.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <Input
+                label="LeetCode username"
+                {...register('studentProfile.externalProfiles.providers.leetcode.username')}
+                placeholder="e.g. neetcode"
+              />
+              <Input
+                label="HackerRank username"
+                {...register('studentProfile.externalProfiles.providers.hackerrank.username')}
+                placeholder="e.g. myhackerrank"
+              />
+              <Input
+                label="Codeforces handle"
+                {...register('studentProfile.externalProfiles.providers.codeforces.username')}
+                placeholder="e.g. tourist"
+              />
+              <Input
+                label="GitHub username"
+                {...register('studentProfile.externalProfiles.providers.github.username')}
+                placeholder="e.g. octocat"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => syncAllPlatformsMutation.mutate({ force: true })}
+                loading={syncAllPlatformsMutation.isPending}
+                disabled={syncAllPlatformsMutation.isPending}
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Sync now
+              </Button>
+              <span className="text-[10px] sm:text-xs text-gray-500 self-center">
+                Sync pulls public data; some providers may be link-only.
+              </span>
             </div>
           </div>
 

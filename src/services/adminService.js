@@ -131,4 +131,33 @@ export const adminService = {
   getPlatformIncome: async (params = {}) => {
     return api.get('/admin/platform-income', { params });
   },
+
+  /**
+   * Admin email center
+   * FormData fields:
+   * - audience: students|clients|both
+   * - mode: all|emails
+   * - emails: string (comma/newline separated) when mode=emails
+   * - subject: string
+   * - htmlBody: string
+   * - textBody: string
+   * - wrap: true|false
+   * - attachments: File[]
+   * - inlineImages: File[]
+   */
+  previewAdminEmail: async (formData) => {
+    return api.post('/admin/emails/preview', formData);
+  },
+
+  sendAdminEmail: async (formData) => {
+    return api.post('/admin/emails/send', formData);
+  },
+
+  listAdminEmailCampaigns: async (params = {}) => {
+    return api.get('/admin/emails', { params });
+  },
+
+  getAdminEmailCampaign: async (id) => {
+    return api.get(`/admin/emails/${id}`);
+  },
 };

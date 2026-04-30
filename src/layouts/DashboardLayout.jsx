@@ -35,6 +35,7 @@ import {
   Clock,
   Wallet,
   Percent,
+  Send,
 } from 'lucide-react';
 import logo from '../assets/logos/01.png';
 import Modal from '../components/common/Modal';
@@ -66,10 +67,12 @@ const translations = {
     startups: 'Startups',
     contactUs: 'Contact Us',
     grantings: 'Support & Donations',
+    emailCenter: 'Email Center',
     logs: 'Audit Logs',
     withdrawals: 'Withdrawals',
     logout: 'Logout',
     welcomeBack: 'Welcome back, {name}!',
+    welcomeShort: 'Welcome',
     points: 'Points',
     wallet: 'Wallet',
     appeals: 'Appeals',
@@ -115,10 +118,12 @@ const translations = {
     startups: 'Startup',
     contactUs: 'Contattaci',
     grantings: 'Supporto e Donazioni',
+    emailCenter: 'Centro Email',
     logs: 'Log di Audit',
     withdrawals: 'Prelievi',
     logout: 'Esci',
     welcomeBack: 'Bentornato, {name}!',
+    welcomeShort: 'Benvenuto',
     points: 'Punti',
     wallet: 'Portafoglio',
     appeals: 'Ricorsi',
@@ -138,6 +143,58 @@ const translations = {
       admin: 'amministratore',
     },
   },
+  ar: {
+    dashboard: 'لوحة التحكم',
+    browseJobs: 'تصفح الوظائف',
+    myApplications: 'طلباتي',
+    subscription: 'الاشتراك',
+    transactions: 'المعاملات',
+    contracts: 'العقود',
+    profile: 'الملف الشخصي',
+    myJobs: 'وظائفي',
+    applications: 'الطلبات',
+    packages: 'الباقات',
+    startupProfile: 'ملف المنشأة',
+    analytics: 'التحليلات',
+    users: 'المستخدمون',
+    verifications: 'التحقق',
+    jobs: 'الوظائف',
+    categories: 'التصنيفات',
+    universities: 'الجامعات',
+    clientPackages: 'باقات العملاء',
+    clientTransactions: 'معاملات العملاء',
+    platformFees: 'رسوم المنصة',
+    studentSubscriptions: 'اشتراكات الطلاب',
+    coupons: 'القسائم',
+    startups: 'الشركات الناشئة',
+    contactUs: 'اتصل بنا',
+    grantings: 'الدعم والتبرعات',
+    emailCenter: 'مركز البريد',
+    logs: 'سجلات التدقيق',
+    withdrawals: 'السحوبات',
+    logout: 'تسجيل الخروج',
+    welcomeBack: 'مرحباً بعودتك، {name}!',
+    welcomeShort: 'مرحباً',
+    points: 'النقاط',
+    wallet: 'المحفظة',
+    appeals: 'الاعتراضات',
+    applicationCountInfo: 'كيف تُحسب الطلبات',
+    applicationCountInfoDesc: 'فهم حد الطلبات الشهري',
+    applicationCountRule1: 'كل طلب تقدّمه يُحتسب ضمن حدك الشهري.',
+    applicationCountRule2: 'الطلبات المسحوبة تبقى محتسبة ضمن حدك.',
+    applicationCountRule3: 'يُعاد تعيين الحد في أول يوم من كل شهر.',
+    applicationCountRule4: 'الخطة المجانية: ١٠ طلبات شهرياً',
+    applicationCountRule5: 'الخطة المميزة: ١٠٠ طلب شهرياً',
+    applicationCountNote:
+      'ملاحظة: حتى إن سحبت طلباً، فهو يُحتسب لأنك استخدمت أحد فتحات الطلبات الشهرية.',
+    internship: 'التدريب (قريباً)',
+    comingSoon: 'قريباً',
+    role: {
+      student: 'طالب',
+      client: 'عميل',
+      admin: 'مسؤول',
+    },
+  },
 };
 
 const DashboardLayout = () => {
@@ -152,10 +209,18 @@ const DashboardLayout = () => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
 
+  const homePath = useMemo(() => {
+    const role = user?.role;
+    if (role === 'student') return '/students';
+    if (role === 'client') return '/';
+    return '/';
+  }, [user?.role]);
+
   // Save language preference to localStorage and set HTML lang attribute
   useEffect(() => {
     localStorage.setItem('dashboardLanguage', language);
     document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
   }, [language]);
@@ -337,6 +402,7 @@ const DashboardLayout = () => {
         { name: t.coupons, icon: Tag, path: '/admin/coupons' },
         { name: t.startups, icon: Star, path: '/admin/startups' },
         { name: t.contactUs, icon: Mail, path: '/admin/contact-us' },
+        { name: t.emailCenter, icon: Send, path: '/admin/emails' },
         { name: t.grantings, icon: Heart, path: '/admin/grantings' },
         { name: t.logs, icon: AlertCircle, path: '/admin/logs' },
         ...baseItems.slice(1),
@@ -348,8 +414,22 @@ const DashboardLayout = () => {
 
   const navigationItems = getNavigationItems();
 
+  const isRTL = language === 'ar';
+
   return (
-    <div className={`flex min-h-screen bg-gray-50 ${themeClass}`}>
+    <div
+      dir={isRTL ? 'rtl' : 'ltr'}
+      lang={language}
+      className={`flex min-h-screen flex-row bg-gray-50 ${themeClass} ${isRTL ? 'font-ar-ui' : ''}`}
+      style={
+        isRTL
+          ? {
+              fontFamily:
+                'system-ui, "Segoe UI", Tahoma, "Noto Sans Arabic", "Helvetica Neue", sans-serif',
+            }
+          : undefined
+      }
+    >
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -358,16 +438,18 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar: order-1 = start side (left in LTR, right in RTL). Off-canvas transforms MUST be max-lg only — otherwise rtl:translate-x-full overrides lg:translate-x-0 and hides the nav in Arabic on desktop. */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex-shrink-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 start-0 z-50 w-64 shrink-0 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 order-1 ${
+          sidebarOpen
+            ? 'max-lg:translate-x-0'
+            : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6 border-b">
-            <Link to="/" className="flex items-center gap-2" onClick={() => setSidebarOpen(false)}>
+            <Link to={homePath} className="flex items-center gap-2" onClick={() => setSidebarOpen(false)}>
               <span 
                 className="text-lg sm:text-xl font-bold"
                 style={{fontWeight: 900, fontFamily: "'Lama Sans', sans-serif" }}
@@ -426,7 +508,7 @@ const DashboardLayout = () => {
                   </div>
                 );
               })()}
-              <div className="ml-2 sm:ml-3 min-w-0">
+              <div className="ms-2 sm:ms-3 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{user?.name}</p>
                 <p className="text-[10px] sm:text-xs text-gray-500 capitalize">{t.role[user?.role] || user?.role}</p>
               </div>
@@ -447,7 +529,7 @@ const DashboardLayout = () => {
                     title={item.comingSoon ? t.comingSoon : ''}
                   >
                     <div className="flex items-center min-w-0 flex-1">
-                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 flex-shrink-0" />
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 me-2 sm:me-3 flex-shrink-0" />
                       <span className="whitespace-nowrap">{item.name}</span>
                     </div>
                
@@ -463,11 +545,11 @@ const DashboardLayout = () => {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <div className="flex items-center min-w-0">
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 flex-shrink-0" />
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 me-2 sm:me-3 flex-shrink-0" />
                     <span className="truncate">{item.name}</span>
                   </div>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-white bg-red-500 rounded-full ml-2 flex-shrink-0">
+                    <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-white bg-red-500 rounded-full ms-2 flex-shrink-0">
                       {item.badge}
                     </span>
                   )}
@@ -482,28 +564,28 @@ const DashboardLayout = () => {
               onClick={handleLogout}
               className="flex items-center w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
             >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 flex-shrink-0" />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 me-2 sm:me-3 flex-shrink-0" />
               {t.logout}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex flex-col flex-1 min-h-screen">
+      {/* Main: order-2 = end side (right in LTR, left in RTL) — keeps nav on the "menu" side in Arabic */}
+      <div className="order-2 flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Top bar */}
         <div className="sticky top-0 z-30 flex items-center justify-between flex-shrink-0 h-16 px-3 sm:px-4 lg:px-8 bg-white border-b">
           <div className="flex items-center min-w-0 flex-1">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="mr-2 sm:mr-4 text-gray-600 hover:text-gray-900 lg:hidden flex-shrink-0"
+              className="me-2 sm:me-4 text-gray-600 hover:text-gray-900 lg:hidden flex-shrink-0"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
               <span className="hidden sm:inline">{t.welcomeBack.replace('{name}', user?.name?.split(' ')[0] || '')}</span>
-              <span className="sm:hidden">Welcome</span>
+              <span className="sm:hidden">{t.welcomeShort}</span>
             </h1>
           </div>
 
@@ -520,6 +602,7 @@ const DashboardLayout = () => {
                 >
                   <option value="en">EN</option>
                   <option value="it">IT</option>
+                  <option value="ar">AR</option>
                 </select>
               </div>
             )}
@@ -532,7 +615,7 @@ const DashboardLayout = () => {
             >
               <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
               {unreadCount?.data?.unreadCount > 0 && (
-                <span className="absolute top-0 right-0 flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full">
+                <span className="absolute top-0 end-0 flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full">
                   {unreadCount.data.unreadCount > 99 ? '99+' : unreadCount.data.unreadCount}
                 </span>
               )}
@@ -596,7 +679,7 @@ const DashboardLayout = () => {
                 </div>
                 <button
                   onClick={() => setShowApplicationInfo(true)}
-                  className="text-green-600 hover:text-green-700 transition-colors ml-1"
+                  className="text-green-600 hover:text-green-700 transition-colors ms-1"
                   aria-label="Application count information"
                   title={t.applicationCountInfo}
                 >

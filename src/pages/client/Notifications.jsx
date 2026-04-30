@@ -23,6 +23,7 @@ import {
   Shield,
   Calendar,
 } from 'lucide-react';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 
 const translations = {
   en: {
@@ -80,6 +81,34 @@ const translations = {
     urgent: 'urgente',
     high: 'alta',
     normal: 'normale',
+  },
+  ar: {
+    notifications: 'الإشعارات',
+    notification: 'إشعار',
+    notificationsPlural: 'إشعارات',
+    markAllRead: 'تعليم الكل كمقروء',
+    all: 'الكل',
+    unread: 'غير مقروء',
+    read: 'مقروء',
+    noNotifications: 'لا إشعارات',
+    noNotificationsYet: 'لا توجد إشعارات بعد.',
+    noUnreadNotifications: 'لا توجد إشعارات غير مقروءة.',
+    noReadNotifications: 'لا توجد إشعارات مقروءة.',
+    viewDetails: 'عرض التفاصيل',
+    delete: 'حذف',
+    deleteConfirm: 'هل تريد حذف هذا الإشعار؟',
+    previous: 'السابق',
+    next: 'التالي',
+    justNow: 'الآن',
+    minAgo: 'دقيقة',
+    minsAgo: 'دقائق',
+    hourAgo: 'ساعة',
+    hoursAgo: 'ساعات',
+    dayAgo: 'يوم',
+    daysAgo: 'أيام',
+    urgent: 'عاجل',
+    high: 'مرتفع',
+    normal: 'عادي',
   },
 };
 
@@ -211,7 +240,7 @@ const Notifications = () => {
     if (diffMins < 60) return `${diffMins} ${diffMins > 1 ? t.minsAgo : t.minAgo}`;
     if (diffHours < 24) return `${diffHours} ${diffHours > 1 ? t.hoursAgo : t.hourAgo}`;
     if (diffDays < 7) return `${diffDays} ${diffDays > 1 ? t.daysAgo : t.dayAgo}`;
-    return date.toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US');
+    return date.toLocaleDateString(getDashboardDateLocale(language));
   };
 
   const notifications = notificationsData?.data?.notifications || [];

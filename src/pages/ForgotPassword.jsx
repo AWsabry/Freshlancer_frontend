@@ -39,6 +39,21 @@ const translations = {
     unableToSend: 'Impossibile inviare l\'email di reset password. Riprova.',
     noAccountFound: 'Nessun account trovato con questo indirizzo email.',
   },
+  ar: {
+    checkYourEmail: 'راجعي بريدك',
+    passwordResetSent: 'أرسلنا رابط إعادة التعيين. راجعي الوارد.',
+    checkSpamFolder: 'إن لم تظهر الرسالة، راجعي البريد المزعج.',
+    backToLogin: 'تسجيل الدخول',
+    forgotPassword: 'نسيت كلمة المرور؟',
+    enterEmailReset: 'أدخلي بريدك لإرسال رابط الاستعادة.',
+    emailAddress: 'البريد',
+    emailPlaceholder: 'بريدك@email.com',
+    emailRequired: 'البريد مطلوب',
+    invalidEmail: 'بريد غير صالح',
+    sendResetLink: 'إرسال الرابط',
+    unableToSend: 'تعذّر الإرسال. حاولي مرة أخرى.',
+    noAccountFound: 'لا حساب بهذا البريد.',
+  },
 };
 
 const ForgotPassword = () => {

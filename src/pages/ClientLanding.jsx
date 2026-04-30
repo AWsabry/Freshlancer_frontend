@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowRight, Star, Clock, CheckCircle, LogOut } from 'lucide-react';
+import { Menu, X, ArrowRight, ArrowLeft, Star, Clock, CheckCircle, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import { LandingLocaleProvider, useLandingLocale } from '../hooks/useLandingLocale';
+import { LandingLanguageSwitcher } from '../components/landing/LandingLanguageSwitcher';
 import logo from '../assets/logos/01.png';
 
 // ─── Navbar ────────────────────────────────────────────────────────────────
@@ -9,8 +11,12 @@ import logo from '../assets/logos/01.png';
 function ClientNavbar() {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
+  const { t, isRTL, copy } = useLandingLocale();
+  const nav = copy.client.nav;
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const CtaIcon = isRTL ? ArrowLeft : ArrowRight;
 
   const handleLogout = async () => {
     await logout();
@@ -29,8 +35,8 @@ function ClientNavbar() {
       style={{
         position: 'fixed',
         top: 0,
-        left: 0,
-        right: 0,
+        insetInlineStart: 0,
+        insetInlineEnd: 0,
         zIndex: 50,
         background: scrolled
           ? 'rgba(10,10,10,0.95)'
@@ -54,17 +60,19 @@ function ClientNavbar() {
           justifyContent: 'space-between',
         }}
       >
-        {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <img src={logo} alt="FreshLancer" style={{ height: '48px', width: 'auto', filter: 'brightness(1.15)' }} />
+          <img
+            src={logo}
+            alt={t('common.logoAlt')}
+            style={{ height: '48px', width: 'auto', filter: 'brightness(1.15)' }}
+          />
         </Link>
 
-        {/* Desktop nav */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '32px',
+            gap: '20px',
           }}
           className="desktop-nav"
         >
@@ -83,7 +91,7 @@ function ClientNavbar() {
             onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
           >
-            For Students
+            {nav.forStudents}
             <span style={{ fontSize: '12px', opacity: 0.8 }}>↗</span>
           </Link>
 
@@ -91,8 +99,8 @@ function ClientNavbar() {
             <button
               type="button"
               onClick={handleLogout}
-              aria-label="Logout"
-              title="Logout"
+              aria-label={nav.logout}
+              title={nav.logout}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -128,7 +136,7 @@ function ClientNavbar() {
               onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
             >
-              Sign In
+              {nav.signIn}
             </Link>
           )}
 
@@ -157,16 +165,18 @@ function ClientNavbar() {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            Post a Job
-            <ArrowRight size={14} />
+            {nav.postAJob}
+            <CtaIcon size={14} />
           </Link>
+
+          <LandingLanguageSwitcher variant="dark" />
         </div>
 
-        {/* Mobile right side: Post a Job always visible + hamburger */}
         <div
-          style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
           className="mobile-nav"
         >
+          <LandingLanguageSwitcher variant="dark" />
           <Link
             to="/register?role=client"
             style={{
@@ -180,7 +190,7 @@ function ClientNavbar() {
               whiteSpace: 'nowrap',
             }}
           >
-            Post a Job
+            {nav.postAJob}
           </Link>
           <button
             onClick={() => setMenuOpen(v => !v)}
@@ -193,14 +203,13 @@ function ClientNavbar() {
               display: 'flex',
               alignItems: 'center',
             }}
-            aria-label="Toggle menu"
+            aria-label={nav.toggleMenu}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile dropdown */}
       {menuOpen && (
         <div
           style={{
@@ -226,14 +235,14 @@ function ClientNavbar() {
               gap: '6px',
             }}
           >
-            For Students <span style={{ fontSize: '12px' }}>↗</span>
+            {nav.forStudents} <span style={{ fontSize: '12px' }}>↗</span>
           </Link>
           {isAuthenticated ? (
             <button
               type="button"
               onClick={handleLogout}
-              aria-label="Logout"
-              title="Logout"
+              aria-label={nav.logout}
+              title={nav.logout}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -257,13 +266,12 @@ function ClientNavbar() {
                 textDecoration: 'none',
               }}
             >
-              Sign In
+              {nav.signIn}
             </Link>
           )}
         </div>
       )}
 
-      {/* Responsive visibility — inline style approach */}
       <style>{`
         .desktop-nav { display: flex !important; }
         .mobile-nav  { display: none  !important; }
@@ -282,13 +290,13 @@ function ClientNavbar() {
 
 // ─── Job Card Mockup ────────────────────────────────────────────────────────
 
-const proposals = [
-  { initials: 'SA', name: 'Sara A.', rating: 4.9, snippet: 'I can deliver this in 2 days...' },
-  { initials: 'OK', name: 'Omar K.', rating: 4.7, snippet: 'Great at brand identity work...' },
-  { initials: 'NM', name: 'Nour M.', rating: 5.0, snippet: 'Ready to start immediately...' },
-];
-
 function JobCardMockup() {
+  const { copy, isRTL } = useLandingLocale();
+  const c = copy.client;
+  const m = c.mock;
+  const proposals = c.proposals;
+  const CtaIcon = isRTL ? ArrowLeft : ArrowRight;
+
   return (
     <div
       style={{
@@ -300,7 +308,6 @@ function JobCardMockup() {
         paddingTop: '24px',
       }}
     >
-      {/* Glow behind card */}
       <div
         style={{
           position: 'absolute',
@@ -315,7 +322,6 @@ function JobCardMockup() {
         }}
       />
 
-      {/* Main card */}
       <div
         className="animate-bounce-slow"
         style={{
@@ -330,7 +336,6 @@ function JobCardMockup() {
           animation: 'bounce-slow 6s ease-in-out infinite',
         }}
       >
-        {/* Card header */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span
@@ -346,32 +351,26 @@ function JobCardMockup() {
                 textTransform: 'uppercase',
               }}
             >
-              New
+              {m.new}
             </span>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>2 min ago</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>{m.timeAgo}</span>
           </div>
-          <div style={{ fontWeight: 700, fontSize: '16px', color: '#ffffff', marginBottom: '6px' }}>
-            Logo Design Needed
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', color: '#ffffff', marginBottom: '6px' }}>{m.jobTitle}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#25aaad', fontSize: '13px', fontWeight: 600 }}>
-              <span>💰</span> 500–800 EGP
+              <span>💰</span> {m.priceRange}
             </span>
             <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>·</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
-              <Clock size={12} /> 3 days
+              <Clock size={12} /> {m.days}
             </span>
           </div>
         </div>
 
-        {/* Divider */}
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '16px' }} />
 
-        {/* Proposals header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: 500 }}>
-            Proposals
-          </span>
+          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: 500 }}>{m.proposals}</span>
           <span
             style={{
               background: 'rgba(37,170,173,0.12)',
@@ -386,21 +385,20 @@ function JobCardMockup() {
           </span>
         </div>
 
-        {/* Proposal rows */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {proposals.map((p, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-              {/* Avatar */}
               <div
                 style={{
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  background: i === 0
-                    ? 'linear-gradient(135deg, #25aaad, #0f828c)'
-                    : i === 1
-                      ? 'linear-gradient(135deg, #065084, #25aaad)'
-                      : 'linear-gradient(135deg, #0f828c, #074368)',
+                  background:
+                    i === 0
+                      ? 'linear-gradient(135deg, #25aaad, #0f828c)'
+                      : i === 1
+                        ? 'linear-gradient(135deg, #065084, #25aaad)'
+                        : 'linear-gradient(135deg, #0f828c, #074368)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -412,7 +410,6 @@ function JobCardMockup() {
               >
                 {p.initials}
               </div>
-              {/* Text */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                   <span style={{ fontWeight: 600, fontSize: '13px', color: '#ffffff' }}>{p.name}</span>
@@ -421,15 +418,23 @@ function JobCardMockup() {
                     {p.rating}
                   </span>
                 </div>
-                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  "{p.snippet}"
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: 'rgba(255,255,255,0.4)',
+                    margin: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  &ldquo;{p.snippet}&rdquo;
                 </p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* CTA row */}
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <div
             style={{
@@ -442,18 +447,17 @@ function JobCardMockup() {
               justifyContent: 'space-between',
             }}
           >
-            <span style={{ fontSize: '13px', color: '#25aaad', fontWeight: 600 }}>Review proposals</span>
-            <ArrowRight size={14} color="#25aaad" />
+            <span style={{ fontSize: '13px', color: '#25aaad', fontWeight: 600 }}>{m.reviewProposals}</span>
+            <CtaIcon size={14} color="#25aaad" />
           </div>
         </div>
       </div>
 
-      {/* Small floating stat card */}
       <div
         style={{
           position: 'absolute',
           bottom: '-16px',
-          right: '-24px',
+          insetInlineEnd: '-24px',
           background: '#0d1117',
           border: '1px solid rgba(37,170,173,0.2)',
           borderRadius: '12px',
@@ -480,8 +484,8 @@ function JobCardMockup() {
           <CheckCircle size={16} color="#25aaad" />
         </div>
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>Hired in 24h</div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}>Avg. response time</div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>{m.hiredIn24h}</div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}>{m.avgResponse}</div>
         </div>
       </div>
     </div>
@@ -491,13 +495,18 @@ function JobCardMockup() {
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 function ClientHero() {
+  const { isRTL, copy, locale } = useLandingLocale();
+  const h = copy.client.hero;
+  const CtaIcon = isRTL ? ArrowLeft : ArrowRight;
+  const trust = [h.trust1, h.trust2, h.trust3];
+  const isArabic = locale === 'ar';
+
   return (
     <section
       style={{
         minHeight: '100vh',
         background: '#0a0a0a',
-        backgroundImage:
-          'radial-gradient(ellipse at 80% 50%, rgba(6,80,132,0.09) 0%, transparent 55%)',
+        backgroundImage: 'radial-gradient(ellipse at 80% 50%, rgba(6,80,132,0.09) 0%, transparent 55%)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 24px',
@@ -517,10 +526,7 @@ function ClientHero() {
         }}
         className="hero-grid"
       >
-        {/* ── Left Column ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '24px' }}>
-
-          {/* Trust badge */}
           <div
             className="animate-fade-up"
             style={{
@@ -537,31 +543,38 @@ function ClientHero() {
               background: 'rgba(37,170,173,0.06)',
             }}
           >
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25aaad', display: 'inline-block' }} />
-            Egypt's First Student Freelance Platform
+            <span
+              style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25aaad', display: 'inline-block' }}
+            />
+            {h.trustBadge}
           </div>
 
-          {/* H1 */}
           <h1
             className="animate-fade-up"
             style={{
               animationDelay: '80ms',
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+              fontSize: isArabic ? 'clamp(2.2rem, 4.1vw, 4.4rem)' : 'clamp(2.5rem, 6vw, 5rem)',
               fontWeight: 800,
               color: '#ffffff',
-              lineHeight: 1.1,
+              lineHeight: isArabic ? 1.18 : 1.1,
               margin: 0,
               letterSpacing: '-0.02em',
             }}
           >
-            Hire verified
+            {h.h1a}
             <br />
-            student talent
+            {h.h1b}
             <br />
-            <span style={{ color: 'rgba(255,255,255,0.85)' }}>fast and affordable.</span>
+            <span
+              style={{
+                color: 'rgba(255,255,255,0.85)',
+                fontSize: isArabic ? '0.92em' : '1em',
+              }}
+            >
+              {h.h1c}
+            </span>
           </h1>
 
-          {/* H2 */}
           <p
             className="animate-fade-up"
             style={{
@@ -574,15 +587,10 @@ function ClientHero() {
               maxWidth: '480px',
             }}
           >
-            Post a job in 2 minutes. Get proposals from
-            Egypt's top university students.
+            {h.h2}
           </p>
 
-          {/* CTA */}
-          <div
-            className="animate-fade-up"
-            style={{ animationDelay: '240ms' }}
-          >
+          <div className="animate-fade-up" style={{ animationDelay: '240ms' }}>
             <Link
               to="/register?role=client"
               style={{
@@ -607,12 +615,11 @@ function ClientHero() {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              Post a Job for Free
-              <ArrowRight size={16} />
+              {h.cta}
+              <CtaIcon size={16} />
             </Link>
           </div>
 
-          {/* Trust line */}
           <div
             className="animate-fade-up"
             style={{
@@ -622,11 +629,7 @@ function ClientHero() {
               gap: '20px',
             }}
           >
-            {[
-              'No upfront cost',
-              '500+ vetted students',
-              'Design, Dev, Marketing & more',
-            ].map(item => (
+            {trust.map((item) => (
               <span
                 key={item}
                 style={{
@@ -644,7 +647,6 @@ function ClientHero() {
           </div>
         </div>
 
-        {/* ── Right Column ── */}
         <div
           className="animate-fade-up hero-card-col"
           style={{
@@ -659,7 +661,6 @@ function ClientHero() {
         </div>
       </div>
 
-      {/* Responsive grid */}
       <style>{`
         .hero-grid {
           grid-template-columns: 1fr 1fr;
@@ -686,11 +687,36 @@ function ClientHero() {
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
-export default function ClientLanding() {
+function ClientLandingContent() {
+  const { dir, locale } = useLandingLocale();
+  const fontStyle =
+    locale === 'ar'
+      ? {
+          fontFamily:
+            'system-ui, "Segoe UI", Tahoma, "Noto Sans Arabic", "Helvetica Neue", sans-serif',
+        }
+      : undefined;
+
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh' }}>
+    <div
+      dir={dir}
+      lang={locale}
+      style={{
+        background: '#0a0a0a',
+        minHeight: '100dvh',
+        ...fontStyle,
+      }}
+    >
       <ClientNavbar />
       <ClientHero />
     </div>
+  );
+}
+
+export default function ClientLanding() {
+  return (
+    <LandingLocaleProvider>
+      <ClientLandingContent />
+    </LandingLocaleProvider>
   );
 }

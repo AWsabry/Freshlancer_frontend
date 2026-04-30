@@ -18,6 +18,8 @@ import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import StartupRegistration from './pages/StartupRegistration';
+import CvReviewContinue from './pages/CvReviewContinue';
+import CvChecker from './pages/CvChecker';
 
 // Payment pages
 import PaymentSuccess from './pages/PaymentSuccess';
@@ -37,6 +39,7 @@ import StudentNotifications from './pages/student/Notifications';
 import StudentProfile from './pages/student/Profile';
 import StudentReviews from './pages/student/Reviews';
 import StudentTransactions from './pages/student/Transactions';
+import CvReviewResult from './pages/student/CvReviewResult';
 import StudentContracts from './pages/student/Contracts';
 import StudentWallet from './pages/student/Wallet';
 import StudentAppeals from './pages/student/Appeals';
@@ -89,6 +92,7 @@ import AdminContracts from './pages/admin/Contracts';
 import AdminWithdrawals from './pages/admin/Withdrawals';
 import AdminAppeals from './pages/admin/Appeals';
 import AdminPlatformFees from './pages/admin/PlatformFees';
+import AdminEmailCenter from './pages/admin/EmailCenter';
 
 function AppNavigationBridge() {
   const navigate = useNavigate();
@@ -135,6 +139,12 @@ function App() {
       {/* Email Verification Routes */}
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
       <Route path="/verify-email-required" element={<VerifyEmailRequired />} />
+
+      {/* CV Checker (public start page) */}
+      <Route path="/cv-checker" element={<CvChecker />} />
+
+      {/* CV Review continuation (public; handles auth inside) */}
+      <Route path="/cv-review/continue" element={<CvReviewContinue />} />
       
       {/* Password Reset Routes */}
       <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to={getDashboardPath()} />} />
@@ -176,6 +186,7 @@ function App() {
         <Route path="profile" element={<StudentProfile />} />
         <Route path="reviews" element={<StudentReviews />} />
         <Route path="transactions" element={<StudentTransactions />} />
+        <Route path="cv-review/:uploadId" element={<CvReviewResult />} />
         <Route path="contact-us" element={<ContactUs />} />
         <Route path="why-support" element={<WhySupport />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
@@ -243,6 +254,7 @@ function App() {
         <Route path="contracts" element={<AdminContracts />} />
         <Route path="withdrawals" element={<AdminWithdrawals />} />
         <Route path="platform-fees" element={<AdminPlatformFees />} />
+        <Route path="emails" element={<AdminEmailCenter />} />
         <Route path="appeals" element={<AdminAppeals />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../stores/authStore';
 import Button from '../components/common/Button';
@@ -75,10 +75,44 @@ const translations = {
     feature4: 'Veloce e Facile',
     feature4Desc: 'Processo semplificato per collegare studenti e clienti rapidamente',
   },
+  ar: {
+    welcomeToFreshlancer: 'مرحباً بك في Freshlancer',
+    signInToAccount: 'سجّل الدخول إلى حسابك',
+    emailAddress: 'البريد الإلكتروني',
+    emailPlaceholder: 'بريدك@email.com',
+    emailRequired: 'البريد الإلكتروني مطلوب',
+    invalidEmail: 'عنوان بريد غير صالح',
+    password: 'كلمة المرور',
+    passwordRequired: 'كلمة المرور مطلوبة',
+    passwordMinLength: 'يجب أن تكون كلمة المرور ٨ أحرف على الأقل',
+    forgotPassword: 'نسيت كلمة المرور؟',
+    signIn: 'تسجيل الدخول',
+    dontHaveAccount: 'ليس لديك حساب؟',
+    signUp: 'إنشاء حساب',
+    unableToSignIn: 'تعذّر تسجيل الدخول. حاول مرة أخرى.',
+    unableToConnect: 'تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.',
+    invalidCredentials: 'بريد أو كلمة مرور غير صحيحة.',
+    accountDeleted: 'تم حذف هذا الحساب. تواصل مع الدعم إن كان ذلك خطأ.',
+    accountSuspended: 'تم تعليق حسابك. تواصل مع الدعم.',
+    emailNotVerified: 'يرجى التحقق من بريدك قبل تسجيل الدخول. راجع صندوق الوارد أو اطلب رسالة جديدة.',
+    invalidEmailFormat: 'أدخل بريداً إلكترونياً صالحاً. يجب استخدام البريد وليس الاسم.',
+    missingCredentials: 'يرجى إدخال البريد وكلمة المرور.',
+    tagline: 'ربط الطلاب الموهوبين بالمشاريع المبتكرة',
+    featuresTitle: 'لماذا Freshlancer؟',
+    feature1: 'مشاريع بجودة عالية',
+    feature1Desc: 'فرص عمل موثّقة من الشركات والناشئين',
+    feature2: 'ابنِ سمعتك المهنية',
+    feature2Desc: 'اعرض مهاراتك ووسّع شبكتك',
+    feature3: 'منصة آمنة',
+    feature3Desc: 'تشفير وحماية بمستوى عالٍ',
+    feature4: 'سريع وسهل',
+    feature4Desc: 'ربط مبسّط بين الطلاب والعملاء',
+  },
 };
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -103,15 +137,20 @@ const Login = () => {
     };
   }, []);
 
-  // Save language preference to localStorage and set HTML lang attribute
+  // Save language preference to localStorage and set HTML lang / dir
   useEffect(() => {
     localStorage.setItem('dashboardLanguage', language);
     document.documentElement.lang = language;
-    // Dispatch custom event to notify other components
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
   }, [language]);
 
   const t = translations[language] || translations.en;
+
+  const nextPath = useMemo(() => {
+    const sp = new URLSearchParams(location.search || '');
+    return sp.get('next') || '';
+  }, [location.search]);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     // Keep form values after submission failure
@@ -134,21 +173,34 @@ const Login = () => {
       // Small delay to ensure error state is cleared before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Redirect based on role and email verification status
+      // Redirect based on role and email verification status (or `next` param)
       const user = response.data.user;
       
       // Check if email is verified (except for admin)
       if (user.role !== 'admin' && !user.emailVerified) {
         // Redirect to email verification page if not verified
-        navigate('/verify-email-required');
+        const next =
+          nextPath ||
+          (localStorage.getItem('pendingCvReviewUploadId')
+            ? `/cv-review/continue?uploadId=${encodeURIComponent(
+                localStorage.getItem('pendingCvReviewUploadId') || ''
+              )}`
+            : '');
+        navigate(`/verify-email-required${next ? `?next=${encodeURIComponent(next)}` : ''}`);
       } else {
-        // Redirect to dashboard based on role
-        if (user.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (user.role === 'client') {
-          navigate('/client/dashboard');
+        if (nextPath) {
+          navigate(nextPath);
+        } else if (localStorage.getItem('pendingCvReviewUploadId')) {
+          navigate(`/cv-review/continue?uploadId=${encodeURIComponent(localStorage.getItem('pendingCvReviewUploadId') || '')}`);
         } else {
-          navigate('/student/dashboard');
+          // Redirect to dashboard based on role
+          if (user.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else if (user.role === 'client') {
+            navigate('/client/dashboard');
+          } else {
+            navigate('/student/dashboard');
+          }
         }
       }
       
@@ -211,9 +263,20 @@ const Login = () => {
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
-      {/* Language Selector - Top Right */}
-      <div className="fixed top-4 right-4 z-50">
+    <div
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+      lang={language}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8"
+      style={
+        language === 'ar'
+          ? {
+              fontFamily:
+                'system-ui, "Segoe UI", Tahoma, "Noto Sans Arabic", "Helvetica Neue", sans-serif',
+            }
+          : undefined
+      }
+    >
+      <div className="fixed top-4 end-4 z-50">
         <div className="flex items-center gap-2 bg-white rounded-lg shadow-md border border-gray-200 px-3 py-2">
           <Globe className="w-4 h-4 text-gray-600" />
           <select
@@ -224,6 +287,7 @@ const Login = () => {
           >
             <option value="en">EN</option>
             <option value="it">IT</option>
+            <option value="ar">AR</option>
           </select>
         </div>
       </div>

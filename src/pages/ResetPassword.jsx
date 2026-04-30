@@ -47,6 +47,24 @@ const translations = {
     resetPassword: 'Reimposta Password',
     unableToReset: 'Impossibile reimpostare la password. Riprova.',
   },
+  ar: {
+    invalidOrExpiredLink: 'رابط غير صالح',
+    linkInvalidExpired: 'انتهت صلاحية الرابط. اطلبي رابطاً جديداً.',
+    requestNewResetLink: 'طلب رابط جديد',
+    backToLogin: 'تسجيل الدخول',
+    passwordResetSuccessful: 'تم تغيير كلمة المرور!',
+    passwordResetSuccessMessage: 'سيتم تحويلك قريباً.',
+    resetYourPassword: 'تعيين كلمة جديدة',
+    enterNewPassword: 'أدخلي كلمة المرور الجديدة.',
+    newPassword: 'كلمة المرور',
+    confirmNewPassword: 'تأكيد',
+    passwordRequired: 'مطلوبة',
+    passwordMinLength: '٨ أحرف على الأقل',
+    confirmPasswordRequired: 'أكدّي',
+    passwordsDoNotMatch: 'غير متطابقتين',
+    resetPassword: 'حفظ',
+    unableToReset: 'تعذّر التعيين',
+  },
 };
 
 const ResetPassword = () => {

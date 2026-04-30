@@ -26,6 +26,7 @@ import {
   Link as LinkIcon,
   ExternalLink,
 } from 'lucide-react';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 
 const translations = {
   en: {
@@ -104,6 +105,44 @@ const translations = {
     noPackagesYet: 'Non hai ancora acquistato nessun pacchetto di punti. Acquista un pacchetto per iniziare a sbloccare i profili degli studenti.',
     profilePicture: 'Foto del Profilo',
   },
+  ar: {
+    loadingProfile: 'جاري تحميل الملف الشخصي...',
+    failedToLoad: 'تعذر تحميل بيانات الملف الشخصي. يرجى تحديث الصفحة.',
+    profileUpdated: 'تم تحديث الملف بنجاح!',
+    updateFailed: 'فشل تحديث الملف',
+    myProfile: 'ملفي الشخصي',
+    editProfile: 'تعديل الملف',
+    personalInformation: 'المعلومات الشخصية',
+    fullName: 'الاسم الكامل',
+    email: 'البريد',
+    emailCannotChange: 'لا يمكن تغيير البريد',
+    phoneNumber: 'رقم الجوال',
+    companyName: 'اسم الشركة',
+    industry: 'المجال',
+    socialLinks: 'روابط اجتماعية (اختياري)',
+    linkedin: 'LinkedIn',
+    website: 'الموقع',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
+    saveChanges: 'حفظ التغييرات',
+    cancel: 'إلغاء',
+    notProvided: 'غير مُدخل',
+    memberSince: 'عضو منذ',
+    notAvailable: 'غير متوفر',
+    pointsBalance: 'رصيد النقاط',
+    loadingPoints: 'جاري تحميل رصيد النقاط...',
+    availablePoints: 'النقاط المتاحة',
+    buyMorePoints: 'شراء المزيد',
+    pointsUsed: 'النقاط المستعملة',
+    usedToUnlock: 'استُخدمت لفتح {count} ملفاً',
+    unlockedProfiles: 'الملفات المفتوحة',
+    pointsPerProfile: '10 نقاط لكل ملف',
+    recentPackages: 'أحدث شراء باقات',
+    viewAll: 'عرض الكل',
+    loadingHistory: 'جاري تحميل سجل الباقات...',
+    noPackagesYet: 'لم تشتَرِ بعد أي باقة نقاط. اشترِ باقة لبدء فتح ملفات الطلاب.',
+    profilePicture: 'صورة الملف',
+  },
 };
 
 const Profile = () => {
@@ -137,6 +176,7 @@ const Profile = () => {
   }, []);
 
   const t = translations[language] || translations.en;
+  const dateLoc = getDashboardDateLocale(language);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -592,7 +632,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">{t.memberSince}</p>
                   <p className="font-semibold text-gray-900">
                     {user?.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
+                      ? new Date(user.createdAt).toLocaleDateString(dateLoc, {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
@@ -751,7 +791,7 @@ const Profile = () => {
                   <div>
                     <p className="font-semibold text-gray-900">{pkg.description}</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(pkg.createdAt).toLocaleDateString('en-US', {
+                      {new Date(pkg.createdAt).toLocaleDateString(dateLoc, {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',

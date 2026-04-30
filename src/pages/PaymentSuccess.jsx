@@ -25,6 +25,14 @@ const translations = {
     redirecting: 'Reindirizzamento...',
     failedToCompletePayment: 'Impossibile completare il pagamento',
   },
+  ar: {
+    paymentSuccessful: 'تم الدفع بنجاح!',
+    paymentConfirmed: 'تأكدنا من دفعتك.',
+    redirectingIn: 'إعادة التوجيه خلال',
+    seconds: 'ثوانٍ',
+    redirecting: 'جارٍ إعادة التوجيه...',
+    failedToCompletePayment: 'تعذر إكمال الدفع',
+  },
 };
 
 // Helper function to get cookie value by name

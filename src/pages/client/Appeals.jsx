@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Card from '../../components/common/Card';
@@ -20,27 +20,27 @@ import {
   onError,
 } from '../../services/websocketService';
 import { useAuthStore } from '../../stores/authStore';
-import { FileText, Upload, X, Send, AlertCircle, CheckCircle, XCircle, Download } from 'lucide-react';
+import { FileText, Upload, Send, AlertCircle, Download } from 'lucide-react';
+import { useDashboardLanguage } from '../../hooks/useDashboardLanguage';
+import { getClientAppealsT } from '../../locales/clientAppealsLocales';
 
-const APPEAL_REASONS = {
-  non_payment: 'Non-Payment',
-  poor_quality: 'Poor Quality Work',
-  contract_violation: 'Contract Violation',
-  missed_deadline: 'Missed Deadline',
-  other: 'Other',
-};
-
-const APPEAL_STATUSES = {
-  open: { label: 'Open', variant: 'warning' },
-  in_review: { label: 'In Review', variant: 'info' },
-  resolved: { label: 'Resolved', variant: 'success' },
-  closed_by_opener: { label: 'Closed by Opener', variant: 'secondary' },
-  cancelled: { label: 'Cancelled', variant: 'danger' },
+const APPEAL_STATUS_VARIANTS = {
+  open: 'warning',
+  in_review: 'info',
+  resolved: 'success',
+  closed_by_opener: 'secondary',
+  cancelled: 'danger',
 };
 
 const Appeals = () => {
   const queryClient = useQueryClient();
   const { success: showSuccess, error: showError } = useToast();
+  const { language, dateLocale } = useDashboardLanguage();
+  const t = useMemo(() => getClientAppealsT(language), [language]);
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const { user } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('appealId');
@@ -70,6 +70,9 @@ const Appeals = () => {
 
   const appeal = appealResp?.data?.appeal || null;
   const isOpener = appeal && String(appeal.opener._id || appeal.opener) === String(user?._id);
+
+  const getReasonLabel = (r) => (r ? t[`reason_${r}`] || r : '');
+  const getStatusLabel = (s) => (s ? t[`st_${s}`] || s : '');
 
   // WebSocket setup
   useEffect(() => {
@@ -143,7 +146,7 @@ const Appeals = () => {
       });
 
       const unsubscribeError = onError((error) => {
-        showError(error.message || 'WebSocket error occurred');
+        showError(error.message || tRef.current.wsError);
       });
 
       return () => {
@@ -211,7 +214,7 @@ const Appeals = () => {
       if (context?.previousAppeal) {
         queryClient.setQueryData(['appeal', selectedAppealId], context.previousAppeal);
       }
-      showError(err?.message || 'Failed to send message');
+      showError(err?.message || tRef.current.sendFail);
     },
   });
 
@@ -237,35 +240,35 @@ const Appeals = () => {
   const closeAppealMutation = useMutation({
     mutationFn: (appealId) => appealService.closeAppeal(appealId),
     onSuccess: () => {
-      showSuccess('Appeal closed successfully');
+      showSuccess(tRef.current.appealClosed);
       queryClient.invalidateQueries({ queryKey: ['appeals', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['appeal', selectedAppealId] });
     },
-    onError: (err) => showError(err?.message || 'Failed to close appeal'),
+    onError: (err) => showError(err?.message || tRef.current.closeFail),
   });
 
   const cancelContractMutation = useMutation({
     mutationFn: (appealId) => appealService.cancelContract(appealId),
     onSuccess: () => {
-      showSuccess('Contract cancelled and escrow refunded');
+      showSuccess(tRef.current.contractCancelledEscrow);
       setShowCancelModal(false);
       queryClient.invalidateQueries({ queryKey: ['appeals', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['appeal', selectedAppealId] });
       queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] });
     },
-    onError: (err) => showError(err?.message || 'Failed to cancel contract'),
+    onError: (err) => showError(err?.message || tRef.current.cancelContractFail),
   });
 
   const uploadDocMutation = useMutation({
     mutationFn: ({ appealId, file, description }) => appealService.uploadDocument(appealId, file, description),
     onSuccess: () => {
-      showSuccess('Document uploaded successfully');
+      showSuccess(tRef.current.docUploaded);
       setUploadingDoc(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['appeal', selectedAppealId] });
     },
     onError: (err) => {
-      showError(err?.message || 'Failed to upload document');
+      showError(err?.message || tRef.current.docUploadFail);
       setUploadingDoc(false);
     },
   });
@@ -275,7 +278,7 @@ const Appeals = () => {
     if (!file || !selectedAppealId) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      showError('File size must be less than 10MB');
+      showError(t.fileTooBig);
       return;
     }
 
@@ -288,8 +291,8 @@ const Appeals = () => {
   };
 
   const getStatusBadge = (status) => {
-    const statusInfo = APPEAL_STATUSES[status] || { label: status, variant: 'secondary' };
-    return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+    const variant = APPEAL_STATUS_VARIANTS[status] || 'secondary';
+    return <Badge variant={variant}>{getStatusLabel(status)}</Badge>;
   };
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -306,7 +309,7 @@ const Appeals = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to download file');
+        throw new Error(t.downloadFileFailed);
       }
       
       const blob = await response.blob();
@@ -319,12 +322,13 @@ const Appeals = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      showError('Failed to download document: ' + (error.message || 'Unknown error'));
+      const msg = error?.message || t.unknownError;
+      showError(t.downloadDocumentError.replace('{msg}', msg));
     }
   };
 
   if (loadingList) {
-    return <Loading text="Loading appeals..." />;
+    return <Loading text={t.loadingList} />;
   }
 
   return (
@@ -332,16 +336,16 @@ const Appeals = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <AlertCircle className="w-7 h-7" />
-          Appeals
+          {t.title}
         </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Appeals List */}
         <div className="lg:col-span-1">
-          <Card title="My Appeals">
+          <Card title={t.myAppeals}>
             {appeals.length === 0 ? (
-              <p className="text-sm text-gray-600 py-4">No appeals found.</p>
+              <p className="text-sm text-gray-600 py-4">{t.noAppeals}</p>
             ) : (
               <div className="space-y-2">
                 {appeals.map((a) => {
@@ -354,7 +358,7 @@ const Appeals = () => {
                         setSelectedAppealId(a._id);
                         setSearchParams({ appealId: a._id });
                       }}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                      className={`w-full text-start p-3 rounded-lg border transition-colors ${
                         isSelected
                           ? 'border-primary-500 bg-primary-50'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -363,13 +367,14 @@ const Appeals = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {isMyAppeal ? 'You' : a.opener?.name || 'User'} vs {isMyAppeal ? a.respondent?.name || 'User' : 'You'}
+                            {isMyAppeal ? t.you : a.opener?.name || t.user} {t.vs}{' '}
+                            {isMyAppeal ? a.respondent?.name || t.user : t.you}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {APPEAL_REASONS[a.reason] || a.reason}
+                            {getReasonLabel(a.reason)}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {new Date(a.createdAt).toLocaleDateString()}
+                            {new Date(a.createdAt).toLocaleDateString(dateLocale)}
                           </p>
                         </div>
                         <div className="flex-shrink-0">{getStatusBadge(a.status)}</div>
@@ -386,17 +391,17 @@ const Appeals = () => {
         <div className="lg:col-span-2">
           {!selectedAppealId ? (
             <Card>
-              <p className="text-gray-600 text-center py-8">Select an appeal to view details</p>
+              <p className="text-gray-600 text-center py-8">{t.selectAppeal}</p>
             </Card>
           ) : loadingDetail ? (
-            <Loading text="Loading appeal details..." />
+            <Loading text={t.loadingDetail} />
           ) : !appeal ? (
-            <Alert type="error" message="Appeal not found" />
+            <Alert type="error" message={t.notFound} />
           ) : (
             <div className="space-y-6">
               {/* Appeal Info */}
               <Card
-                title="Appeal Details"
+                title={t.detailsTitle}
                 actions={
                   isOpener && appeal.status === 'open' ? (
                     <Button
@@ -405,7 +410,7 @@ const Appeals = () => {
                       onClick={() => closeAppealMutation.mutate(appeal._id)}
                       loading={closeAppealMutation.isPending}
                     >
-                      Close Appeal
+                      {t.closeAppeal}
                     </Button>
                   ) : null
                 }
@@ -413,43 +418,43 @@ const Appeals = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500">Status</p>
+                      <p className="text-xs text-gray-500">{t.status}</p>
                       <div className="mt-1">{getStatusBadge(appeal.status)}</div>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Reason</p>
+                      <p className="text-xs text-gray-500">{t.reason}</p>
                       <p className="text-sm font-medium text-gray-900 mt-1">
-                        {APPEAL_REASONS[appeal.reason] || appeal.reason}
+                        {getReasonLabel(appeal.reason)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Opener</p>
+                      <p className="text-xs text-gray-500">{t.opener}</p>
                       <p className="text-sm font-medium text-gray-900 mt-1">
-                        {appeal.opener?.name || 'N/A'}
+                        {appeal.opener?.name || t.na}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Respondent</p>
+                      <p className="text-xs text-gray-500">{t.respondent}</p>
                       <p className="text-sm font-medium text-gray-900 mt-1">
-                        {appeal.respondent?.name || 'N/A'}
+                        {appeal.respondent?.name || t.na}
                       </p>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Description</p>
+                    <p className="text-xs text-gray-500">{t.description}</p>
                     <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">{appeal.description}</p>
                   </div>
                   {appeal.adminDecision && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-xs font-medium text-blue-900">Admin Decision</p>
+                      <p className="text-xs font-medium text-blue-900">{t.adminDecision}</p>
                       <p className="text-sm text-blue-800 mt-1">
                         {appeal.adminDecision === 'favor_opener'
-                          ? 'Favor of Appeal Opener'
+                          ? t.decFavorOpener
                           : appeal.adminDecision === 'favor_respondent'
-                          ? 'Favor of Respondent'
+                          ? t.decFavorRespondent
                           : appeal.adminDecision === 'partial'
-                          ? 'Partial Resolution'
-                          : 'Dismissed'}
+                          ? t.decPartial
+                          : t.decDismissed}
                       </p>
                       {appeal.adminNotes && (
                         <p className="text-xs text-blue-700 mt-2">{appeal.adminNotes}</p>
@@ -460,11 +465,11 @@ const Appeals = () => {
               </Card>
 
               {/* Documents */}
-              <Card title="Documents">
+              <Card title={t.documents}>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-gray-600">
-                      {appeal.documents?.length || 0} / 10 documents
+                      {t.docCount.replace('{n}', String(appeal.documents?.length || 0))}
                     </p>
                     {(appeal.status === 'open' || appeal.status === 'in_review') && appeal.documents?.length < 10 && (
                       <label className="cursor-pointer">
@@ -484,13 +489,13 @@ const Appeals = () => {
                           className="flex items-center gap-2"
                         >
                           <Upload className="w-4 h-4" />
-                          Upload Document
+                          {t.uploadDocument}
                         </Button>
                       </label>
                     )}
                     {(appeal.status === 'cancelled' || !['open', 'in_review'].includes(appeal.status)) && (
                       <p className="text-sm text-gray-500">
-                        Upload disabled. This appeal is {appeal.status}. Messaging is disabled.
+                        {t.uploadDisabled.replace('{status}', getStatusLabel(appeal.status) || String(appeal.status))}
                       </p>
                     )}
                   </div>
@@ -509,15 +514,20 @@ const Appeals = () => {
                                 <p className="text-xs text-gray-500">{doc.description}</p>
                               )}
                               <p className="text-xs text-gray-400">
-                                Uploaded by {doc.uploadedBy?.name || 'User'} on{' '}
-                                {new Date(doc.uploadedAt).toLocaleDateString()}
+                                {t.uploadedBy
+                                  .replace('{name}', doc.uploadedBy?.name || t.user)
+                                  .replace(
+                                    '{date}',
+                                    new Date(doc.uploadedAt).toLocaleDateString(dateLocale)
+                                  )}
                               </p>
                             </div>
                           </div>
                           <button
                             onClick={() => handleDownload(doc)}
                             className="text-primary-600 hover:text-primary-700 cursor-pointer"
-                            title="Download document"
+                            title={t.downloadTitle}
+                            type="button"
                           >
                             <Download className="w-5 h-5" />
                           </button>
@@ -525,13 +535,13 @@ const Appeals = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-600 py-4">No documents uploaded yet.</p>
+                    <p className="text-sm text-gray-600 py-4">{t.noDocuments}</p>
                   )}
                 </div>
               </Card>
 
               {/* Chat */}
-              <Card title="Messages">
+              <Card title={t.messages}>
                 <div className="space-y-4">
                   <div className="border border-gray-200 rounded-lg p-4 h-96 overflow-y-auto bg-gray-50">
                     {appeal.messages && appeal.messages.length > 0 ? (
@@ -552,13 +562,13 @@ const Appeals = () => {
                                 style={isMyMessage ? { backgroundColor: '#2563eb', color: '#ffffff' } : {}}
                               >
                                 <p className={`text-xs font-medium mb-1 ${isMyMessage ? 'text-white opacity-90' : 'text-gray-700 opacity-80'}`}>
-                                  {msg.sender?.name || 'User'}
+                                  {msg.sender?.name || t.user}
                                 </p>
                                 <p className={`text-sm whitespace-pre-wrap ${isMyMessage ? 'text-white' : 'text-gray-900'}`}>
                                   {msg.content}
                                 </p>
                                 <p className={`text-xs mt-1 ${isMyMessage ? 'text-white opacity-80' : 'text-gray-600 opacity-70'}`}>
-                                  {new Date(msg.timestamp).toLocaleString()}
+                                  {new Date(msg.timestamp).toLocaleString(dateLocale)}
                                 </p>
                               </div>
                             </div>
@@ -569,13 +579,13 @@ const Appeals = () => {
                             {Object.values(typingUsers)
                               .filter(Boolean)
                               .join(', ')}{' '}
-                            {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing...
+                            {Object.keys(typingUsers).length === 1 ? t.isTyping : t.areTyping} {t.typing}
                           </div>
                         )}
                         <div ref={messagesEndRef} />
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-600 text-center py-8">No messages yet.</p>
+                      <p className="text-sm text-gray-600 text-center py-8">{t.noMessages}</p>
                     )}
                   </div>
                   {appeal.status === 'open' || appeal.status === 'in_review' ? (
@@ -595,7 +605,7 @@ const Appeals = () => {
                             handleTyping(false);
                           }
                         }}
-                        placeholder="Type a message..."
+                        placeholder={t.typeMessage}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                         disabled={sendMessageMutation.isPending}
                       />
@@ -606,12 +616,15 @@ const Appeals = () => {
                         className="flex items-center gap-2"
                       >
                         <Send className="w-4 h-4" />
-                        Send
+                        {t.send}
                       </Button>
                     </div>
                   ) : (
                     <p className="text-sm text-gray-500 text-center py-2">
-                      This appeal is {appeal.status}. Messaging is disabled.
+                      {t.messagingDisabled.replace(
+                        '{status}',
+                        getStatusLabel(appeal.status) || String(appeal.status)
+                      )}
                     </p>
                   )}
                 </div>
@@ -621,16 +634,16 @@ const Appeals = () => {
               {(appeal.status === 'open' || appeal.status === 'in_review') && (
                 <Card>
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-sm font-medium text-red-900 mb-2">Cancel Contract</p>
+                    <p className="text-sm font-medium text-red-900 mb-2">{t.cancelSectionTitle}</p>
                     <p className="text-xs text-red-700 mb-3">
-                      If you cancel the contract, all escrow funds will be refunded to the client's wallet. This action cannot be undone.
+                      {t.cancelSectionBody}
                     </p>
                     <Button
                       size="sm"
                       variant="danger"
                       onClick={() => setShowCancelModal(true)}
                     >
-                      Cancel Contract
+                      {t.cancelContractCta}
                     </Button>
                   </div>
                 </Card>
@@ -641,30 +654,30 @@ const Appeals = () => {
       </div>
 
       {/* Cancel Contract Modal */}
-      {showCancelModal && (
+      {showCancelModal && appeal && (
         <Modal
           isOpen={showCancelModal}
           onClose={() => setShowCancelModal(false)}
-          title="Cancel Contract"
+          title={t.cancelModalTitle}
           size="md"
         >
           <div className="space-y-4">
             <p className="text-sm text-gray-700">
-              Are you sure you want to cancel this contract? All escrow funds will be refunded to the client's wallet.
+              {t.cancelModalBody}
             </p>
             <p className="text-xs text-red-600">
-              This action cannot be undone. The contract will be permanently cancelled.
+              {t.cancelModalIrreversible}
             </p>
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button variant="outline" onClick={() => setShowCancelModal(false)}>
-                Cancel
+                {t.modalDismiss}
               </Button>
               <Button
                 variant="danger"
                 onClick={() => cancelContractMutation.mutate(appeal._id)}
                 loading={cancelContractMutation.isPending}
               >
-                Confirm Cancellation
+                {t.confirmCancelContract}
               </Button>
             </div>
           </div>

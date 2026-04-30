@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowRight, CheckCircle, TrendingUp, Star, Briefcase, LogOut } from 'lucide-react';
+import { Menu, X, ArrowRight, ArrowLeft, CheckCircle, TrendingUp, Star, Briefcase, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import { LandingLocaleProvider, useLandingLocale } from '../hooks/useLandingLocale';
+import { LandingLanguageSwitcher } from '../components/landing/LandingLanguageSwitcher';
 import logo from '../assets/logos/01.png';
+// CV Checker button routes to a dedicated page (no heavy UI in landing)
 
 // ─── Student Navbar ─────────────────────────────────────────────────────────
 
 function StudentNavbar() {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
+  const { copy, isRTL } = useLandingLocale();
+  const nav = copy.student.nav;
+  const CtaIcon = isRTL ? ArrowLeft : ArrowRight;
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -29,15 +35,13 @@ function StudentNavbar() {
       style={{
         position: 'fixed',
         top: 0,
-        left: 0,
-        right: 0,
+        insetInlineStart: 0,
+        insetInlineEnd: 0,
         zIndex: 50,
         background: scrolled ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: scrolled
-          ? '1px solid #e2e8f0'
-          : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid #e2e8f0' : '1px solid transparent',
         transition: 'border-color 0.3s ease, background 0.3s ease',
         boxShadow: scrolled ? '0 1px 0 rgba(15,23,42,0.04)' : 'none',
       }}
@@ -53,20 +57,11 @@ function StudentNavbar() {
           justifyContent: 'space-between',
         }}
       >
-        {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <img
-            src={logo}
-            alt="FreshLancer"
-            style={{ height: '48px', width: 'auto' }}
-          />
+          <img src={logo} alt={copy.common.logoAlt} style={{ height: '48px', width: 'auto' }} />
         </Link>
 
-        {/* Desktop nav */}
-        <div
-          style={{ display: 'flex', alignItems: 'center', gap: '32px' }}
-          className="desktop-nav-s"
-        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }} className="desktop-nav-s">
           <Link
             to="/"
             style={{
@@ -82,7 +77,7 @@ function StudentNavbar() {
             onMouseEnter={e => (e.currentTarget.style.color = '#0f172a')}
             onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
           >
-            For Clients
+            {nav.forClients}
             <span style={{ fontSize: '12px', opacity: 0.8 }}>↗</span>
           </Link>
 
@@ -90,8 +85,8 @@ function StudentNavbar() {
             <button
               type="button"
               onClick={handleLogout}
-              aria-label="Logout"
-              title="Logout"
+              aria-label={nav.logout}
+              title={nav.logout}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -127,7 +122,7 @@ function StudentNavbar() {
               onMouseEnter={e => (e.currentTarget.style.color = '#0f172a')}
               onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
             >
-              Sign In
+              {nav.signIn}
             </Link>
           )}
 
@@ -156,16 +151,15 @@ function StudentNavbar() {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            Start Earning
-            <ArrowRight size={14} />
+            {nav.startEarning}
+            <CtaIcon size={14} />
           </Link>
+
+          <LandingLanguageSwitcher variant="light" />
         </div>
 
-        {/* Mobile: always-visible CTA + hamburger */}
-        <div
-          style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
-          className="mobile-nav-s"
-        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="mobile-nav-s">
+          <LandingLanguageSwitcher variant="light" />
           <Link
             to="/register?role=student"
             style={{
@@ -179,7 +173,7 @@ function StudentNavbar() {
               whiteSpace: 'nowrap',
             }}
           >
-            Start Earning
+            {nav.startEarning}
           </Link>
           <button
             onClick={() => setMenuOpen(v => !v)}
@@ -192,14 +186,13 @@ function StudentNavbar() {
               display: 'flex',
               alignItems: 'center',
             }}
-            aria-label="Toggle menu"
+            aria-label={nav.toggleMenu}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile dropdown */}
       {menuOpen && (
         <div
           style={{
@@ -225,14 +218,14 @@ function StudentNavbar() {
               gap: '6px',
             }}
           >
-            For Clients <span style={{ fontSize: '12px' }}>↗</span>
+            {nav.forClients} <span style={{ fontSize: '12px' }}>↗</span>
           </Link>
           {isAuthenticated ? (
             <button
               type="button"
               onClick={handleLogout}
-              aria-label="Logout"
-              title="Logout"
+              aria-label={nav.logout}
+              title={nav.logout}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -256,7 +249,7 @@ function StudentNavbar() {
                 textDecoration: 'none',
               }}
             >
-              Sign In
+              {nav.signIn}
             </Link>
           )}
         </div>
@@ -280,13 +273,13 @@ function StudentNavbar() {
 
 // ─── Earnings Card Mockup ───────────────────────────────────────────────────
 
-const recentEarnings = [
-  { initials: 'AK', name: 'Ahmed K.', skill: 'Graphic Design', amount: '2,500', label: 'this week' },
-  { initials: 'SM', name: 'Sara M.',  skill: 'Web Development',  amount: '4,200', label: 'this month' },
-  { initials: 'NR', name: 'Nour R.',  skill: 'Video Editing',    amount: '1,800', label: 'this week' },
-];
-
 function EarningsCardMockup() {
+  const { copy } = useLandingLocale();
+  const s = copy.student;
+  const m = s.mock;
+  const rows = s.rows;
+  const egp = copy.common.egp;
+
   return (
     <div
       style={{
@@ -298,7 +291,6 @@ function EarningsCardMockup() {
         paddingTop: '24px',
       }}
     >
-      {/* Background glow */}
       <div
         style={{
           position: 'absolute',
@@ -313,7 +305,6 @@ function EarningsCardMockup() {
         }}
       />
 
-      {/* Main earnings card */}
       <div
         style={{
           background: '#ffffff',
@@ -327,7 +318,6 @@ function EarningsCardMockup() {
           animation: 'bounce-slow 6s ease-in-out infinite',
         }}
       >
-        {/* Card header */}
         <div
           style={{
             display: 'flex',
@@ -350,9 +340,7 @@ function EarningsCardMockup() {
             >
               <TrendingUp size={16} color="#25aaad" />
             </div>
-            <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>
-              Recent Earnings
-            </span>
+            <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>{m.recentEarnings}</span>
           </div>
           <span
             style={{
@@ -367,13 +355,12 @@ function EarningsCardMockup() {
               textTransform: 'uppercase',
             }}
           >
-            Live
+            {m.live}
           </span>
         </div>
 
-        {/* Earnings rows */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {recentEarnings.map((e, i) => (
+          {rows.map((e, i) => (
             <div
               key={i}
               style={{
@@ -386,7 +373,6 @@ function EarningsCardMockup() {
                 border: '1px solid #f1f5f9',
               }}
             >
-              {/* Avatar */}
               <div
                 style={{
                   width: '36px',
@@ -397,8 +383,8 @@ function EarningsCardMockup() {
                     i === 0
                       ? 'linear-gradient(135deg, #25aaad, #0f828c)'
                       : i === 1
-                      ? 'linear-gradient(135deg, #065084, #25aaad)'
-                      : 'linear-gradient(135deg, #0f828c, #074368)',
+                        ? 'linear-gradient(135deg, #065084, #25aaad)'
+                        : 'linear-gradient(135deg, #0f828c, #074368)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -410,30 +396,31 @@ function EarningsCardMockup() {
                 {e.initials}
               </div>
 
-              {/* Name + skill */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '13px', color: '#0f172a', marginBottom: '2px' }}>
-                  {e.name}
-                </div>
-                <div style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontWeight: 600, fontSize: '13px', color: '#0f172a', marginBottom: '2px' }}>{e.name}</div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#64748b',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {e.skill}
                 </div>
               </div>
 
-              {/* Amount */}
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ textAlign: 'end', flexShrink: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: '14px', color: '#25aaad' }}>
-                  {e.amount} EGP
+                  {e.amount} {egp}
                 </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  {e.label}
-                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>{e.label}</div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Footer */}
         <div
           style={{
             marginTop: '16px',
@@ -442,12 +429,11 @@ function EarningsCardMockup() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: '8px',
           }}
         >
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-            500+ students earning this week
-          </span>
-          <div style={{ display: 'flex', gap: '-8px' }}>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{m.studentsEarning}</span>
+          <div style={{ display: 'flex' }}>
             {['AK', 'SM', 'NR', '+'].map((init, i) => (
               <div
                 key={i}
@@ -463,7 +449,7 @@ function EarningsCardMockup() {
                   fontSize: '8px',
                   fontWeight: 700,
                   color: i === 3 ? '#25aaad' : '#ffffff',
-                  marginLeft: i > 0 ? '-6px' : 0,
+                  marginInlineStart: i > 0 ? '-6px' : 0,
                 }}
               >
                 {init}
@@ -473,12 +459,11 @@ function EarningsCardMockup() {
         </div>
       </div>
 
-      {/* Floating badge — first project stat */}
       <div
         style={{
           position: 'absolute',
           bottom: '-12px',
-          right: '-28px',
+          insetInlineEnd: '-28px',
           background: '#ffffff',
           border: '1px solid #e2e8f0',
           borderRadius: '12px',
@@ -505,17 +490,16 @@ function EarningsCardMockup() {
           <Briefcase size={15} color="#25aaad" />
         </div>
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>First project</div>
-          <div style={{ fontSize: '11px', color: '#0f828c', fontWeight: 600 }}>avg. in 48h</div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>{m.firstProject}</div>
+          <div style={{ fontSize: '11px', color: '#0f828c', fontWeight: 600 }}>{m.avg48}</div>
         </div>
       </div>
 
-      {/* Floating star badge — top left */}
       <div
         style={{
           position: 'absolute',
           top: '12px',
-          left: '-28px',
+          insetInlineStart: '-28px',
           background: '#ffffff',
           border: '1px solid #fde68a',
           borderRadius: '10px',
@@ -530,8 +514,8 @@ function EarningsCardMockup() {
       >
         <Star size={14} color="#f59e0b" fill="#f59e0b" />
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>4.9 avg rating</div>
-          <div style={{ fontSize: '10px', color: '#64748b' }}>from clients</div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>{m.rating}</div>
+          <div style={{ fontSize: '10px', color: '#64748b' }}>{m.fromClients}</div>
         </div>
       </div>
     </div>
@@ -541,13 +525,18 @@ function EarningsCardMockup() {
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 function StudentHero() {
+  const { isRTL, copy, locale } = useLandingLocale();
+  const h = copy.student.hero;
+  const CtaIcon = isRTL ? ArrowLeft : ArrowRight;
+  const trust = [h.trust1, h.trust2, h.trust3];
+  const isArabic = locale === 'ar';
+
   return (
     <section
       style={{
         minHeight: '100vh',
         background: '#f8fafc',
-        backgroundImage:
-          'radial-gradient(ellipse at 15% 45%, rgba(37,170,173,0.1) 0%, transparent 55%)',
+        backgroundImage: 'radial-gradient(ellipse at 15% 45%, rgba(37,170,173,0.1) 0%, transparent 55%)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 24px',
@@ -567,10 +556,7 @@ function StudentHero() {
         }}
         className="student-hero-grid"
       >
-        {/* ── Left column ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '24px' }}>
-
-          {/* Badge */}
           <div
             className="animate-fade-up"
             style={{
@@ -596,30 +582,35 @@ function StudentHero() {
                 display: 'inline-block',
               }}
             />
-            Free to join · No experience needed
+            {h.topBadge}
           </div>
 
-          {/* H1 */}
           <h1
             className="animate-fade-up"
             style={{
               animationDelay: '80ms',
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+              fontSize: isArabic ? 'clamp(2.2rem, 5.2vw, 4.4rem)' : 'clamp(2.5rem, 6vw, 5rem)',
               fontWeight: 800,
               color: '#0f172a',
-              lineHeight: 1.1,
+              lineHeight: isArabic ? 1.18 : 1.1,
               margin: 0,
               letterSpacing: '-0.02em',
             }}
           >
-            Turn your
+            {h.h1a}
             <br />
-            university skills
+            {h.h1b}
             <br />
-            <span style={{ color: '#334155' }}>into real income.</span>
+            <span
+              style={{
+                color: '#334155',
+                fontSize: isArabic ? '0.92em' : '1em',
+              }}
+            >
+              {h.h1c}
+            </span>
           </h1>
 
-          {/* H2 */}
           <p
             className="animate-fade-up"
             style={{
@@ -632,10 +623,9 @@ function StudentHero() {
               maxWidth: '480px',
             }}
           >
-            Egypt's first freelance platform built exclusively for students. Free to join.
+            {h.h2}
           </p>
 
-          {/* CTAs */}
           <div
             className="animate-fade-up"
             style={{
@@ -645,7 +635,6 @@ function StudentHero() {
               flexWrap: 'wrap',
             }}
           >
-            {/* Primary CTA */}
             <Link
               to="/register?role=student"
               style={{
@@ -670,13 +659,12 @@ function StudentHero() {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              Start Earning
-              <ArrowRight size={16} />
+              {h.ctaStart}
+              <CtaIcon size={16} />
             </Link>
 
-            {/* Ghost CTA — hidden below 480px */}
-            <a
-              href="#how-it-works"
+            <Link
+              to="/cv-checker?role=student"
               className="student-ghost-cta"
               style={{
                 display: 'inline-flex',
@@ -695,11 +683,10 @@ function StudentHero() {
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(6,80,132,0.08)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              See How It Works
-            </a>
+              {locale === 'ar' ? 'فاحص السيرة الذاتية' : 'CV Checker'}
+            </Link>
           </div>
 
-          {/* Trust line */}
           <div
             className="animate-fade-up"
             style={{
@@ -709,11 +696,7 @@ function StudentHero() {
               gap: '20px',
             }}
           >
-            {[
-              'Free to join',
-              'No experience needed',
-              'Get paid in EGP directly',
-            ].map(item => (
+            {trust.map((item) => (
               <span
                 key={item}
                 style={{
@@ -731,7 +714,6 @@ function StudentHero() {
           </div>
         </div>
 
-        {/* ── Right column ── */}
         <div
           className="animate-fade-up student-hero-card-col"
           style={{
@@ -771,11 +753,36 @@ function StudentHero() {
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
-export default function StudentLanding() {
+function StudentLandingContent() {
+  const { dir, locale } = useLandingLocale();
+  const fontStyle =
+    locale === 'ar'
+      ? {
+          fontFamily:
+            'system-ui, "Segoe UI", Tahoma, "Noto Sans Arabic", "Helvetica Neue", sans-serif',
+        }
+      : undefined;
+
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh' }}>
+    <div
+      dir={dir}
+      lang={locale}
+      style={{
+        background: '#f8fafc',
+        minHeight: '100dvh',
+        ...fontStyle,
+      }}
+    >
       <StudentNavbar />
       <StudentHero />
     </div>
+  );
+}
+
+export default function StudentLanding() {
+  return (
+    <LandingLocaleProvider>
+      <StudentLandingContent />
+    </LandingLocaleProvider>
   );
 }

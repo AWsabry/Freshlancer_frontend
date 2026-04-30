@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
@@ -59,10 +59,35 @@ const translations = {
     emailNotFound: 'Indirizzo email non trovato',
     failedToResend: 'Impossibile reinviare l\'email di verifica',
   },
+  ar: {
+    loading: '...',
+    emailVerificationRequired: 'التحقق من البريد مطلوب',
+    pleaseVerifyEmail: 'حقّقي بريدك للوصول للوحة',
+    emailNotVerified: 'بريدك غير مُحقّق. راجعي الوارد واضغطي الرابط.',
+    verificationEmailSent: 'أُرسلت رسالة التحقق إلى:',
+    verificationEmailResent: 'أُعيد إرسال الرسالة! راجعي الوارد.',
+    myStartups: 'منشآتي',
+    manageStartupsWhileWaiting: 'يمكنك إدارة المنشآت أثناء الانتظار',
+    manageStartups: 'إدارة المنشآت',
+    importantInformation: 'معلومات مهمة:',
+    checkInboxSpam: 'راجعي الوارد والبريد المزعج',
+    linkExpires10Minutes: 'الرابط ينتهي خلال ١٠ دقائق',
+    clickLinkToVerify: 'اضغطي الرابط في الرسالة',
+    pageAutoRefresh: 'تُحدَّث الصفحة تلقائياً بعد التحقق',
+    resendVerificationEmail: 'إعادة إرسال',
+    checkVerificationStatus: 'التحقق من الحالة',
+    signOut: 'تسجيل الخروج',
+    note: 'ملاحظة:',
+    emailServiceNote: 'قد يُستخدم بريد تجريبي في التطوير.',
+    checkServerConsole: 'راجعي وحدة التحكم أو اضبطي SMTP.',
+    emailNotFound: 'البريد غير موجود',
+    failedToResend: 'فشل إعادة الإرسال',
+  },
 };
 
 const VerifyEmailRequired = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuthStore();
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState(null);
@@ -88,6 +113,11 @@ const VerifyEmailRequired = () => {
   }, []);
 
   const t = translations[language] || translations.en;
+
+  const nextPath = useMemo(() => {
+    const sp = new URLSearchParams(location.search || '');
+    return sp.get('next') || '';
+  }, [location.search]);
 
   const { setUser } = useAuthStore();
 
@@ -167,10 +197,21 @@ const VerifyEmailRequired = () => {
       };
       // Small delay to ensure state is updated
       setTimeout(() => {
-        navigate(getDashboardPath(), { replace: true });
+        if (nextPath) {
+          navigate(nextPath, { replace: true });
+        } else if (localStorage.getItem('pendingCvReviewUploadId')) {
+          navigate(
+            `/cv-review/continue?uploadId=${encodeURIComponent(
+              localStorage.getItem('pendingCvReviewUploadId') || ''
+            )}`,
+            { replace: true }
+          );
+        } else {
+          navigate(getDashboardPath(), { replace: true });
+        }
       }, 500);
     }
-  }, [isVerified, currentUser, navigate]);
+  }, [isVerified, currentUser, navigate, nextPath]);
 
   if (isVerified) {
     return (

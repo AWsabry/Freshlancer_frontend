@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
@@ -8,6 +8,8 @@ import { authService } from '../../services/authService';
 import { contractService } from '../../services/contractService';
 import { withdrawalService } from '../../services/withdrawalService';
 import { useToast } from '../../contexts/ToastContext';
+import { useDashboardLanguage } from '../../hooks/useDashboardLanguage';
+import { getStudentWalletT } from '../../locales/studentWalletLocales';
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const fmt = (cur, n) => `${cur} ${round2(n).toFixed(2)}`;
@@ -27,6 +29,12 @@ const getKeys = (obj) => {
 const Wallet = () => {
   const queryClient = useQueryClient();
   const { success: showSuccess, error: showError } = useToast();
+  const { language } = useDashboardLanguage();
+  const t = useMemo(() => getStudentWalletT(language), [language]);
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const [showWithdrawalForm, setShowWithdrawalForm] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState('EGP');
   const [withdrawalAmount, setWithdrawalAmount] = useState('');
@@ -65,7 +73,7 @@ const Wallet = () => {
   const withdrawalMutation = useMutation({
     mutationFn: (payload) => withdrawalService.requestWithdrawal(payload),
     onSuccess: () => {
-      showSuccess('Withdrawal request submitted successfully. It will be processed after admin approval.');
+      showSuccess(tRef.current.withdrawalSubmitted);
       setShowWithdrawalForm(false);
       setWithdrawalAmount('');
       setBankAccount({
@@ -83,7 +91,7 @@ const Wallet = () => {
       queryClient.invalidateQueries({ queryKey: ['withdrawals', 'me'] });
     },
     onError: (err) => {
-      showError(err?.response?.data?.message || err?.message || 'Failed to submit withdrawal request');
+      showError(err?.response?.data?.message || err?.message || tRef.current.withdrawalFailed);
     },
   });
 
@@ -129,14 +137,16 @@ const Wallet = () => {
     const minimum = minimums.EGP || 500;
 
     if (amountNum < minimum) {
-      showError(`Minimum withdrawal amount is ${selectedCurrency} ${minimum}`);
+      showError(`${t.minAmountError} ${selectedCurrency} ${minimum}`);
       return;
     }
 
     if (amountNum > availableForWithdrawalEGP) {
       showError(
-        `Insufficient balance. Available for withdrawal: ${selectedCurrency} ${availableForWithdrawalEGP.toFixed(2)}` +
-          (pendingWithdrawalTotalEGP > 0 ? ` (${fmt('EGP', pendingWithdrawalTotalEGP)} locked in pending)` : '')
+        `${t.insufficientError} ${selectedCurrency} ${availableForWithdrawalEGP.toFixed(2)}` +
+          (pendingWithdrawalTotalEGP > 0
+            ? ` (${fmt('EGP', pendingWithdrawalTotalEGP)} ${t.lockedInPending})`
+            : '')
       );
       return;
     }
@@ -160,6 +170,9 @@ const Wallet = () => {
   const contracts = contractsResp?.data?.contracts || [];
 
   const holdsByContract = useMemo(() => {
+    const defM = t.defaultMilestone;
+    const defP = t.defaultProject;
+    const defC = t.defaultClient;
     const list = [];
     for (const c of Array.isArray(contracts) ? contracts : []) {
       const ms = Array.isArray(c?.milestones) ? c.milestones : [];
@@ -173,7 +186,7 @@ const Wallet = () => {
           if (!isHeld) return null;
           return {
             milestoneId: m?._id,
-            title: m?.plan?.title || 'Milestone',
+            title: m?.plan?.title || defM,
             description: m?.plan?.description || '',
             percent: m?.plan?.percent || 0,
             status,
@@ -192,12 +205,12 @@ const Wallet = () => {
 
       list.push({
         contractId: c?._id,
-        jobTitle: c?.jobPost?.title || 'Project',
+        jobTitle: c?.jobPost?.title || defP,
         projectDescription: c?.projectDescription || '',
         currency: c?.currency || 'EGP',
         totalAmount: c?.totalAmount || 0,
         contractStatus: c?.status || 'draft',
-        otherPartyName: c?.client?.name || 'Client',
+        otherPartyName: c?.client?.name || defC,
         otherPartyEmail: c?.client?.email || '',
         otherPartyPhone: c?.client?.phone || '',
         holds,
@@ -205,22 +218,22 @@ const Wallet = () => {
       });
     }
     return list;
-  }, [contracts]);
+  }, [contracts, language]);
 
   return (
     <div className="space-y-6">
-      <Card title="Wallet">
+      <Card title={t.titleWallet}>
         {loadingMe ? (
           <Loading />
         ) : meError ? (
-          <Alert type="error" message={meError?.message || 'Failed to load wallet'} />
+          <Alert type="error" message={meError?.message || t.failedLoadWallet} />
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="border rounded-lg p-4 bg-white">
-                <p className="text-xs text-gray-500">Available balance</p>
+                <p className="text-xs text-gray-500">{t.availableBalance}</p>
                 {currencies.length === 0 ? (
-                  <p className="text-sm text-gray-700 mt-1">No balance yet.</p>
+                  <p className="text-sm text-gray-700 mt-1">{t.noBalanceYet}</p>
                 ) : (
                   <div className="mt-2 space-y-1">
                     {currencies.map((cur) => (
@@ -234,9 +247,9 @@ const Wallet = () => {
               </div>
 
               <div className="border rounded-lg p-4 bg-white">
-                <p className="text-xs text-gray-500">Escrow (held)</p>
+                <p className="text-xs text-gray-500">{t.escrowHeld}</p>
                 {currencies.length === 0 ? (
-                  <p className="text-sm text-gray-700 mt-1">No escrow holds.</p>
+                  <p className="text-sm text-gray-700 mt-1">{t.noEscrow}</p>
                 ) : (
                   <div className="mt-2 space-y-1">
                     {currencies.map((cur) => (
@@ -248,7 +261,7 @@ const Wallet = () => {
                   </div>
                 )}
                 <p className="text-[11px] text-gray-500 mt-2">
-                  Escrow is locked until the client approves each milestone.
+                  {t.escrowHint}
                 </p>
               </div>
             </div>
@@ -256,27 +269,27 @@ const Wallet = () => {
         )}
       </Card>
 
-      <Card title="Request withdrawal">
+      <Card title={t.titleWithdraw}>
         {loadingMe ? (
           <Loading />
         ) : meError ? (
-          <Alert type="error" message={meError?.message || 'Failed to load wallet'} />
+          <Alert type="error" message={meError?.message || t.failedLoadWallet} />
         ) : (
           <div className="space-y-4">
             {!showWithdrawalForm ? (
               <div className="space-y-3">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                  <p className="text-xs font-medium text-blue-900 mb-1">⏱️ Processing time</p>
+                  <p className="text-xs font-medium text-blue-900 mb-1">⏱️ {t.processingTime}</p>
                   <p className="text-xs text-blue-800">
-                    Money transfers are processed at the <span className="font-semibold">beginning of every month</span>.
+                    {t.processingTimeBody}
                   </p>
                 </div>
                 <p className="text-sm text-gray-700">
-                  Request a withdrawal (EGP only). Minimum withdrawal amount: <span className="font-semibold">{fmt('EGP', minimums.EGP || 500)}</span>
+                  {t.minWithdraw} <span className="font-semibold">{fmt('EGP', minimums.EGP || 500)}</span>
                 </p>
 
                 <div className="border rounded-lg p-4 bg-white">
-                  <p className="text-xs text-gray-500 mb-2">Available for withdrawal (EGP)</p>
+                  <p className="text-xs text-gray-500 mb-2">{t.availableForWithdraw}</p>
                   {(() => {
                     const minimum = minimums.EGP || 500;
                     const canWithdrawEGP = availableForWithdrawalEGP >= minimum;
@@ -289,15 +302,15 @@ const Wallet = () => {
                         <div>
                           <p className="text-sm font-medium text-gray-900">EGP</p>
                           <p className="text-xs text-gray-600">
-                            {fmt('EGP', availableForWithdrawalEGP)} available
+                            {fmt('EGP', availableForWithdrawalEGP)} {t.availableSuffix}
                             {pendingWithdrawalTotalEGP > 0 && (
-                              <span className="text-gray-500 ml-1">
-                                ({fmt('EGP', pendingWithdrawalTotalEGP)} locked in pending)
+                              <span className="text-gray-500 ms-1">
+                                ({fmt('EGP', pendingWithdrawalTotalEGP)} {t.lockedPending})
                               </span>
                             )}
                             {!canWithdrawEGP && (
-                              <span className="text-orange-600 ml-1">
-                                (min: {fmt('EGP', minimum)})
+                              <span className="text-orange-600 ms-1">
+                                ({t.minLabel} {fmt('EGP', minimum)})
                               </span>
                             )}
                           </p>
@@ -310,7 +323,7 @@ const Wallet = () => {
                               setShowWithdrawalForm(true);
                             }}
                           >
-                            Withdraw
+                            {t.withdraw}
                           </Button>
                         )}
                       </div>
@@ -321,7 +334,9 @@ const Wallet = () => {
             ) : (
               <form onSubmit={handleWithdrawalSubmit} className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900">Withdrawal request ({selectedCurrency})</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    {t.withdrawalRequest} ({selectedCurrency})
+                  </h3>
                   <button
                     type="button"
                     onClick={() => {
@@ -330,13 +345,13 @@ const Wallet = () => {
                     }}
                     className="text-sm text-gray-600 hover:text-gray-900"
                   >
-                    Cancel
+                    {t.cancel}
                   </button>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount (EGP)
+                    {t.amountEgp}
                   </label>
                   <input
                     type="number"
@@ -346,19 +361,19 @@ const Wallet = () => {
                     value={withdrawalAmount}
                     onChange={(e) => setWithdrawalAmount(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    placeholder={`Min: ${fmt('EGP', minimums.EGP || 500)}`}
+                    placeholder={`${t.minPlaceholder} ${fmt('EGP', minimums.EGP || 500)}`}
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Available for withdrawal: {fmt('EGP', availableForWithdrawalEGP)}
-                    {pendingWithdrawalTotalEGP > 0 && ` (${fmt('EGP', pendingWithdrawalTotalEGP)} locked)`} • Min:{' '}
+                    {t.availableForWithdrawLine} {fmt('EGP', availableForWithdrawalEGP)}
+                    {pendingWithdrawalTotalEGP > 0 && ` (${fmt('EGP', pendingWithdrawalTotalEGP)} ${t.locked})`} • {t.min}{' '}
                     {fmt('EGP', minimums.EGP || 500)}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payment method *
+                    {t.paymentMethod}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
@@ -370,7 +385,7 @@ const Wallet = () => {
                           : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      Bank Transfer
+                      {t.bankTransfer}
                     </button>
                     <button
                       type="button"
@@ -381,7 +396,7 @@ const Wallet = () => {
                           : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      InstaPay
+                      {t.instapay}
                     </button>
                   </div>
                 </div>
@@ -390,7 +405,7 @@ const Wallet = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone number *
+                        {t.phone}
                       </label>
                       <input
                         type="tel"
@@ -401,33 +416,33 @@ const Wallet = () => {
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Enter the phone number linked to your InstaPay account
+                        {t.phoneHelp}
                       </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        InstaPay username *
+                        {t.instapayUser}
                       </label>
                       <input
                         type="text"
                         value={instapayUsername}
                         onChange={(e) => setInstapayUsername(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                        placeholder="Enter your InstaPay username"
+                        placeholder={t.instapayUserPlaceholder}
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Enter your InstaPay username
+                        {t.instapayUserHelp}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="border-t pt-4">
-                    <p className="text-sm font-medium text-gray-900 mb-3">Bank account details</p>
+                    <p className="text-sm font-medium text-gray-900 mb-3">{t.bankDetails}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Account holder name *
+                        {t.accountHolder}
                       </label>
                       <input
                         type="text"
@@ -440,7 +455,7 @@ const Wallet = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Account number *</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t.accountNumber}</label>
                       <input
                         type="text"
                         value={bankAccount.accountNumber}
@@ -452,7 +467,7 @@ const Wallet = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Bank name *</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t.bankName}</label>
                       <input
                         type="text"
                         value={bankAccount.bankName}
@@ -462,7 +477,7 @@ const Wallet = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">IBAN</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t.iban}</label>
                       <input
                         type="text"
                         value={bankAccount.iban}
@@ -471,7 +486,7 @@ const Wallet = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">SWIFT code</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t.swift}</label>
                       <input
                         type="text"
                         value={bankAccount.swiftCode}
@@ -480,7 +495,7 @@ const Wallet = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Routing number</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">{t.routing}</label>
                       <input
                         type="text"
                         value={bankAccount.routingNumber}
@@ -503,10 +518,10 @@ const Wallet = () => {
                       setWithdrawalAmount('');
                     }}
                   >
-                    Cancel
+                    {t.cancel}
                   </Button>
                   <Button type="submit" loading={withdrawalMutation.isPending} disabled={!canWithdraw}>
-                    Submit request
+                    {t.submitRequest}
                   </Button>
                 </div>
               </form>
@@ -515,11 +530,11 @@ const Wallet = () => {
         )}
       </Card>
 
-      <Card title="Withdrawal history">
+      <Card title={t.titleHistory}>
         {loadingWithdrawals ? (
           <Loading />
         ) : !withdrawalsResp?.data?.withdrawals || withdrawalsResp.data.withdrawals.length === 0 ? (
-          <p className="text-gray-600">No withdrawal requests yet.</p>
+          <p className="text-gray-600">{t.noWithdrawals}</p>
         ) : (
           <div className="space-y-3">
             {withdrawalsResp.data.withdrawals.map((w) => {
@@ -531,11 +546,11 @@ const Wallet = () => {
                 cancelled: 'bg-gray-50 border-gray-200 text-gray-800',
               };
               const statusLabels = {
-                pending: 'Pending',
-                processing: 'Processing',
-                completed: 'Completed',
-                rejected: 'Rejected',
-                cancelled: 'Cancelled',
+                pending: t.wPending,
+                processing: t.wProcessing,
+                completed: t.wCompleted,
+                rejected: t.wRejected,
+                cancelled: t.wCancelled,
               };
               return (
                 <div key={w._id} className="border rounded-lg p-4 bg-white">
@@ -550,42 +565,43 @@ const Wallet = () => {
                         </span>
                       </div>
                       <p className="text-xs text-gray-600">
-                        Payment method: <span className="font-medium">
-                          {w.paymentMethod === 'instapay' ? 'InstaPay' : 'Bank Transfer'}
+                        {t.paymentMethodLabel}{' '}
+                        <span className="font-medium">
+                          {w.paymentMethod === 'instapay' ? t.instapay : t.bankTransfer}
                         </span>
                       </p>
                       {w.paymentMethod === 'instapay' && w.instapayPhone && (
                         <p className="text-xs text-gray-600 mt-1">
-                          Phone: {w.instapayPhone}
-                          {w.instapayUsername && ` • Username: ${w.instapayUsername}`}
+                          {t.phoneLabel} {w.instapayPhone}
+                          {w.instapayUsername && ` • ${t.usernameLabel} ${w.instapayUsername}`}
                         </p>
                       )}
                       {w.paymentMethod === 'bank_transfer' && w.bankAccount?.bankName && (
                         <p className="text-xs text-gray-600 mt-1">
-                          Bank: {w.bankAccount.bankName} • Account: {w.bankAccount.accountNumber}
+                          {t.bankLabel} {w.bankAccount.bankName} • {t.accountLabel} {w.bankAccount.accountNumber}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-2">
-                        Requested: {w.requestedAt ? new Date(w.requestedAt).toLocaleString() : 'N/A'}
+                        {t.requested} {w.requestedAt ? new Date(w.requestedAt).toLocaleString() : t.na}
                         {w.completedAt && (
-                          <span className="ml-2">
-                            • Completed: {new Date(w.completedAt).toLocaleString()}
+                          <span className="ms-2">
+                            • {t.completed} {new Date(w.completedAt).toLocaleString()}
                           </span>
                         )}
                         {w.rejectedAt && (
-                          <span className="ml-2">
-                            • Rejected: {new Date(w.rejectedAt).toLocaleString()}
+                          <span className="ms-2">
+                            • {t.rejected} {new Date(w.rejectedAt).toLocaleString()}
                           </span>
                         )}
                       </p>
                       {w.rejectedReason && (
                         <p className="text-xs text-red-600 mt-1">
-                          Reason: {w.rejectedReason}
+                          {t.reason} {w.rejectedReason}
                         </p>
                       )}
                       {w.adminNotes && (
                         <p className="text-xs text-gray-600 mt-1 italic">
-                          Note: {w.adminNotes}
+                          {t.note} {w.adminNotes}
                         </p>
                       )}
                     </div>
@@ -597,13 +613,13 @@ const Wallet = () => {
         )}
       </Card>
 
-      <Card title="Money held per project (from clients)">
+      <Card title={t.titleEscrow}>
         {loadingContracts ? (
           <Loading />
         ) : contractsError ? (
-          <Alert type="error" message={contractsError?.message || 'Failed to load contracts'} />
+          <Alert type="error" message={contractsError?.message || t.failedLoadContracts} />
         ) : holdsByContract.length === 0 ? (
-          <p className="text-gray-600">No money is currently held in escrow for your projects.</p>
+          <p className="text-gray-600">{t.noMoneyHeld}</p>
         ) : (
           <div className="space-y-4">
             {holdsByContract.map((c) => (
@@ -620,13 +636,13 @@ const Wallet = () => {
                         </p>
                       )}
                       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                        <span>Contract: {c.contractStatus}</span>
+                        <span>{t.contract} {c.contractStatus}</span>
                         <span>•</span>
-                        <span>Total: {fmt(c.currency, c.totalAmount)}</span>
+                        <span>{t.total} {fmt(c.currency, c.totalAmount)}</span>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs text-gray-500">Total held in escrow</p>
+                    <div className="text-end flex-shrink-0">
+                      <p className="text-xs text-gray-500">{t.totalHeldEscrow}</p>
                       <p className="text-sm font-bold text-gray-900">{fmt(c.currency, c.totalHeld)}</p>
                     </div>
                   </div>
@@ -634,19 +650,19 @@ const Wallet = () => {
 
                 {/* Client Info */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                  <p className="text-xs font-medium text-blue-900 mb-1">Client Details</p>
+                  <p className="text-xs font-medium text-blue-900 mb-1">{t.clientDetails}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-blue-800">
                     <div>
-                      <span className="font-medium">Name:</span> {c.otherPartyName}
+                      <span className="font-medium">{t.name}</span> {c.otherPartyName}
                     </div>
                     {c.otherPartyEmail && (
                       <div>
-                        <span className="font-medium">Email:</span> {c.otherPartyEmail}
+                        <span className="font-medium">{t.email}</span> {c.otherPartyEmail}
                       </div>
                     )}
                     {c.otherPartyPhone && (
                       <div>
-                        <span className="font-medium">Phone:</span> {c.otherPartyPhone}
+                        <span className="font-medium">{t.phoneShort}</span> {c.otherPartyPhone}
                       </div>
                     )}
                   </div>
@@ -654,13 +670,13 @@ const Wallet = () => {
 
                 {/* Milestones */}
                 <div className="space-y-3">
-                  <p className="text-xs font-medium text-gray-700">Milestones in escrow:</p>
+                  <p className="text-xs font-medium text-gray-700">{t.milestoneEscrow}</p>
                   {c.holds.map((h) => {
                     const statusLabels = {
-                      funded: 'Funded - You can start working',
-                      submitted: 'Submitted - Awaiting client approval',
-                      approved: 'Approved - Ready for release to your wallet',
-                      released: 'Released - Payment received',
+                      funded: t.mFunded,
+                      submitted: t.mSubmitted,
+                      approved: t.mApproved,
+                      released: t.mReleased,
                     };
                     const statusColors = {
                       funded: 'bg-yellow-50 border-yellow-200',
@@ -683,30 +699,30 @@ const Wallet = () => {
                               <p className="text-xs text-gray-600 mt-1 line-clamp-2">{h.description}</p>
                             )}
                           </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-xs text-gray-500">Amount held</p>
+                          <div className="text-end flex-shrink-0">
+                            <p className="text-xs text-gray-500">{t.amountHeld}</p>
                             <p className="text-sm font-bold text-gray-900">{fmt(c.currency, h.held)}</p>
-                            <p className="text-[10px] text-gray-400 mt-1">of {fmt(c.currency, h.amount)}</p>
+                            <p className="text-[10px] text-gray-400 mt-1">{t.of} {fmt(c.currency, h.amount)}</p>
                           </div>
                         </div>
 
                         <div className="border-t pt-2 mt-2">
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                             <div>
-                              <p className="text-gray-500">Phase/Status</p>
+                              <p className="text-gray-500">{t.phaseStatus}</p>
                               <p className="font-medium text-gray-900 mt-0.5">
                                 {statusLabels[h.status] || h.status}
                               </p>
                             </div>
                             {h.expectedDuration && (
                               <div>
-                                <p className="text-gray-500">Expected Duration</p>
+                                <p className="text-gray-500">{t.expectedDuration}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">{h.expectedDuration}</p>
                               </div>
                             )}
                             {h.fundedAt && (
                               <div>
-                                <p className="text-gray-500">Funded Date</p>
+                                <p className="text-gray-500">{t.fundedDate}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">
                                   {new Date(h.fundedAt).toLocaleDateString()}
                                 </p>
@@ -714,7 +730,7 @@ const Wallet = () => {
                             )}
                             {h.submittedAt && (
                               <div>
-                                <p className="text-gray-500">Submitted Date</p>
+                                <p className="text-gray-500">{t.submittedDate}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">
                                   {new Date(h.submittedAt).toLocaleDateString()}
                                 </p>
@@ -722,7 +738,7 @@ const Wallet = () => {
                             )}
                             {h.approvedAt && (
                               <div>
-                                <p className="text-gray-500">Approved Date</p>
+                                <p className="text-gray-500">{t.approvedDate}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">
                                   {new Date(h.approvedAt).toLocaleDateString()}
                                 </p>

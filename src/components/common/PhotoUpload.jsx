@@ -42,6 +42,22 @@ const translations = {
     cropSizeError: 'La dimensione del file deve essere inferiore a 5MB. Prova a ritagliare un\'area più piccola.',
     cancel: 'Annulla',
   },
+  ar: {
+    changePhoto: 'تغيير الصورة',
+    uploadPhoto: 'رفع صورة',
+    photoUploaded: 'تم رفع الصورة',
+    photoUploadFailed: 'فشل رفع الصورة',
+    selectPhoto: 'اختر صورة',
+    photoSupportedFormats: 'JPG وPNG وGIF وWEBP (حد أقصى ٥ ميجا)',
+    cropPhoto: 'قص الصورة',
+    cropPhotoDescription: 'اضبطي الإطار',
+    saveCrop: 'حفظ ورفع',
+    fileSizeError: 'الحجم أقل من ٥ ميجا',
+    fileReadError: 'خطأ في قراءة الملف',
+    adjustCropError: 'اضبطي منطقة القص',
+    cropSizeError: 'الحجم كبير — قلّلي المساحة',
+    cancel: 'إلغاء',
+  },
 };
 
 // Helper function to create image from URL

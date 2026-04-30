@@ -27,6 +27,15 @@ const translations = {
     goToLogin: 'Vai al Login',
     requestNewLink: 'Richiedi Nuovo Link di Verifica',
   },
+  ar: {
+    verifying: 'جاري التحقق من بريدك...',
+    success: 'تم التحقق من البريد!',
+    successMessage: 'يمكنك الآن تسجيل الدخول.',
+    error: 'فشل التحقق',
+    errorMessage: 'الرابط غير صالح أو منتهٍ. اطلبي رسالة جديدة.',
+    goToLogin: 'تسجيل الدخول',
+    requestNewLink: 'طلب رابط جديد',
+  },
 };
 
 const VerifyEmail = () => {

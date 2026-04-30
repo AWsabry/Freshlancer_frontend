@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuthStore } from '../stores/authStore';
+import { registerAr } from '../locales/registerAr';
 import { generatePassword, validatePassword } from '../utils/passwordGenerator';
 import { universityService } from '../services/universityService';
 import Button from '../components/common/Button';
@@ -620,10 +621,12 @@ const translations = {
     clients: 'Clienti',
     projects: 'Progetti Completati',
   },
+  ar: registerAr,
 };
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register: registerUser } = useAuthStore();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -638,6 +641,11 @@ const Register = () => {
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
+
+  const nextPath = useMemo(() => {
+    const sp = new URLSearchParams(location.search || '');
+    return sp.get('next') || '';
+  }, [location.search]);
 
   useEffect(() => {
     const handleLanguageChange = (event) => {
@@ -656,10 +664,11 @@ const Register = () => {
     };
   }, []);
 
-  // Save language preference to localStorage and set HTML lang attribute
+  // Save language preference to localStorage and set HTML lang / dir
   useEffect(() => {
     localStorage.setItem('dashboardLanguage', language);
     document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
   }, [language]);
@@ -866,13 +875,31 @@ const Register = () => {
       if (!user?.emailVerified) {
         console.log('[Register] Email not verified, redirecting to verify-email-required');
         // Use replace to prevent back navigation
-        navigate('/verify-email-required', { replace: true });
+        const next =
+          nextPath ||
+          (localStorage.getItem('pendingCvReviewUploadId')
+            ? `/cv-review/continue?uploadId=${encodeURIComponent(
+                localStorage.getItem('pendingCvReviewUploadId') || ''
+              )}`
+            : '');
+        navigate(`/verify-email-required${next ? `?next=${encodeURIComponent(next)}` : ''}`, {
+          replace: true,
+        });
         return;
       }
 
       // If email is verified, redirect to dashboard based on role
       console.log('[Register] Email verified, redirecting to dashboard');
-      if (user.role === 'admin') {
+      if (nextPath) {
+        navigate(nextPath, { replace: true });
+      } else if (localStorage.getItem('pendingCvReviewUploadId')) {
+        navigate(
+          `/cv-review/continue?uploadId=${encodeURIComponent(
+            localStorage.getItem('pendingCvReviewUploadId') || ''
+          )}`,
+          { replace: true }
+        );
+      } else if (user.role === 'admin') {
         navigate('/admin/dashboard', { replace: true });
       } else if (user.role === 'client') {
         navigate('/client/dashboard', { replace: true });
@@ -922,9 +949,21 @@ const Register = () => {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
-      {/* Language Selector - Top Right */}
-      <div className="fixed top-4 right-4 z-50">
+    <div
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+      lang={language}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-12 px-4 sm:px-6 lg:px-8"
+      style={
+        language === 'ar'
+          ? {
+              fontFamily:
+                'system-ui, "Segoe UI", Tahoma, "Noto Sans Arabic", "Helvetica Neue", sans-serif',
+            }
+          : undefined
+      }
+    >
+      {/* Language Selector — inline end */}
+      <div className="fixed top-4 end-4 z-50">
         <div className="flex items-center gap-2 bg-white rounded-lg shadow-md border border-gray-200 px-3 py-2">
           <Globe className="w-4 h-4 text-gray-600" />
           <select
@@ -935,6 +974,7 @@ const Register = () => {
           >
             <option value="en">EN</option>
             <option value="it">IT</option>
+            <option value="ar">AR</option>
           </select>
         </div>
       </div>

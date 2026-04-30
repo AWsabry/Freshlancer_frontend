@@ -90,7 +90,7 @@ src/
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Backend API running at `http://localhost:5000`
+- Backend API running (default `http://localhost:8080`—match `VITE_API_BASE_URL` in `.env`)
 
 ### Installation
 
@@ -112,18 +112,7 @@ The app will be available at `http://localhost:3000`
 
 ## API Integration
 
-The frontend connects to the backend API through a proxy configured in `vite.config.js`:
-
-```javascript
-server: {
-  proxy: {
-    '/api': {
-      target: 'http://localhost:5000',
-      changeOrigin: true,
-    },
-  },
-}
-```
+The dev server proxies `/api` to `VITE_API_BASE_URL` from your env (see `vite.config.js`). Point `VITE_API_BASE_URL` at the same host/port as your local API (commonly `http://localhost:8080`).
 
 All API requests are handled through `src/services/api.js` which:
 - Automatically adds JWT tokens from localStorage
@@ -203,11 +192,16 @@ Variants: `success`, `warning`, `error`, `info`, `primary`
 
 ## Environment Variables
 
-Create a `.env` file in the root:
+Vite injects only variables prefixed with `VITE_`. Copy [`.env.example`](.env.example) to `.env` for local development, and use `.env.production` for production builds (`npm run build` loads it automatically per [Vite env modes](https://vitejs.dev/guide/env-and-mode.html)).
 
-```env
-VITE_API_URL=http://localhost:5000/api/v1
-```
+| Variable | Purpose |
+|----------|---------|
+| `VITE_API_BASE_URL` | Backend API origin (no trailing slash), e.g. `http://localhost:8080` in dev, your HTTPS API in production |
+| `VITE_CANONICAL_ORIGIN` | Public site origin for Open Graph and sharing (required for production; set in `.env.production`) |
+| `VITE_ENCRYPTION_KEY` | Must match the API `ENCRYPTION_KEY` where client-side crypto is used |
+| `VITE_PAYMOB_PUBLIC_KEY` | Must match the API Paymob public key and environment (test vs live) |
+
+**Dev vs production:** use `.env` / `.env.development` for daily work (test API), and `.env.production` for the live API URL and canonical origin when you run `npm run build`.
 
 ## Deployment
 
@@ -280,7 +274,7 @@ vercel --prod
 ## Troubleshooting
 
 ### API Connection Issues
-- Ensure backend is running on port 5000
+- Ensure the backend is running and matches `VITE_API_BASE_URL` in `.env`
 - Check proxy configuration in `vite.config.js`
 - Verify CORS is enabled on backend
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '../../components/common/Card';
@@ -15,10 +15,18 @@ import Modal from '../../components/common/Modal';
 import { useAuthStore } from '../../stores/authStore';
 import { AlertCircle } from 'lucide-react';
 import { getPaymobPublicKey } from '../../config/paymob';
+import { useDashboardLanguage } from '../../hooks/useDashboardLanguage';
+import { getClientContractsT } from '../../locales/clientContractsLocales';
 
 const Contracts = () => {
   const queryClient = useQueryClient();
   const { success: showSuccess, error: showError } = useToast();
+  const { language, dateLocale } = useDashboardLanguage();
+  const t = useMemo(() => getClientContractsT(language), [language]);
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const { user } = useAuthStore();
   const [searchParams] = useSearchParams();
   const preselectId = searchParams.get('contractId');
@@ -88,7 +96,7 @@ const Contracts = () => {
   const createAppealMutation = useMutation({
     mutationFn: ({ contractId, reason, description }) => appealService.createAppeal(contractId, reason, description),
     onSuccess: () => {
-      showSuccess('Appeal filed successfully');
+      showSuccess(tRef.current.appealFiled);
       setShowAppealModal(false);
       setAppealReason('');
       setAppealDescription('');
@@ -96,69 +104,69 @@ const Contracts = () => {
       queryClient.invalidateQueries({ queryKey: ['contract', selectedId] });
       queryClient.invalidateQueries({ queryKey: ['appeals', 'me'] });
     },
-    onError: (err) => showError(err?.message || 'Failed to file appeal'),
+    onError: (err) => showError(err?.message || tRef.current.appealFileFail),
   });
 
   const saveMutation = useMutation({
     mutationFn: (payload) => contractService.updateContract(selectedId, payload),
     onSuccess: async () => {
-      showSuccess('Contract updated');
+      showSuccess(tRef.current.contractUpdatedMsg);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['contract', selectedId] }),
       ]);
     },
-    onError: (err) => showError(err?.message || 'Failed to update contract'),
+    onError: (err) => showError(err?.message || tRef.current.updateFail),
   });
 
   const signMutation = useMutation({
     mutationFn: (payload) => contractService.signContract(selectedId, payload),
     onSuccess: async () => {
-      showSuccess('Signature saved');
+      showSuccess(tRef.current.signatureSaved);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['contract', selectedId] }),
       ]);
     },
-    onError: (err) => showError(err?.message || 'Failed to sign contract'),
+    onError: (err) => showError(err?.message || tRef.current.signFail),
   });
 
   const completeAfterAppealMutation = useMutation({
     mutationFn: () => contractService.completeContractAfterAppeal(selectedId),
     onSuccess: async () => {
-      showSuccess('Contract marked as completed');
+      showSuccess(tRef.current.contractCompletedToast);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['contract', selectedId] }),
         queryClient.invalidateQueries({ queryKey: ['appeals', 'me'] }),
       ]);
     },
-    onError: (err) => showError(err?.message || 'Failed to complete contract'),
+    onError: (err) => showError(err?.message || tRef.current.contractCompleteFail),
   });
 
   const cancelAfterAppealMutation = useMutation({
     mutationFn: () => contractService.cancelContractAfterAppeal(selectedId),
     onSuccess: async () => {
-      showSuccess('Contract cancelled and escrow refunded');
+      showSuccess(tRef.current.contractCancelledEscrowToast);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['contract', selectedId] }),
         queryClient.invalidateQueries({ queryKey: ['appeals', 'me'] }),
       ]);
     },
-    onError: (err) => showError(err?.message || 'Failed to cancel contract'),
+    onError: (err) => showError(err?.message || tRef.current.contractCancelFail),
   });
 
   const confirmMutation = useMutation({
     mutationFn: () => contractService.confirmChanges(selectedId),
     onSuccess: async () => {
-      showSuccess('Changes confirmed');
+      showSuccess(tRef.current.changesConfirmed);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['contract', selectedId] }),
       ]);
     },
-    onError: (err) => showError(err?.message || 'Failed to confirm changes'),
+    onError: (err) => showError(err?.message || tRef.current.confirmFail),
   });
 
   const fundMutation = useMutation({
@@ -168,7 +176,7 @@ const Contracts = () => {
       if (data?.gateway === 'paymob' && data?.clientSecret) {
         const publicKey = getPaymobPublicKey();
         if (!publicKey) {
-          showError('Paymob public key is not configured (VITE_PAYMOB_PUBLIC_KEY).');
+          showError(tRef.current.paymobKeyMissing);
           return;
         }
         const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(data.clientSecret)}`;
@@ -179,39 +187,40 @@ const Contracts = () => {
         window.location.href = data.approvalUrl;
         return;
       }
-      showError('Unexpected payment response');
+      showError(tRef.current.unexpectedPayment);
     },
-    onError: (err) => showError(err?.message || 'Failed to start funding'),
+    onError: (err) => showError(err?.message || tRef.current.fundingFailed),
     onSettled: () => setBusyMilestoneId(null),
   });
 
   const approveMutation = useMutation({
     mutationFn: ({ milestoneId }) => contractService.approveMilestone(selectedId, milestoneId),
     onSuccess: async () => {
-      showSuccess('Milestone approved and payment released');
+      showSuccess(tRef.current.milestoneApproved);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['contracts', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['contract', selectedId] }),
       ]);
     },
-    onError: (err) => showError(err?.message || 'Failed to approve milestone'),
+    onError: (err) => showError(err?.message || tRef.current.approveMilestoneFail),
     onSettled: () => setBusyMilestoneId(null),
   });
 
   const headerTitle = useMemo(() => {
-    if (!contract) return 'Contracts';
-    return `Contract • ${contract?.jobPost?.title || contract._id}`;
-  }, [contract?._id]);
+    if (!contract) return t.title;
+    const sub = contract?.jobPost?.title || String(contract._id);
+    return t.contractHeader.replace('{title}', sub);
+  }, [contract?._id, contract?.jobPost?.title, t]);
 
   return (
     <div className="space-y-6">
-      <Card title="Contracts">
+      <Card title={t.title}>
         {loadingList ? (
           <Loading />
         ) : listError ? (
-          <Alert type="error" message={listError?.message || 'Failed to load contracts'} />
+          <Alert type="error" message={listError?.message || t.failedLoad} />
         ) : contracts.length === 0 ? (
-          <p className="text-gray-600">No contracts yet.</p>
+          <p className="text-gray-600">{t.noContracts}</p>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1 space-y-2">
@@ -219,11 +228,11 @@ const Contracts = () => {
                 <button
                   key={c._id}
                   onClick={() => setSelectedId(c._id)}
-                  className={`w-full text-left border rounded-lg p-3 hover:bg-gray-50 ${
+                  className={`w-full text-start border rounded-lg p-3 hover:bg-gray-50 ${
                     selectedId === c._id ? 'border-primary-400 bg-primary-50' : 'border-gray-200'
                   }`}
                 >
-                  <p className="font-medium text-gray-900">{c?.jobPost?.title || 'Contract'}</p>
+                  <p className="font-medium text-gray-900">{c?.jobPost?.title || t.contractFallback}</p>
                   <p className="text-xs text-gray-600 mt-1">
                     {c.status} • {c.currency} {c.totalAmount}
                   </p>
@@ -236,7 +245,7 @@ const Contracts = () => {
                 {loadingDetail ? (
                   <Loading />
                 ) : !contract ? (
-                  <p className="text-gray-600">Select a contract to view details.</p>
+                  <p className="text-gray-600">{t.selectContract}</p>
                 ) : (
                   <div className="space-y-6">
                     {/* Active Appeal Banner */}
@@ -245,9 +254,9 @@ const Contracts = () => {
                         <div className="flex items-start gap-3">
                           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-red-900">Active Appeal</p>
+                            <p className="text-sm font-semibold text-red-900">{t.activeAppeal}</p>
                             <p className="text-sm text-red-800 mt-1">
-                              This contract has an active appeal. All milestone operations are frozen until the appeal is resolved.
+                              {t.activeAppealBody}
                             </p>
                             <Button
                               size="sm"
@@ -255,7 +264,7 @@ const Contracts = () => {
                               className="mt-3"
                               onClick={() => window.location.href = `/client/appeals?appealId=${activeAppeal._id}`}
                             >
-                              View Appeal
+                              {t.viewAppeal}
                             </Button>
                           </div>
                         </div>
@@ -268,20 +277,20 @@ const Contracts = () => {
                         <div className="flex items-start gap-3">
                           <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-blue-900">Appeal Closed - Action Required</p>
+                            <p className="text-sm font-semibold text-blue-900">{t.postAppealTitle}</p>
                             <p className="text-sm text-blue-800 mt-1">
-                              The appeal for this contract has been closed. Please choose how you would like to proceed:
+                              {t.postAppealBody}
                             </p>
-                            <div className="flex gap-3 mt-4">
+                            <div className="flex flex-wrap gap-3 mt-4">
                               <Button
                                 size="sm"
                                 variant="primary"
                                 onClick={() => completeAfterAppealMutation.mutate()}
                                 loading={completeAfterAppealMutation.isPending}
                                 disabled={isCancelled}
-                                title={isCancelled ? 'Contract is cancelled' : ''}
+                                title={isCancelled ? t.contractCancelled : ''}
                               >
-                                Complete Contract
+                                {t.completeContract}
                               </Button>
                               <Button
                                 size="sm"
@@ -289,15 +298,15 @@ const Contracts = () => {
                                 onClick={() => cancelAfterAppealMutation.mutate()}
                                 loading={cancelAfterAppealMutation.isPending}
                                 disabled={isCancelled}
-                                title={isCancelled ? 'Contract is cancelled' : ''}
+                                title={isCancelled ? t.contractCancelled : ''}
                               >
-                                Cancel Contract
+                                {t.cancelContractAction}
                               </Button>
                             </div>
                             <p className="text-xs text-blue-700 mt-3">
-                              <strong>Complete Contract:</strong> Continue with the contract as originally signed. All milestones will proceed normally.
+                              <strong>{t.completeContract}:</strong> {t.completeContractDesc}
                               <br />
-                              <strong>Cancel Contract:</strong> Terminate the contract and refund all escrow funds to your wallet.
+                              <strong>{t.cancelContractAction}:</strong> {t.cancelContractDesc}
                             </p>
                           </div>
                         </div>
@@ -313,34 +322,34 @@ const Contracts = () => {
                           className="flex items-center gap-2"
                         >
                           <AlertCircle className="w-4 h-4" />
-                          File Appeal
+                          {t.fileAppeal}
                         </Button>
                       </div>
                     )}
 
                     <div className="text-sm text-gray-700">
                       <p>
-                        <span className="font-medium">Status:</span> {contract.status}
+                        <span className="font-medium">{t.status}</span> {contract.status}
                       </p>
                       <p>
-                        <span className="font-medium">Version:</span> {contract.version}
+                        <span className="font-medium">{t.version}</span> {contract.version}
                       </p>
                     </div>
 
                     <div className="border rounded-lg p-4 bg-white">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Parties</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">{t.parties}</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="border rounded-lg p-3">
-                          <p className="text-xs text-gray-500">Client</p>
-                          <p className="text-sm font-semibold text-gray-900">{contract?.client?.name || 'N/A'}</p>
-                          <p className="text-sm text-gray-700">{contract?.client?.email || 'N/A'}</p>
-                          <p className="text-sm text-gray-700">{contract?.client?.phone || 'N/A'}</p>
+                          <p className="text-xs text-gray-500">{t.client}</p>
+                          <p className="text-sm font-semibold text-gray-900">{contract?.client?.name || t.na}</p>
+                          <p className="text-sm text-gray-700">{contract?.client?.email || t.na}</p>
+                          <p className="text-sm text-gray-700">{contract?.client?.phone || t.na}</p>
                         </div>
                         <div className="border rounded-lg p-3">
-                          <p className="text-xs text-gray-500">Student</p>
-                          <p className="text-sm font-semibold text-gray-900">{contract?.student?.name || 'N/A'}</p>
-                          <p className="text-sm text-gray-700">{contract?.student?.email || 'N/A'}</p>
-                          <p className="text-sm text-gray-700">{contract?.student?.phone || 'N/A'}</p>
+                          <p className="text-xs text-gray-500">{t.student}</p>
+                          <p className="text-sm font-semibold text-gray-900">{contract?.student?.name || t.na}</p>
+                          <p className="text-sm text-gray-700">{contract?.student?.email || t.na}</p>
+                          <p className="text-sm text-gray-700">{contract?.student?.phone || t.na}</p>
                         </div>
                       </div>
                     </div>
@@ -351,32 +360,33 @@ const Contracts = () => {
                       saving={saveMutation.isPending}
                       onSave={(payload) => saveMutation.mutate(payload)}
                       highlightFields={highlightFields}
+                      language={language}
                     />
 
                     {pending ? (
                       <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
                         <p className="text-sm font-semibold text-yellow-900">
-                          Contract updated — confirmation required
+                          {t.contractUpdated}
                         </p>
                         <p className="text-sm text-yellow-800 mt-1">
                           {isBlockedFromSigning
-                            ? 'You must confirm the latest changes before you can sign.'
-                            : 'Waiting for the other party to confirm the latest changes before they can sign.'}
+                            ? t.mustConfirm
+                            : t.waitingOther}
                         </p>
                         {isBlockedFromSigning &&
                         Array.isArray(contract?.pendingConfirmation?.changes) &&
                         contract.pendingConfirmation.changes.length > 0 ? (
                           <div className="mt-3 space-y-2">
-                            <p className="text-xs font-medium text-yellow-900">What changed</p>
+                            <p className="text-xs font-medium text-yellow-900">{t.whatChanged}</p>
                             <ul className="text-xs text-yellow-900 space-y-2">
                               {contract.pendingConfirmation.changes.map((c, idx) => (
                                 <li key={idx} className="bg-white/60 border border-yellow-200 rounded p-2">
                                   <p className="font-semibold">{c.label || c.field}</p>
                                   <p className="mt-1">
-                                    <span className="font-medium">Before:</span> {c.before || '—'}
+                                    <span className="font-medium">{t.before}</span> {c.before || '—'}
                                   </p>
                                   <p className="mt-1">
-                                    <span className="font-medium">After:</span> {c.after || '—'}
+                                    <span className="font-medium">{t.after}</span> {c.after || '—'}
                                   </p>
                                 </li>
                               ))}
@@ -390,9 +400,9 @@ const Contracts = () => {
                               onClick={() => confirmMutation.mutate()}
                               loading={confirmMutation.isPending}
                               disabled={isCancelled}
-                              title={isCancelled ? 'Contract is cancelled' : ''}
+                              title={isCancelled ? t.contractCancelled : ''}
                             >
-                              Confirm changes
+                              {t.confirmChanges}
                             </Button>
                           </div>
                         ) : null}
@@ -400,7 +410,7 @@ const Contracts = () => {
                     ) : null}
 
                     <div className="border-t pt-6">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Contract Notes</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">{t.contractNotes}</h3>
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                         <div className="flex items-start gap-2">
                           <div className="flex-shrink-0 mt-0.5">
@@ -409,9 +419,9 @@ const Contracts = () => {
                             </svg>
                           </div>
                           <div className="flex-1 space-y-2 text-sm text-blue-900">
-                            <p className="font-semibold">Working with Students</p>
+                            <p className="font-semibold">{t.yourLearning}</p>
                             <p>
-                              Remember that students are here to learn and gain experience first. They may need more guidance and communication than experienced professionals. Be patient and provide clear feedback to help them deliver quality work.
+                              {t.yourLearningBody}
                             </p>
                           </div>
                         </div>
@@ -422,13 +432,13 @@ const Contracts = () => {
                             </svg>
                           </div>
                           <div className="flex-1 space-y-2 text-sm text-amber-900">
-                            <p className="font-semibold">Protect Your Investment</p>
-                            <ul className="list-disc list-inside space-y-1 ml-2">
-                              <li>Review milestones carefully before funding. Only fund when you're satisfied with the contract terms.</li>
-                              <li>Try not to pay high deposits - they're just to show you're serious, nothing else. Keep initial payments reasonable.</li>
-                              <li>Use the milestone system - approve work only after reviewing deliverables.</li>
-                              <li>Communicate clearly about expectations and deadlines from the start.</li>
-                              <li>If something seems off, pause and discuss before proceeding.</li>
+                            <p className="font-semibold">{t.protect}</p>
+                            <ul className="list-disc list-inside space-y-1 ms-2">
+                              <li>{t.protectL1}</li>
+                              <li>{t.protectL2}</li>
+                              <li>{t.protectL3}</li>
+                              <li>{t.protectL4}</li>
+                              <li>{t.protectL5}</li>
                             </ul>
                           </div>
                         </div>
@@ -439,12 +449,12 @@ const Contracts = () => {
                             </svg>
                           </div>
                           <div className="flex-1 space-y-2 text-sm text-green-900">
-                            <p className="font-semibold">Best Practices</p>
-                            <ul className="list-disc list-inside space-y-1 ml-2">
-                              <li>Set realistic deadlines that allow for learning and iteration.</li>
-                              <li>Provide constructive feedback promptly to help students improve.</li>
-                              <li>Use the escrow system - your funds are protected until you approve the work.</li>
-                              <li>Keep all communication professional and documented through the platform.</li>
+                            <p className="font-semibold">{t.bestPractices}</p>
+                            <ul className="list-disc list-inside space-y-1 ms-2">
+                              <li>{t.bp1}</li>
+                              <li>{t.bp2}</li>
+                              <li>{t.bp3}</li>
+                              <li>{t.bp4}</li>
                             </ul>
                           </div>
                         </div>
@@ -452,12 +462,12 @@ const Contracts = () => {
                     </div>
 
                     <div className="border-t pt-6">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Sign contract</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">{t.signContract}</h3>
                       {contract?.clientSignature?.signedAt ? (
-                        <p className="text-sm text-green-700 mb-3">You have signed this contract.</p>
+                        <p className="text-sm text-green-700 mb-3">{t.youSigned}</p>
                       ) : (
                         <>
-                          <SignaturePad value={signature} onChange={setSignature} />
+                          <SignaturePad value={signature} onChange={setSignature} language={language} />
                           <div className="mt-3 flex justify-end">
                             <Button
                               onClick={() => signMutation.mutate(signature)}
@@ -465,16 +475,16 @@ const Contracts = () => {
                               disabled={
                                 isCancelled ||
                                 isBlockedFromSigning ||
-                                (!signature.typedName && !signature.drawnSignatureDataUrl)
+                                !signature.typedName?.trim()
                               }
-                              title={isCancelled ? 'Contract is cancelled' : ''}
+                              title={isCancelled ? t.contractCancelled : ''}
                             >
-                              Sign
+                              {t.sign}
                             </Button>
                           </div>
                           {isBlockedFromSigning ? (
                             <p className="text-xs text-gray-600 mt-2">
-                              You can’t sign until you confirm the latest contract changes above.
+                              {t.cantSignUntilConfirm}
                             </p>
                           ) : null}
                         </>
@@ -486,6 +496,7 @@ const Contracts = () => {
                         contract={contract}
                         role="client"
                         busyMilestoneId={busyMilestoneId}
+                        language={language}
                         onFund={(milestoneId) => {
                           setBusyMilestoneId(milestoneId);
                           fundMutation.mutate({ milestoneId });
@@ -498,7 +509,7 @@ const Contracts = () => {
                     </div>
 
                     <div className="border-t pt-6">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Change history</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">{t.changeHistory}</h3>
                       {Array.isArray(contract?.changeLog) && contract.changeLog.length > 0 ? (
                         <div className="space-y-3">
                           {[...contract.changeLog]
@@ -508,13 +519,15 @@ const Contracts = () => {
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
                                     <p className="text-sm font-semibold text-gray-900 truncate">
-                                      {entry?.updatedBy?.name || 'User'} updated (v{entry?.version ?? 0})
+                                      {entry?.updatedBy?.name || t.userFallback} {t.updated} (v{entry?.version ?? 0})
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
-                                      {entry?.updatedAt ? new Date(entry.updatedAt).toLocaleString() : ''}
+                                      {entry?.updatedAt
+                                        ? new Date(entry.updatedAt).toLocaleString(dateLocale)
+                                        : ''}
                                       {entry?.confirmedAt
-                                        ? ` • confirmed by ${entry?.confirmedBy?.name || 'User'} at ${new Date(entry.confirmedAt).toLocaleString()}`
-                                        : ' • awaiting confirmation'}
+                                        ? ` • ${t.confirmedBy} ${entry?.confirmedBy?.name || t.userFallback} ${t.at} ${new Date(entry.confirmedAt).toLocaleString(dateLocale)}`
+                                        : ` • ${t.awaitingConfirmation}`}
                                     </p>
                                   </div>
                                 </div>
@@ -525,10 +538,10 @@ const Contracts = () => {
                                       <li key={idx} className="border border-gray-200 rounded p-2 bg-gray-50">
                                         <p className="font-semibold">{c.label || c.field}</p>
                                         <p className="mt-1">
-                                          <span className="font-medium">Before:</span> {c.before || '—'}
+                                          <span className="font-medium">{t.before}</span> {c.before || '—'}
                                         </p>
                                         <p className="mt-1">
-                                          <span className="font-medium">After:</span> {c.after || '—'}
+                                          <span className="font-medium">{t.after}</span> {c.after || '—'}
                                         </p>
                                       </li>
                                     ))}
@@ -538,7 +551,7 @@ const Contracts = () => {
                             ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-600">No changes yet.</p>
+                        <p className="text-sm text-gray-600">{t.noChanges}</p>
                       )}
                     </div>
                   </div>
@@ -558,13 +571,13 @@ const Contracts = () => {
             setAppealReason('');
             setAppealDescription('');
           }}
-          title="File Appeal"
+          title={t.modalFileAppeal}
           size="md"
         >
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reason *
+                {t.reason}
               </label>
               <select
                 value={appealReason}
@@ -572,29 +585,29 @@ const Contracts = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 required
               >
-                <option value="">Select a reason</option>
-                <option value="non_payment">Non-Payment</option>
-                <option value="poor_quality">Poor Quality Work</option>
-                <option value="contract_violation">Contract Violation</option>
-                <option value="missed_deadline">Missed Deadline</option>
-                <option value="other">Other</option>
+                <option value="">{t.selectReason}</option>
+                <option value="non_payment">{t.reasonNonPayment}</option>
+                <option value="poor_quality">{t.reasonPoor}</option>
+                <option value="contract_violation">{t.reasonViolation}</option>
+                <option value="missed_deadline">{t.reasonDeadline}</option>
+                <option value="other">{t.reasonOther}</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description *
+                {t.desc}
               </label>
               <textarea
                 value={appealDescription}
                 onChange={(e) => setAppealDescription(e.target.value)}
                 className="w-full min-h-[150px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                placeholder="Please describe the issue in detail..."
+                placeholder={t.descPlaceholder}
                 required
               />
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-xs text-yellow-800">
-                <strong>Note:</strong> Filing an appeal will freeze all contract operations (milestone funding, submissions, and approvals) until the appeal is resolved.
+                {t.appealNote}
               </p>
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t">
@@ -606,13 +619,13 @@ const Contracts = () => {
                   setAppealDescription('');
                 }}
               >
-                Cancel
+                {t.cancel}
               </Button>
               <Button
                 variant="primary"
                 onClick={() => {
                   if (!appealReason || !appealDescription.trim()) {
-                    showError('Please select a reason and provide a description');
+                    showError(t.appealSelectDesc);
                     return;
                   }
                   createAppealMutation.mutate({
@@ -624,7 +637,7 @@ const Contracts = () => {
                 loading={createAppealMutation.isPending}
                 disabled={!appealReason || !appealDescription.trim()}
               >
-                File Appeal
+                {t.fileAppeal}
               </Button>
             </div>
           </div>

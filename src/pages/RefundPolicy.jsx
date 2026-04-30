@@ -26,6 +26,7 @@ const translations = {
 
     noRefund: {
       title: 'NO REFUNDS AFTER PAYMENT',
+      exclusionsTitle: 'We do not offer refunds for:',
       points: [
         'All payments made to Freshlancer are final and non-refundable.',
         'Once a payment has been processed and completed, no refund will be issued under any circumstances.',
@@ -54,6 +55,78 @@ const translations = {
 
     footer: '© Freshlancer. All rights reserved.',
   },
+  it: {
+    title: 'Politica sui rimborsi',
+    lastUpdated: 'In vigore: gennaio 2025',
+    backToHome: 'Torna alla home',
+    introduction: {
+      title: 'Politica sui rimborsi Freshlancer',
+      content:
+        'Leggi con attenzione questa politica sui rimborsi prima di effettuare un pagamento a Freshlancer.',
+    },
+    noRefund: {
+      title: 'NESSUN RIMBORSO DOPO IL PAGAMENTO',
+      exclusionsTitle: 'Non offriamo rimborsi per:',
+      points: [
+        'Tutti i pagamenti a Freshlancer sono definitivi e non rimborsabili.',
+        'Una volta completato, nessun rimborso sarà emesso in nessun caso.',
+        'La politica si applica a servizi, abbonamenti, pagamenti una tantum e ogni altra transazione su Freshlancer.',
+      ],
+      exclusions: [
+        'Ripensamento',
+        'Uso parziale dei servizi',
+        'Insoddisfazione per il servizio',
+        'Qualsiasi altro motivo dopo il pagamento',
+      ],
+    },
+    beforePay: {
+      title: 'PRIMA DI PAGARE',
+      content:
+        'Ti invitiamo a esaminare servizi, condizioni e descrizioni prima di pagare. Procedendo con il pagamento confermi di aver compreso e accettare questa politica di mancato rimborso.',
+    },
+    contact: {
+      title: 'Contatti',
+      content:
+        'Per domande su questa politica sui rimborsi, contattaci prima di effettuare un pagamento.',
+      email: 'support@freshlancer.online',
+    },
+    footer: '© Freshlancer. Tutti i diritti riservati.',
+  },
+  ar: {
+    title: 'سياسة الاسترداد',
+    lastUpdated: 'سريان: يناير 2025',
+    backToHome: 'العودة للرئيسية',
+    introduction: {
+      title: 'سياسة الاسترداد — فريش لانسر',
+      content: 'يُرجى قراءة سياسة الاسترداد بعناية قبل أي دفع لـ Freshlancer.',
+    },
+    noRefund: {
+      title: 'لا استرداد بعد إتمام الدفع',
+      exclusionsTitle: 'لا نقدّم استرداداً في حالات مثل:',
+      points: [
+        'جميع المدفوعات إلى Freshlancer نهائية وغير قابلة للاسترداد.',
+        'بعد اكتمال الدفع لن يُصدر استرداد تحت أي ظرف.',
+        'تنطبق السياسة على الخدمات والاشتراكات والدفعات لمرة واحدة وغيرها عبر المنصة.',
+      ],
+      exclusions: [
+        'تغيّر الرأي',
+        'استخدام جزئي للخدمة',
+        'عدم الرضا عن الخدمة',
+        'أي سبب آخر بعد الدفع',
+      ],
+    },
+    beforePay: {
+      title: 'قبل أن تدفع',
+      content:
+        'ننصحك بمراجعة الخدمات والشروط والوصف بعناية. بمتابعة الدفع تؤكد أنك قرأت ووافقت على سياسة عدم الاسترداد.',
+    },
+    contact: {
+      title: 'تواصل',
+      content: 'للأسئلة حول سياسة الاسترداد يرجى التواصل قبل الدفع.',
+      email: 'support@freshlancer.online',
+    },
+    footer: '© فريش لانسر. جميع الحقوق محفوظة.',
+  },
 };
 
 const RefundPolicy = () => {
@@ -63,12 +136,15 @@ const RefundPolicy = () => {
   );
 
   useEffect(() => {
+    const onLang = (e) => setLanguage(e.detail?.language || localStorage.getItem('dashboardLanguage') || 'en');
     const handleStorageChange = () => {
       setLanguage(localStorage.getItem('dashboardLanguage') || 'en');
     };
+    window.addEventListener('languageChanged', onLang);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      window.removeEventListener('languageChanged', onLang);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
@@ -135,7 +211,7 @@ const RefundPolicy = () => {
 
         <div>
           <h3 className="font-semibold text-gray-900 mb-2">
-            We do not offer refunds for:
+            {t.noRefund.exclusionsTitle}
           </h3>
           <ul className="list-disc list-inside space-y-2 text-gray-700">
             {t.noRefund.exclusions.map((item, index) => (

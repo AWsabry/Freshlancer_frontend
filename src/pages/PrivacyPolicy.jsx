@@ -23,6 +23,7 @@ import {
   Download,
   Edit,
 } from 'lucide-react';
+import { privacyPolicyAr } from '../locales/privacyPolicyAr';
 
 const translations = {
   en: {
@@ -522,6 +523,7 @@ const translations = {
       note: 'Risponderemo alle tue richieste entro un periodo di tempo ragionevole.',
     },
   },
+  ar: privacyPolicyAr,
 };
 
 const PrivacyPolicy = () => {

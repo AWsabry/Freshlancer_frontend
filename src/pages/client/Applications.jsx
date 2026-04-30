@@ -48,6 +48,22 @@ const translations = {
     viewJob: 'Visualizza Lavoro',
     viewAllApplications: 'Visualizza Tutte le Candidature',
   },
+  ar: {
+    loading: 'جاري تحميل الطلبات...',
+    failedToLoad: 'تعذر تحميل الطلبات: {error}',
+    jobApplications: 'طلبات الوظائف',
+    reviewGrouped: 'راجع الطلبات مجمّعة حسب كل وظيفة',
+    availablePoints: 'النقاط المتاحة',
+    pointsPerContact: '١٠ نقاط لكل جهة اتصال',
+    getMorePoints: 'احصل على المزيد من النقاط',
+    insufficientPoints:
+      'نقاطك غير كافية لفتح بيانات التواصل. اشترِ باقة لمتابعة عرض تفاصيل المتقدمين.',
+    noApplicationsYet: 'لم يُستلم أي طلب بعد.',
+    applicants: 'متقدم',
+    applicantsPlural: 'متقدمون',
+    viewJob: 'عرض الوظيفة',
+    viewAllApplications: 'عرض كل الطلبات',
+  },
 };
 
 const Applications = () => {

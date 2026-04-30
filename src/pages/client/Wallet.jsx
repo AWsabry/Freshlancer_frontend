@@ -1,4 +1,7 @@
 import React, { useMemo, useState } from 'react';
+import { useDashboardLanguage } from '../../hooks/useDashboardLanguage';
+import { getClientWalletT } from '../../locales/clientWalletLocales';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 import { useQuery } from '@tanstack/react-query';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
@@ -25,6 +28,8 @@ const getKeys = (obj) => {
 };
 
 const Wallet = () => {
+  const { language } = useDashboardLanguage();
+  const t = useMemo(() => getClientWalletT(language), [language]);
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('walletViewMode') || 'detailed';
   });
@@ -58,6 +63,9 @@ const Wallet = () => {
   const contracts = contractsResp?.data?.contracts || [];
 
   const holdsByContract = useMemo(() => {
+    const defM = t.defaultMilestone;
+    const defP = t.defaultProject;
+    const defStudent = t.defaultClient;
     const list = [];
     for (const c of Array.isArray(contracts) ? contracts : []) {
       const ms = Array.isArray(c?.milestones) ? c.milestones : [];
@@ -71,7 +79,7 @@ const Wallet = () => {
           if (!isHeld) return null;
           return {
             milestoneId: m?._id,
-            title: m?.plan?.title || 'Milestone',
+            title: m?.plan?.title || defM,
             description: m?.plan?.description || '',
             percent: m?.plan?.percent || 0,
             status,
@@ -90,12 +98,12 @@ const Wallet = () => {
 
       list.push({
         contractId: c?._id,
-        jobTitle: c?.jobPost?.title || 'Project',
+        jobTitle: c?.jobPost?.title || defP,
         projectDescription: c?.projectDescription || '',
         currency: c?.currency || 'USD',
         totalAmount: c?.totalAmount || 0,
         contractStatus: c?.status || 'draft',
-        otherPartyName: c?.student?.name || 'Student',
+        otherPartyName: c?.student?.name || defStudent,
         otherPartyEmail: c?.student?.email || '',
         otherPartyPhone: c?.student?.phone || '',
         holds,
@@ -103,7 +111,7 @@ const Wallet = () => {
       });
     }
     return list;
-  }, [contracts]);
+  }, [contracts, language]);
 
   const heldByCurrency = useMemo(() => {
     const out = {};
@@ -134,7 +142,7 @@ const Wallet = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Wallet</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t.titleWallet}</h1>
         {/* View Toggle */}
         <div className="flex items-center gap-1 border border-gray-300 rounded-lg p-1 bg-white">
           <button
@@ -148,7 +156,7 @@ const Wallet = () => {
                 ? 'bg-primary-600 text-gray-600'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
-            title="List View 1"
+            title={t.listView1}
           >
             <List className="w-4 h-4" />
           </button>
@@ -163,7 +171,7 @@ const Wallet = () => {
                 ? 'bg-primary-600 text-gray-600'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
-            title="List View 2"
+            title={t.listView2}
           >
             <ListChecks className="w-4 h-4" />
           </button>
@@ -177,24 +185,24 @@ const Wallet = () => {
                 ? 'bg-primary-600 text-gray-600'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
-            title="Detailed View"
+            title={t.detailedView}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
         </div>
       </div>
-      <Card title="Wallet">
+      <Card title={t.titleWallet}>
         {loadingMe ? (
           <Loading />
         ) : meError ? (
-          <Alert type="error" message={meError?.message || 'Failed to load wallet'} />
+          <Alert type="error" message={meError?.message || t.failedLoadWallet} />
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="border rounded-lg p-4 bg-white">
-                <p className="text-xs text-gray-500">Available balance</p>
+                <p className="text-xs text-gray-500">{t.availableBalance}</p>
                 {currencies.length === 0 ? (
-                  <p className="text-sm text-gray-700 mt-1">No balance yet.</p>
+                  <p className="text-sm text-gray-700 mt-1">{t.noBalanceYet}</p>
                 ) : (
                   <div className="mt-2 space-y-1">
                     {currencies.map((cur) => (
@@ -208,9 +216,9 @@ const Wallet = () => {
               </div>
 
               <div className="border rounded-lg p-4 bg-white">
-                <p className="text-xs text-gray-500">Escrow (held)</p>
+                <p className="text-xs text-gray-500">{t.escrowHeld}</p>
                 {currencies.length === 0 ? (
-                  <p className="text-sm text-gray-700 mt-1">No escrow holds.</p>
+                  <p className="text-sm text-gray-700 mt-1">{t.noEscrow}</p>
                 ) : (
                   <div className="mt-2 space-y-1">
                     {currencies.map((cur) => (
@@ -223,7 +231,7 @@ const Wallet = () => {
                 )}
                 {Object.keys(heldByCurrency).length > 0 ? (
                   <p className="text-[11px] text-gray-500 mt-2">
-                    Breakdown below shows escrow holds per project (milestone amounts only).
+                    {t.escrowBreakdown}
                   </p>
                 ) : null}
               </div>
@@ -232,13 +240,13 @@ const Wallet = () => {
         )}
       </Card>
 
-      <Card title="Escrow holds by project">
+      <Card title={t.titleEscrow}>
         {loadingContracts ? (
           <Loading />
         ) : contractsError ? (
-          <Alert type="error" message={contractsError?.message || 'Failed to load contracts'} />
+          <Alert type="error" message={contractsError?.message || t.failedLoadContracts} />
         ) : holdsByContract.length === 0 ? (
-          <p className="text-gray-600">No money is currently held in escrow for your projects.</p>
+          <p className="text-gray-600">{t.noMoneyHeld}</p>
         ) : (
           <>
             <div className={
@@ -260,9 +268,14 @@ const Wallet = () => {
                             <span className="text-xs text-gray-500">({c.contractStatus})</span>
                           </div>
                           <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                            <span>{fmt(c.currency, c.totalHeld)} held</span>
+                            <span>
+                              {fmt(c.currency, c.totalHeld)} {t.heldTag}
+                            </span>
                             <span>•</span>
-                            <span>{c.holds.length} milestone{c.holds.length !== 1 ? 's' : ''}</span>
+                            <span>
+                              {c.holds.length}{' '}
+                              {c.holds.length !== 1 ? t.milestones : t.milestone}
+                            </span>
                           </div>
                         </div>
                         <Button
@@ -272,7 +285,7 @@ const Wallet = () => {
                           className="flex items-center gap-1 text-xs flex-shrink-0"
                         >
                           <Eye className="w-3 h-3" />
-                          View
+                          {t.view}
                         </Button>
                       </div>
                     </div>
@@ -291,21 +304,21 @@ const Wallet = () => {
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-600">
                             <div>
-                              <span className="text-gray-500">Total held: </span>
+                              <span className="text-gray-500">{t.totalHeldShort} </span>
                               <span className="font-semibold">{fmt(c.currency, c.totalHeld)}</span>
                             </div>
                             <div>
-                              <span className="text-gray-500">Total amount: </span>
+                              <span className="text-gray-500">{t.totalAmountShort} </span>
                               <span>{fmt(c.currency, c.totalAmount)}</span>
                             </div>
                             <div>
-                              <span className="text-gray-500">Milestones: </span>
+                              <span className="text-gray-500">{t.milestonesCount} </span>
                               <span>{c.holds.length}</span>
                             </div>
                           </div>
                           {c.otherPartyName && (
                             <div className="text-xs text-gray-500 mt-1">
-                              Student: {c.otherPartyName}
+                              {t.studentPrefix} {c.otherPartyName}
                             </div>
                           )}
                         </div>
@@ -316,7 +329,7 @@ const Wallet = () => {
                           className="flex items-center gap-1 text-xs flex-shrink-0"
                         >
                           <Eye className="w-3 h-3" />
-                          View
+                          {t.view}
                         </Button>
                       </div>
                     </div>
@@ -338,13 +351,17 @@ const Wallet = () => {
                             </p>
                           )}
                           <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                            <span>Contract: {c.contractStatus}</span>
+                            <span>
+                              {t.contract} {c.contractStatus}
+                            </span>
                             <span>•</span>
-                            <span>Total: {fmt(c.currency, c.totalAmount)}</span>
+                            <span>
+                              {t.total} {fmt(c.currency, c.totalAmount)}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-xs text-gray-500">Total held</p>
+                        <div className="text-end flex-shrink-0">
+                          <p className="text-xs text-gray-500">{t.totalHeldEscrow}</p>
                           <p className="text-sm font-bold text-gray-900">{fmt(c.currency, c.totalHeld)}</p>
                         </div>
                       </div>
@@ -352,19 +369,19 @@ const Wallet = () => {
 
                     {/* Other Party Info */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                      <p className="text-xs font-medium text-blue-900 mb-1">Student Details</p>
+                      <p className="text-xs font-medium text-blue-900 mb-1">{t.clientDetails}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-blue-800">
                         <div>
-                          <span className="font-medium">Name:</span> {c.otherPartyName}
+                          <span className="font-medium">{t.name}</span> {c.otherPartyName}
                         </div>
                         {c.otherPartyEmail && (
                           <div>
-                            <span className="font-medium">Email:</span> {c.otherPartyEmail}
+                            <span className="font-medium">{t.email}</span> {c.otherPartyEmail}
                           </div>
                         )}
                         {c.otherPartyPhone && (
                           <div>
-                            <span className="font-medium">Phone:</span> {c.otherPartyPhone}
+                            <span className="font-medium">{t.phoneShort}</span> {c.otherPartyPhone}
                           </div>
                         )}
                       </div>
@@ -372,13 +389,13 @@ const Wallet = () => {
 
                     {/* Milestones */}
                     <div className="space-y-3">
-                      <p className="text-xs font-medium text-gray-700">Milestones in escrow:</p>
+                      <p className="text-xs font-medium text-gray-700">{t.milestoneEscrow}</p>
                       {c.holds.map((h) => {
                     const statusLabels = {
-                      funded: 'Funded - Awaiting student submission',
-                      submitted: 'Submitted - Awaiting your approval',
-                      approved: 'Approved - Ready for release',
-                      released: 'Released',
+                      funded: t.cMsFunded,
+                      submitted: t.cMsSubmitted,
+                      approved: t.cMsApproved,
+                      released: t.cMsReleased,
                     };
                     const statusColors = {
                       funded: 'bg-yellow-50 border-yellow-200',
@@ -401,48 +418,56 @@ const Wallet = () => {
                               <p className="text-xs text-gray-600 mt-1 line-clamp-2">{h.description}</p>
                             )}
                           </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-xs text-gray-500">Amount held</p>
+                          <div className="text-end flex-shrink-0">
+                            <p className="text-xs text-gray-500">{t.amountHeld}</p>
                             <p className="text-sm font-bold text-gray-900">{fmt(c.currency, h.held)}</p>
-                            <p className="text-[10px] text-gray-400 mt-1">of {fmt(c.currency, h.amount)}</p>
+                            <p className="text-[10px] text-gray-400 mt-1">
+                              {t.of} {fmt(c.currency, h.amount)}
+                            </p>
                           </div>
                         </div>
 
                         <div className="border-t pt-2 mt-2">
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                             <div>
-                              <p className="text-gray-500">Phase/Status</p>
+                              <p className="text-gray-500">{t.phaseStatus}</p>
                               <p className="font-medium text-gray-900 mt-0.5">
                                 {statusLabels[h.status] || h.status}
                               </p>
                             </div>
                             {h.expectedDuration && (
                               <div>
-                                <p className="text-gray-500">Expected Duration</p>
+                                <p className="text-gray-500">{t.expectedDuration}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">{h.expectedDuration}</p>
                               </div>
                             )}
                             {h.fundedAt && (
                               <div>
-                                <p className="text-gray-500">Funded Date</p>
+                                <p className="text-gray-500">{t.fundedDate}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">
-                                  {new Date(h.fundedAt).toLocaleDateString()}
+                                  {new Date(h.fundedAt).toLocaleDateString(
+                                    getDashboardDateLocale(language)
+                                  )}
                                 </p>
                               </div>
                             )}
                             {h.submittedAt && (
                               <div>
-                                <p className="text-gray-500">Submitted Date</p>
+                                <p className="text-gray-500">{t.submittedDate}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">
-                                  {new Date(h.submittedAt).toLocaleDateString()}
+                                  {new Date(h.submittedAt).toLocaleDateString(
+                                    getDashboardDateLocale(language)
+                                  )}
                                 </p>
                               </div>
                             )}
                             {h.approvedAt && (
                               <div>
-                                <p className="text-gray-500">Approved Date</p>
+                                <p className="text-gray-500">{t.approvedDate}</p>
                                 <p className="font-medium text-gray-900 mt-0.5">
-                                  {new Date(h.approvedAt).toLocaleDateString()}
+                                  {new Date(h.approvedAt).toLocaleDateString(
+                                    getDashboardDateLocale(language)
+                                  )}
                                 </p>
                               </div>
                             )}
@@ -461,7 +486,9 @@ const Wallet = () => {
             {isListView && totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
                 <p className="text-sm text-gray-600">
-                  Showing {(listPage - 1) * listLimit + 1} to {Math.min(listPage * listLimit, holdsByContract.length)} of {holdsByContract.length} contracts
+                  {t.showing} {(listPage - 1) * listLimit + 1} {t.to}{' '}
+                  {Math.min(listPage * listLimit, holdsByContract.length)} {t.of}{' '}
+                  {holdsByContract.length} {t.contractsWord}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -470,10 +497,10 @@ const Wallet = () => {
                     onClick={() => setListPage(p => Math.max(1, p - 1))}
                     disabled={listPage === 1}
                   >
-                    Previous
+                    {t.previous}
                   </Button>
                   <span className="flex items-center px-3 text-sm text-gray-600">
-                    Page {listPage} of {totalPages}
+                    {t.page} {listPage} {t.of} {totalPages}
                   </span>
                   <Button
                     variant="outline"
@@ -481,7 +508,7 @@ const Wallet = () => {
                     onClick={() => setListPage(p => Math.min(totalPages, p + 1))}
                     disabled={listPage === totalPages}
                   >
-                    Next
+                    {t.next}
                   </Button>
                 </div>
               </div>
@@ -495,7 +522,7 @@ const Wallet = () => {
         <Modal
           isOpen={showDetailsModal}
           onClose={handleCloseModal}
-          title="Contract Details"
+          title={t.contractDetails}
           size="lg"
         >
           <div className="space-y-4 max-h-[80vh] overflow-y-auto">
@@ -510,20 +537,20 @@ const Wallet = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-500">Contract Status:</span>
-                    <span className="ml-2 font-semibold text-gray-900">{selectedContract.contractStatus}</span>
+                    <span className="text-gray-500">{t.contractStatus}</span>
+                    <span className="ms-2 font-semibold text-gray-900">{selectedContract.contractStatus}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Currency:</span>
-                    <span className="ml-2 font-semibold text-gray-900">{selectedContract.currency}</span>
+                    <span className="text-gray-500">{t.currency}</span>
+                    <span className="ms-2 font-semibold text-gray-900">{selectedContract.currency}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Total Amount:</span>
-                    <span className="ml-2 font-semibold text-green-600">{fmt(selectedContract.currency, selectedContract.totalAmount)}</span>
+                    <span className="text-gray-500">{t.totalAmountLabel}</span>
+                    <span className="ms-2 font-semibold text-green-600">{fmt(selectedContract.currency, selectedContract.totalAmount)}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Total Held:</span>
-                    <span className="ml-2 font-semibold text-blue-600">{fmt(selectedContract.currency, selectedContract.totalHeld)}</span>
+                    <span className="text-gray-500">{t.totalHeldLabel}</span>
+                    <span className="ms-2 font-semibold text-blue-600">{fmt(selectedContract.currency, selectedContract.totalHeld)}</span>
                   </div>
                 </div>
               </div>
@@ -531,22 +558,22 @@ const Wallet = () => {
 
             {/* Student Details */}
             <Card>
-              <h4 className="text-md font-semibold text-gray-900 mb-3">Student Information</h4>
+              <h4 className="text-md font-semibold text-gray-900 mb-3">{t.studentInformation}</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
-                  <span className="text-gray-500">Name:</span>
-                  <span className="ml-2 font-medium text-gray-900">{selectedContract.otherPartyName}</span>
+                  <span className="text-gray-500">{t.name}</span>
+                  <span className="ms-2 font-medium text-gray-900">{selectedContract.otherPartyName}</span>
                 </div>
                 {selectedContract.otherPartyEmail && (
                   <div>
-                    <span className="text-gray-500">Email:</span>
-                    <span className="ml-2 font-medium text-gray-900">{selectedContract.otherPartyEmail}</span>
+                    <span className="text-gray-500">{t.email}</span>
+                    <span className="ms-2 font-medium text-gray-900">{selectedContract.otherPartyEmail}</span>
                   </div>
                 )}
                 {selectedContract.otherPartyPhone && (
                   <div>
-                    <span className="text-gray-500">Phone:</span>
-                    <span className="ml-2 font-medium text-gray-900">{selectedContract.otherPartyPhone}</span>
+                    <span className="text-gray-500">{t.phoneShort}</span>
+                    <span className="ms-2 font-medium text-gray-900">{selectedContract.otherPartyPhone}</span>
                   </div>
                 )}
               </div>
@@ -554,14 +581,14 @@ const Wallet = () => {
 
             {/* Milestones */}
             <Card>
-              <h4 className="text-md font-semibold text-gray-900 mb-3">Milestones in Escrow</h4>
+              <h4 className="text-md font-semibold text-gray-900 mb-3">{t.milestonesInEscrowTitle}</h4>
               <div className="space-y-3">
                 {selectedContract.holds.map((h) => {
                   const statusLabels = {
-                    funded: 'Funded - Awaiting student submission',
-                    submitted: 'Submitted - Awaiting your approval',
-                    approved: 'Approved - Ready for release',
-                    released: 'Released',
+                    funded: t.cMsFunded,
+                    submitted: t.cMsSubmitted,
+                    approved: t.cMsApproved,
+                    released: t.cMsReleased,
                   };
                   const statusColors = {
                     funded: 'bg-yellow-50 border-yellow-200',
@@ -584,48 +611,56 @@ const Wallet = () => {
                             <p className="text-xs text-gray-600 mt-1">{h.description}</p>
                           )}
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-xs text-gray-500">Amount held</p>
+                        <div className="text-end flex-shrink-0">
+                          <p className="text-xs text-gray-500">{t.amountHeld}</p>
                           <p className="text-sm font-bold text-gray-900">{fmt(selectedContract.currency, h.held)}</p>
-                          <p className="text-[10px] text-gray-400 mt-1">of {fmt(selectedContract.currency, h.amount)}</p>
+                          <p className="text-[10px] text-gray-400 mt-1">
+                            {t.of} {fmt(selectedContract.currency, h.amount)}
+                          </p>
                         </div>
                       </div>
 
                       <div className="border-t pt-3 mt-3">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                           <div>
-                            <p className="text-gray-500 mb-1">Phase/Status</p>
+                            <p className="text-gray-500 mb-1">{t.phaseStatus}</p>
                             <p className="font-medium text-gray-900">
                               {statusLabels[h.status] || h.status}
                             </p>
                           </div>
                           {h.expectedDuration && (
                             <div>
-                              <p className="text-gray-500 mb-1">Expected Duration</p>
+                              <p className="text-gray-500 mb-1">{t.expectedDuration}</p>
                               <p className="font-medium text-gray-900">{h.expectedDuration}</p>
                             </div>
                           )}
                           {h.fundedAt && (
                             <div>
-                              <p className="text-gray-500 mb-1">Funded Date</p>
+                              <p className="text-gray-500 mb-1">{t.fundedDate}</p>
                               <p className="font-medium text-gray-900">
-                                {new Date(h.fundedAt).toLocaleDateString()}
+                                {new Date(h.fundedAt).toLocaleDateString(
+                                  getDashboardDateLocale(language)
+                                )}
                               </p>
                             </div>
                           )}
                           {h.submittedAt && (
                             <div>
-                              <p className="text-gray-500 mb-1">Submitted Date</p>
+                              <p className="text-gray-500 mb-1">{t.submittedDate}</p>
                               <p className="font-medium text-gray-900">
-                                {new Date(h.submittedAt).toLocaleDateString()}
+                                {new Date(h.submittedAt).toLocaleDateString(
+                                  getDashboardDateLocale(language)
+                                )}
                               </p>
                             </div>
                           )}
                           {h.approvedAt && (
                             <div>
-                              <p className="text-gray-500 mb-1">Approved Date</p>
+                              <p className="text-gray-500 mb-1">{t.approvedDate}</p>
                               <p className="font-medium text-gray-900">
-                                {new Date(h.approvedAt).toLocaleDateString()}
+                                {new Date(h.approvedAt).toLocaleDateString(
+                                  getDashboardDateLocale(language)
+                                )}
                               </p>
                             </div>
                           )}
@@ -640,7 +675,7 @@ const Wallet = () => {
             {/* Close Button */}
             <div className="flex justify-end pt-4 border-t">
               <Button variant="primary" onClick={handleCloseModal}>
-                Close
+                {t.close}
               </Button>
             </div>
           </div>

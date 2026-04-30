@@ -11,6 +11,10 @@ const translations = {
     messages: 'Messaggi',
     underConstruction: 'Questa pagina è in costruzione.',
   },
+  ar: {
+    messages: 'الرسائل',
+    underConstruction: 'هذه الصفحة قيد الإنشاء.',
+  },
 };
 
 const Messages = () => {

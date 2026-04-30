@@ -64,12 +64,37 @@ const errorTranslations = {
     // Default
     'unknown error': 'Si è verificato un errore imprevisto. Riprova o contatta il supporto.',
   },
+  ar: {
+    'network error': 'خطأ في الشبكة: تحقق من الاتصال بالإنترنت وحاول مرة أخرى.',
+    timeout: 'انتهت مهلة الطلب. حاول مرة أخرى.',
+    unauthorized: 'غير مخوّل لتنفيذ هذا الإجراء.',
+    forbidden: 'ليست لديك صلاحية لتنفيذ هذا الإجراء.',
+    'not found': 'المورد المطلوب غير موجود.',
+    'server error': 'حدث خطأ في الخادم. حاول لاحقاً أو تواصل مع الدعم.',
+    'bad request': 'طلب غير صالح. راجع المدخلات.',
+    'validation error': 'خطأ في التحقق. راجع الحقول.',
+    'already applied': 'لقد تقدّمت مسبقاً لهذه الوظيفة.',
+    'application limit reached': 'بلغت الحد الأقصى لطلباتك هذا الشهر.',
+    'must be verified':
+      'يجب التحقق من صفتك كطالبة/طالبة للتقديم. أرسلي مستنداتك من الملف وانتظري الموافقة.',
+    'verification required':
+      'يجب التحقق من صفتك كطالبة/طالبة للتقديم. أرسلي مستنداتك من الملف وانتظري الموافقة.',
+    'payment failed': 'فشل الدفع. حاول مرة أخرى.',
+    'insufficient funds': 'رصيد غير كافٍ.',
+    'card declined': 'رفضت البنك العملية.',
+    'invalid card': 'تفاصيل البطاقة غير صالحة.',
+    'invalid credentials': 'بريد أو كلمة مرور غير صحيحة.',
+    'email not verified': 'يُرجى التحقق من بريدك قبل تسجيل الدخول.',
+    'account suspended': 'حسابك موقوف. تواصل مع الدعم.',
+    'account deleted': 'تم حذف هذا الحساب.',
+    'unknown error': 'حدث خطأ غير متوقع. حاول مرة أخرى أو تواصل مع الدعم.',
+  },
 };
 
 /**
  * Translates an error message to the user's language
  * @param {string} errorMessage - The error message to translate
- * @param {string} language - The target language ('en' or 'it')
+ * @param {string} language - The target language ('en', 'it', or 'ar')
  * @param {object} customTranslations - Optional custom translations object
  * @returns {string} - The translated error message
  */
@@ -78,8 +103,9 @@ export const translateError = (errorMessage, language = 'en', customTranslations
     return errorTranslations[language]?.['unknown error'] || errorTranslations.en['unknown error'];
   }
 
-  const lang = language === 'it' ? 'it' : 'en';
-  const translations = { ...errorTranslations[lang], ...customTranslations };
+  const lang = language === 'it' ? 'it' : language === 'ar' ? 'ar' : 'en';
+  const base = errorTranslations[lang] || errorTranslations.en;
+  const translations = { ...base, ...customTranslations };
   
   // Convert error message to lowercase for matching
   const lowerMessage = errorMessage.toLowerCase();
