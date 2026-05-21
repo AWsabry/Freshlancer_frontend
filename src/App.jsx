@@ -1,12 +1,14 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { registerAppNavigation, clearAppNavigation } from './services/appNavigation';
 import { useAuthStore } from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import { ToastProvider } from './contexts/ToastContext';
 
 // Public pages
-import Landing from './pages/Landing';
+import ClientLanding from './pages/ClientLanding';
+import StudentLanding from './pages/StudentLanding';
 
 // Auth pages
 import Login from './pages/Login';
@@ -16,6 +18,8 @@ import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import StartupRegistration from './pages/StartupRegistration';
+import CvChecker from './pages/CvChecker';
+import CvReviewContinue from './pages/CvReviewContinue';
 
 // Payment pages
 import PaymentSuccess from './pages/PaymentSuccess';
@@ -38,6 +42,7 @@ import StudentTransactions from './pages/student/Transactions';
 import StudentContracts from './pages/student/Contracts';
 import StudentWallet from './pages/student/Wallet';
 import StudentAppeals from './pages/student/Appeals';
+import CvReviewResult from './pages/student/CvReviewResult';
 import ContactUs from './pages/ContactUs';
 import WhySupport from './pages/WhySupport';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -87,6 +92,19 @@ import AdminContracts from './pages/admin/Contracts';
 import AdminWithdrawals from './pages/admin/Withdrawals';
 import AdminAppeals from './pages/admin/Appeals';
 import AdminPlatformFees from './pages/admin/PlatformFees';
+import AdminEmailCenter from './pages/admin/EmailCenter';
+
+function AppNavigationBridge() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    registerAppNavigation(
+      (to, options) => navigate(to, options),
+      () => useAuthStore.getState().setUser(null)
+    );
+    return () => clearAppNavigation();
+  }, [navigate]);
+  return null;
+}
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -107,9 +125,12 @@ function App() {
   };
 
   return (
-    <Routes>
-      {/* Landing Page - Accessible to everyone */}
-      <Route path="/" element={<Landing />} />
+    <>
+      <AppNavigationBridge />
+      <Routes>
+      {/* Landing pages - Accessible to everyone */}
+      <Route path="/" element={<ClientLanding />} />
+      <Route path="/students" element={<StudentLanding />} />
 
       {/* Public routes */}
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to={getDashboardPath()} />} />
@@ -125,6 +146,11 @@ function App() {
       
       {/* Startup Registration Route */}
       <Route path="/startup-registration" element={!isAuthenticated ? <StartupRegistration /> : <Navigate to={getDashboardPath()} />} />
+
+      {/* CV Checker (public start page) */}
+      <Route path="/cv-checker" element={<CvChecker />} />
+      {/* CV Review continuation (public; handles auth inside) */}
+      <Route path="/cv-review/continue" element={<CvReviewContinue />} />
 
       {/* Payment callback routes - public but require authentication to function properly */}
       <Route path="/payment/processing" element={<PaymentProcessing />} />
@@ -150,6 +176,7 @@ function App() {
         <Route path="jobs/:id" element={<StudentJobDetails />} />
         <Route path="applications" element={<StudentApplications />} />
         <Route path="applications/:id" element={<StudentApplicationDetails />} />
+        <Route path="cv-review/:uploadId" element={<CvReviewResult />} />
         <Route path="contracts" element={<StudentContracts />} />
         <Route path="wallet" element={<StudentWallet />} />
         <Route path="appeals" element={<StudentAppeals />} />
@@ -227,6 +254,7 @@ function App() {
         <Route path="withdrawals" element={<AdminWithdrawals />} />
         <Route path="platform-fees" element={<AdminPlatformFees />} />
         <Route path="appeals" element={<AdminAppeals />} />
+        <Route path="emails" element={<AdminEmailCenter />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="logs" element={<AdminLogs />} />
@@ -235,6 +263,7 @@ function App() {
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
+    </>
   );
 }
 

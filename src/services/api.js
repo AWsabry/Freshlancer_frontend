@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/env.js';
+import { redirectToLogin } from './appNavigation';
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
@@ -56,8 +57,7 @@ api.interceptors.response.use(
         }
       });
       
-      // Redirect to login and reload to clear all state
-      window.location.href = '/login';
+      redirectToLogin();
     }
     return Promise.reject(error.response?.data || error);
   }

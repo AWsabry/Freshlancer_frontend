@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
@@ -29,9 +29,7 @@ const translations = {
     resendVerificationEmail: 'Resend Verification Email',
     checkVerificationStatus: 'Check Verification Status',
     signOut: 'Sign Out',
-    note: 'Note:',
-    emailServiceNote: 'The email service is currently using Ethereal Email (testing service).',
-    checkServerConsole: 'Check the server console for the email preview URL, or configure a real SMTP service for production.',
+    deliveryTip: 'If you do not see the email within a few minutes, check your spam or junk folder.',
     emailNotFound: 'Email address not found',
     failedToResend: 'Failed to resend verification email',
   },
@@ -53,16 +51,37 @@ const translations = {
     resendVerificationEmail: 'Reinvia Email di Verifica',
     checkVerificationStatus: 'Controlla Stato Verifica',
     signOut: 'Esci',
-    note: 'Nota:',
-    emailServiceNote: 'Il servizio email sta attualmente utilizzando Ethereal Email (servizio di test).',
-    checkServerConsole: 'Controlla la console del server per l\'URL di anteprima email, oppure configura un servizio SMTP reale per la produzione.',
+    deliveryTip: 'Se non vedi l\'email entro pochi minuti, controlla la cartella spam o posta indesiderata.',
     emailNotFound: 'Indirizzo email non trovato',
     failedToResend: 'Impossibile reinviare l\'email di verifica',
+  },
+  ar: {
+    loading: 'جاري التحميل...',
+    emailVerificationRequired: 'التحقق من البريد مطلوب',
+    pleaseVerifyEmail: 'حقّقي بريدك للوصول إلى لوحة التحكم',
+    emailNotVerified: 'بريدك غير مُحقّق. راجعي الوارد واضغطي رابط التحقق للمتابعة.',
+    verificationEmailSent: 'أُرسلت رسالة التحقق إلى:',
+    verificationEmailResent: 'أُعيد إرسال الرسالة! راجعي الوارد.',
+    myStartups: 'منشآتي',
+    manageStartupsWhileWaiting: 'يمكنك إدارة المنشآت أثناء انتظار التحقق من البريد',
+    manageStartups: 'إدارة المنشآت',
+    importantInformation: 'معلومات مهمة:',
+    checkInboxSpam: 'راجعي الوارد ومجلد البريد المزعج',
+    linkExpires10Minutes: 'ينتهي رابط التحقق خلال ١٠ دقائق',
+    clickLinkToVerify: 'اضغطي الرابط في الرسالة للتحقق من حسابك',
+    pageAutoRefresh: 'ستُحدَّث الصفحة تلقائياً بعد التحقق',
+    resendVerificationEmail: 'إعادة إرسال رسالة التحقق',
+    checkVerificationStatus: 'التحقق من الحالة',
+    signOut: 'تسجيل الخروج',
+    deliveryTip: 'إن لم تصلك الرسالة خلال دقائق، راجعي مجلد البريد المزعج أو غير المرغوب.',
+    emailNotFound: 'البريد غير موجود',
+    failedToResend: 'فشل إعادة إرسال رسالة التحقق',
   },
 };
 
 const VerifyEmailRequired = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuthStore();
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState(null);
@@ -88,6 +107,11 @@ const VerifyEmailRequired = () => {
   }, []);
 
   const t = translations[language] || translations.en;
+
+  const nextPath = useMemo(() => {
+    const sp = new URLSearchParams(location.search || '');
+    return sp.get('next') || '';
+  }, [location.search]);
 
   const { setUser } = useAuthStore();
 
@@ -167,10 +191,21 @@ const VerifyEmailRequired = () => {
       };
       // Small delay to ensure state is updated
       setTimeout(() => {
-        navigate(getDashboardPath(), { replace: true });
+        if (nextPath) {
+          navigate(nextPath, { replace: true });
+        } else if (localStorage.getItem('pendingCvReviewUploadId')) {
+          navigate(
+            `/cv-review/continue?uploadId=${encodeURIComponent(
+              localStorage.getItem('pendingCvReviewUploadId') || ''
+            )}`,
+            { replace: true }
+          );
+        } else {
+          navigate(getDashboardPath(), { replace: true });
+        }
       }, 500);
     }
-  }, [isVerified, currentUser, navigate]);
+  }, [isVerified, currentUser, navigate, nextPath]);
 
   if (isVerified) {
     return (
@@ -263,6 +298,7 @@ const VerifyEmailRequired = () => {
                 <li>{t.linkExpires10Minutes}</li>
                 <li>{t.clickLinkToVerify}</li>
                 <li>{t.pageAutoRefresh}</li>
+                <li>{t.deliveryTip}</li>
               </ul>
             </div>
           </div>

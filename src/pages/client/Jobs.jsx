@@ -7,6 +7,7 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Modal from '../../components/common/Modal';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 import {
   Plus,
   Edit2,
@@ -68,6 +69,8 @@ const translations = {
     statusCancelled: 'Cancelled',
     compactView: 'Compact View',
     detailedView: 'Detailed View',
+    listView1: 'List view 1',
+    listView2: 'List view 2',
   },
   it: {
     loading: 'Caricamento dei tuoi lavori...',
@@ -115,6 +118,53 @@ const translations = {
     detailedView: 'Vista Dettagliata',
     listView1: 'Vista Lista 1',
     listView2: 'Vista Lista 2',
+  },
+  ar: {
+    loading: 'جاري تحميل وظائفك...',
+    myJobPosts: 'إعلاناتي',
+    managePostings: 'أدِر إعلانات الوظائف',
+    postNewJob: 'نشر وظيفة جديدة',
+    allJobs: 'كل الوظائف',
+    open: 'مفتوحة',
+    completed: 'مكتملة',
+    withdrawn: 'مسحوبة',
+    noJobsYet: 'لم تنشر أي وظيفة بعد.',
+    noJobsFound: 'لا توجد وظائف {status}.',
+    budget: 'الميزانية',
+    applications: 'الطلبات',
+    posted: 'تاريخ النشر',
+    deadline: 'الموعد النهائي',
+    more: 'المزيد',
+    viewDetails: 'عرض التفاصيل',
+    edit: 'تعديل',
+    withdrawJob: 'سحب الوظيفة',
+    delete: 'حذف',
+    urgent: 'عاجل',
+    featured: 'مميّز',
+    deleteJobPost: 'حذف الإعلان',
+    deleteConfirm: 'هل تريد حذف إعلان «{title}»؟',
+    cannotUndone: 'لا يمكن التراجع عن هذا الإجراء.',
+    cancel: 'إلغاء',
+    deleteJob: 'حذف',
+    withdrawJobPost: 'سحب الإعلان',
+    withdrawConfirm: 'هل تريد سحب إعلان «{title}»؟',
+    withdrawWill: 'سيترتب على ذلك:',
+    withdrawClose: 'إغلاق الوظيفة كملغاة',
+    withdrawMark: 'وضع جميع طلبات هذه الوظيفة كمسحوبة',
+    withdrawStudents: 'سيرى الطلاب طلباتهم كمسحوبة',
+    withdrawJobButton: 'سحب الوظيفة',
+    jobDeleted: 'تم حذف الوظيفة بنجاح!',
+    deleteFailed: 'فشل الحذف',
+    jobWithdrawn: 'سُحبت الوظيفة! وُسِمت كل الطلبات كمسحوبة.',
+    withdrawFailed: 'فشل سحب الوظيفة',
+    statusOpen: 'مفتوحة',
+    statusInProgress: 'قيد التنفيذ',
+    statusCompleted: 'مكتملة',
+    statusCancelled: 'ملغاة',
+    compactView: 'عرض مضغوط',
+    detailedView: 'عرض مفصّل',
+    listView1: 'قائمة ١',
+    listView2: 'قائمة ٢',
   },
 };
 
@@ -439,12 +489,12 @@ const Jobs = () => {
                           </div>
                           <div>
                             <span className="text-gray-500">{t.posted}: </span>
-                            <span>{new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}</span>
+                            <span>{new Date(job.createdAt).toLocaleDateString(getDashboardDateLocale(language))}</span>
                           </div>
                           {job.deadline && (
                             <div>
                               <span className="text-gray-500">{t.deadline}: </span>
-                              <span>{new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}</span>
+                              <span>{new Date(job.deadline).toLocaleDateString(getDashboardDateLocale(language))}</span>
                             </div>
                           )}
                         </div>
@@ -536,7 +586,7 @@ const Jobs = () => {
                       <div className="min-w-0">
                         <p className="text-xs text-gray-500 mb-0.5">{t.posted}</p>
                         <p className="font-semibold text-xs sm:text-sm">
-                          {new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                          {new Date(job.createdAt).toLocaleDateString(getDashboardDateLocale(language))}
                         </p>
                       </div>
                     </div>
@@ -548,7 +598,7 @@ const Jobs = () => {
                         <div className="min-w-0">
                           <p className="text-xs text-gray-500 mb-0.5">{t.deadline}</p>
                           <p className="font-semibold text-xs sm:text-sm">
-                            {new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                            {new Date(job.deadline).toLocaleDateString(getDashboardDateLocale(language))}
                           </p>
                         </div>
                       </div>

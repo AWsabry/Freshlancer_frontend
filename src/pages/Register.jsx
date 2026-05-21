@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuthStore } from '../stores/authStore';
 import { generatePassword, validatePassword } from '../utils/passwordGenerator';
@@ -10,6 +10,7 @@ import Select from '../components/common/Select';
 import UniversitySelect from '../components/common/UniversitySelect';
 import Alert from '../components/common/Alert';
 import logo from '../assets/logos/01.png';
+import { registerAr } from '../locales/registerAr';
 import { RefreshCw, CheckCircle, XCircle, Eye, EyeOff, Briefcase, Users, Shield, Zap, Star, Globe } from 'lucide-react';
 
 // Currency for students: EGP is used for all countries
@@ -620,10 +621,12 @@ const translations = {
     clients: 'Clienti',
     projects: 'Progetti Completati',
   },
+  ar: registerAr,
 };
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register: registerUser } = useAuthStore();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -638,6 +641,11 @@ const Register = () => {
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('dashboardLanguage') || 'en';
   });
+
+  const nextPath = useMemo(() => {
+    const sp = new URLSearchParams(location.search || '');
+    return sp.get('next') || '';
+  }, [location.search]);
 
   useEffect(() => {
     const handleLanguageChange = (event) => {
@@ -671,6 +679,15 @@ const Register = () => {
       role: ''
     }
   });
+
+  useEffect(() => {
+    const roleParam = new URLSearchParams(location.search).get('role');
+    if (roleParam === 'student' || roleParam === 'client') {
+      setValue('role', roleParam);
+      setRole(roleParam);
+    }
+  }, [location.search, setValue]);
+
   const password = watch('password');
   const selectedRole = watch('role');
   const watchedCountry = watch('country');
@@ -865,14 +882,31 @@ const Register = () => {
       // Default to false if emailVerified is undefined (new registrations should not be verified)
       if (!user?.emailVerified) {
         console.log('[Register] Email not verified, redirecting to verify-email-required');
-        // Use replace to prevent back navigation
-        navigate('/verify-email-required', { replace: true });
+        const next =
+          nextPath ||
+          (localStorage.getItem('pendingCvReviewUploadId')
+            ? `/cv-review/continue?uploadId=${encodeURIComponent(
+                localStorage.getItem('pendingCvReviewUploadId') || ''
+              )}`
+            : '');
+        navigate(`/verify-email-required${next ? `?next=${encodeURIComponent(next)}` : ''}`, {
+          replace: true,
+        });
         return;
       }
 
       // If email is verified, redirect to dashboard based on role
       console.log('[Register] Email verified, redirecting to dashboard');
-      if (user.role === 'admin') {
+      if (nextPath) {
+        navigate(nextPath, { replace: true });
+      } else if (localStorage.getItem('pendingCvReviewUploadId')) {
+        navigate(
+          `/cv-review/continue?uploadId=${encodeURIComponent(
+            localStorage.getItem('pendingCvReviewUploadId') || ''
+          )}`,
+          { replace: true }
+        );
+      } else if (user.role === 'admin') {
         navigate('/admin/dashboard', { replace: true });
       } else if (user.role === 'client') {
         navigate('/client/dashboard', { replace: true });
@@ -935,6 +969,7 @@ const Register = () => {
           >
             <option value="en">EN</option>
             <option value="it">IT</option>
+            <option value="ar">AR</option>
           </select>
         </div>
       </div>

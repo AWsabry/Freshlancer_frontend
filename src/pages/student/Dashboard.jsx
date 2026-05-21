@@ -5,6 +5,7 @@ import { subscriptionService } from '../../services/subscriptionService';
 import { applicationService } from '../../services/applicationService';
 import { verificationService } from '../../services/verificationService';
 import { authService } from '../../services/authService';
+import { contractService } from '../../services/contractService';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
@@ -66,6 +67,32 @@ const translations = {
     recentApplications: 'Candidature Recenti',
     applied: 'Candidato',
     noApplicationsYet: 'Nessuna candidatura ancora',
+  },
+  ar: {
+    loading: 'جاري تحميل لوحة التحكم...',
+    verificationRequired: 'التحقق مطلوب',
+    verificationRequiredMessage: 'أكملي التحقق من صفتك كطالبة/طالبة لتتمكني من التقديم.',
+    applicationsThisMonth: 'طلبات هذا الشهر',
+    ofThisMonth: 'من {limit} لهذا الشهر',
+    applicationsRemaining: 'الطلبات المتبقية',
+    premiumPlan: 'الخطة المميزة',
+    freePlan: 'الخطة المجانية',
+    verification: 'التحقق',
+    verified: 'موثّق',
+    pending: 'قيد المراجعة',
+    rejected: 'مرفوض',
+    unverified: 'غير موثّق',
+    package: 'الباقة',
+    premium: 'مميز',
+    free: 'مجاني',
+    quickActions: 'إجراءات سريعة',
+    completeVerification: 'أكملي التحقق',
+    browseJobs: 'تصفح الوظائف',
+    viewApplications: 'عرض الطلبات',
+    upgradeToPremium: 'الترقية للمميز',
+    recentApplications: 'أحدث الطلبات',
+    applied: 'مُرسل',
+    noApplicationsYet: 'لا طلبات بعد',
   },
 };
 

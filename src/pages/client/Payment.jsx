@@ -8,6 +8,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X } from 'lucide-react';
 import paymobImage from '../../assets/images/paymob.png';
+import { getPaymobPublicKey } from '../../config/paymob';
 
 const translations = {
   en: {
@@ -83,6 +84,45 @@ const translations = {
     paymentSuccessful: 'Pagamento riuscito! {points} punti sono stati aggiunti al tuo account.',
     paymentProcessingError: 'Errore nell\'elaborazione del pagamento. Si prega di contattare il supporto.',
     paymentFailed: 'Pagamento fallito. Si prega di riprovare.',
+  },
+  ar: {
+    noPaymentDetails: 'لا تفاصيل دفع',
+    goToPackages: 'اذهب إلى الباقات',
+    backToPackages: 'العودة للباقات',
+    completePayment: 'إتمام الدفع',
+    securePaymentPaymob: 'دفع آمن عبر Paymob',
+    paymobRedirect:
+      'ستُعاد توجيهك إلى Paymob لإكمال الدفع بأمان. يدعم Paymob البطاقات والمحافظ وطرق دفع أخرى.',
+    acceptedPaymentMethods: 'طرق الدفع المقبولة:',
+    creditDebitCards: 'بطاقات ائتمان/خصم',
+    cardsList: 'Visa وMastercard وMeeza',
+    mobileWallets: 'محافظ إلكترونية',
+    walletsList: 'Vodafone وEtisalat وOrange',
+    paymentSecure: 'دفعك آمن',
+    paymentSecureDesc:
+      'تُعالَج المعاملات بشفافية عبر بوابة Paymob. بيانات بطاقتك لا تُخزَّن على خوادمنا.',
+    paymentSummary: 'ملخص الدفع',
+    package: 'الباقة',
+    points: 'نقاط',
+    havePromoCode: 'لديك رمز؟',
+    enterCode: 'أدخل الرمز',
+    apply: 'تطبيق',
+    invalidCoupon: 'رمز غير صالح',
+    enterCouponCode: 'أدخل رمز القسيمة',
+    discount: 'خصم',
+    subtotal: 'المجموع الفرعي',
+    processingFee: 'رسوم معالجة (3٪)',
+    total: 'الإجمالي',
+    whatYouGet: 'ما ستحصل عليه:',
+    pointsAdded: 'نقاط تُضاف للرصيد',
+    unlockProfiles: 'فتح ملفات الطلاب',
+    accessContact: 'الوصول لبيانات التواصل',
+    pointsPerUnlock: '10 نقاط لكل فتح ملف',
+    proceedToPayment: 'المتابعة للدفع',
+    securePaymentPowered: 'دفع آمن عبر Paymob',
+    paymentSuccessful: 'نجح الدفع! أُضيفت {points} نقطة إلى حسابك.',
+    paymentProcessingError: 'خطأ في معالجة الدفع. تواصل مع الدعم.',
+    paymentFailed: 'فشل الدفع. حاول مرة أخرى.',
   },
 };
 
@@ -167,8 +207,13 @@ const Payment = () => {
             console.log('Stored intention ID in sessionStorage:', intentionId);
           }
 
-          const publicKey = 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
-          const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
+          const publicKey = getPaymobPublicKey();
+          if (!publicKey) {
+            console.error('VITE_PAYMOB_PUBLIC_KEY is not set; cannot open Paymob checkout.');
+            alert(t.paymentProcessingError);
+            return;
+          }
+          const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(clientSecret)}`;
 
           console.log('Client Secret received:', clientSecret);
           console.log('Intention ID received:', intentionId);

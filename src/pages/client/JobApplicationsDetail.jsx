@@ -8,6 +8,8 @@ import { contractService } from '../../services/contractService';
 import { useToast } from '../../contexts/ToastContext';
 import { translateError } from '../../utils/errorTranslations';
 import { getUniversityName, getUniversityId } from '../../utils/universityHelpers';
+import { clientJobApplicationsDetailAr } from '../../locales/clientJobApplicationsDetailAr';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { API_BASE_URL } from '../../config/env';
 import Button from '../../components/common/Button';
@@ -298,6 +300,7 @@ const translations = {
     certifications: 'Certificazioni',
     socialLinks: 'Link Social',
   },
+  ar: clientJobApplicationsDetailAr,
 };
 
 const JobApplicationsDetail = () => {
@@ -398,6 +401,13 @@ const JobApplicationsDetail = () => {
   
   const handleModalImageError = (key) => {
     setModalImageErrors(prev => ({ ...prev, [key]: true }));
+  };
+
+  const getMatchVariant = (score) => {
+    if (typeof score !== 'number') return 'info';
+    if (score >= 8) return 'success';
+    if (score >= 5) return 'warning';
+    return 'error';
   };
 
   // Fetch job details
@@ -672,7 +682,7 @@ const JobApplicationsDetail = () => {
                   <p className="text-xs text-gray-500">{t.deadline}</p>
                   <p className="font-semibold">
                     {job?.deadline 
-                      ? new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')
+                      ? new Date(job.deadline).toLocaleDateString(getDashboardDateLocale(language))
                       : t.noDeadlineSettled
                     }
                   </p>
@@ -962,6 +972,12 @@ const JobApplicationsDetail = () => {
                               <Crown className="w-2.5 h-2.5" />
                             </Badge>
                           )}
+                          <Badge
+                            variant={getMatchVariant(application.matchScore)}
+                            className="text-xs"
+                          >
+                            Match: {typeof application.matchScore === 'number' ? `${application.matchScore}/10` : '—'}
+                          </Badge>
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                           <span>{application.proposedBudget?.currency} {application.proposedBudget?.amount}</span>
@@ -1008,6 +1024,12 @@ const JobApplicationsDetail = () => {
                               <Crown className="w-2.5 h-2.5" /> Premium
                             </Badge>
                           )}
+                          <Badge
+                            variant={getMatchVariant(application.matchScore)}
+                            className="text-xs"
+                          >
+                            Match: {typeof application.matchScore === 'number' ? `${application.matchScore}/10` : '—'}
+                          </Badge>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
                           <div>
@@ -1083,6 +1105,12 @@ const JobApplicationsDetail = () => {
                                   {viewMode === 'detailed' && 'Premium Account'}
                                 </Badge>
                               )}
+                              <Badge
+                                variant={getMatchVariant(application.matchScore)}
+                                className={`${viewMode === 'compact' ? 'text-xs' : ''}`}
+                              >
+                                Match: {typeof application.matchScore === 'number' ? `${application.matchScore}/10` : '—'}
+                              </Badge>
                             </div>
                           </>
                         ) : (
@@ -1096,6 +1124,12 @@ const JobApplicationsDetail = () => {
                                   {viewMode === 'detailed' && t.premiumAccount}
                                 </Badge>
                               )}
+                              <Badge
+                                variant={getMatchVariant(application.matchScore)}
+                                className={`${viewMode === 'compact' ? 'text-xs' : ''}`}
+                              >
+                                Match: {typeof application.matchScore === 'number' ? `${application.matchScore}/10` : '—'}
+                              </Badge>
                             </div>
                           </>
                         )}
@@ -1161,7 +1195,7 @@ const JobApplicationsDetail = () => {
                            application.status}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          {t.applied} {new Date(application.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                          {t.applied} {new Date(application.createdAt).toLocaleDateString(getDashboardDateLocale(language))}
                         </span>
                       </div>
                     </div>
@@ -1338,52 +1372,35 @@ const JobApplicationsDetail = () => {
                 : {};
               const applicationSpecs = specDefs.filter((s) => s.useInApplication);
               const applicationSpecsOrdered = [...applicationSpecs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+              const categorySpecAnswerKeys = Object.keys(categorySpecAnswers || {});
+              const categorySpecAnswerKeysOrdered = categorySpecAnswerKeys.slice().sort();
+
+              const prettySpecKey = (key) => {
+                if (!key) return '';
+                const normalized = String(key).replace(/[_-]+/g, ' ').trim();
+                if (!normalized) return String(key);
+                return normalized.replace(/\b\w/g, (c) => c.toUpperCase());
+              };
+
+              const formatSpecValue = (val) => {
+                if (val === undefined || val === null || val === '') return '—';
+                if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+                if (Array.isArray(val)) return val.length > 0 ? val.join(', ') : '—';
+                return String(val);
+              };
 
               return (
                 <>
-                  {/* Job & Category */}
-                  {fullApp.jobPost && (
-                    <Card>
-                      <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <Briefcase className="w-5 h-5" />
-                        {t.jobDetails}
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
-                        <div className="sm:col-span-2">
-                          <p className="text-sm text-gray-500">{t.jobTitle}</p>
-                          <p className="font-semibold text-gray-900">{fullApp.jobPost.title}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">{t.budget}</p>
-                          <p className="font-semibold">
-                            {fullApp.jobPost.budget?.currency} {fullApp.jobPost.budget?.min} – {fullApp.jobPost.budget?.max}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">{t.deadline}</p>
-                          <p className="font-semibold">
-                            {fullApp.jobPost.deadline
-                              ? new Date(fullApp.jobPost.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')
-                              : t.noDeadlineSettled}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">{t.duration}</p>
-                          <p className="font-semibold">{fullApp.jobPost.projectDuration || t.notSpecified}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">{t.categoryName}</p>
-                          <p className="font-semibold">{fullJobCategoryName || t.notSpecified}</p>
-                        </div>
-                      </div>
-                      {category?.description && (
-                        <div className="pt-3 border-t border-gray-200">
-                          <p className="text-sm text-gray-500 mb-1">{t.categoryDescription}</p>
-                          <p className="text-gray-700">{category.description}</p>
-                        </div>
-                      )}
-                    </Card>
-                  )}
+                  <div className="flex justify-end">
+                    <Badge
+                      variant={getMatchVariant(fullApp.matchScore)}
+                      className="text-base sm:text-lg px-4 py-1.5"
+                    >
+                      {typeof fullApp.matchScore === 'number'
+                        ? `Match: ${fullApp.matchScore}/10`
+                        : 'Match: —'}
+                    </Badge>
+                  </div>
 
                   {/* Student Info Section */}
                   <Card>
@@ -1551,7 +1568,7 @@ const JobApplicationsDetail = () => {
                                         </div>
                                         {cert.issueDate && (
                                           <p className="text-xs text-gray-500">
-                                            {new Date(cert.issueDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                                            {new Date(cert.issueDate).toLocaleDateString(getDashboardDateLocale(language))}
                                           </p>
                                         )}
                                       </div>
@@ -1652,6 +1669,12 @@ const JobApplicationsDetail = () => {
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
+                        <p className="text-sm text-gray-500">Match score</p>
+                        <Badge variant={getMatchVariant(fullApp.matchScore)}>
+                          {typeof fullApp.matchScore === 'number' ? `${fullApp.matchScore}/10` : '—'}
+                        </Badge>
+                      </div>
+                      <div>
                         <p className="text-sm text-gray-500">{t.applicationStatus}</p>
                         <Badge
                           variant={
@@ -1669,7 +1692,7 @@ const JobApplicationsDetail = () => {
                       <div>
                         <p className="text-sm text-gray-500">{t.appliedDate}</p>
                         <p className="font-semibold">
-                          {new Date(fullApp.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
+                          {new Date(fullApp.createdAt).toLocaleDateString(getDashboardDateLocale(language), {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
@@ -1752,20 +1775,45 @@ const JobApplicationsDetail = () => {
                     </Card>
                   )}
 
+                  {/* Job & Category */}
+                  {fullApp.jobPost && (
+                    <Card>
+                      <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5" />
+                        {t.jobDetails}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-3">
+                        <div>
+                          <p className="text-sm text-gray-500">{t.budget}</p>
+                          <p className="font-semibold">
+                            {fullApp.jobPost.budget?.currency} {fullApp.jobPost.budget?.min} – {fullApp.jobPost.budget?.max}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">{t.deadline}</p>
+                          <p className="font-semibold">
+                            {fullApp.jobPost.deadline
+                              ? new Date(fullApp.jobPost.deadline).toLocaleDateString(getDashboardDateLocale(language))
+                              : t.noDeadlineSettled}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">{t.duration}</p>
+                          <p className="font-semibold">{fullApp.jobPost.projectDuration || t.notSpecified}</p>
+                        </div>
+                      </div>
+                      {/* Category description intentionally hidden in modal */}
+                    </Card>
+                  )}
+
                   {/* Category Details – all specs, job requirements, applicant answers */}
-                  {(category || applicationSpecsOrdered.length > 0) && (
+                  {(category || applicationSpecsOrdered.length > 0 || categorySpecAnswerKeysOrdered.length > 0) && (
                     <Card>
                       <h4 className="font-bold text-gray-900 mb-4">{t.categoryDetails}</h4>
                       {category && (
                         <div className="mb-4 pb-4 border-b border-gray-200">
                           <p className="text-sm text-gray-500">{t.categoryName}</p>
                           <p className="font-semibold text-gray-900">{category.name}</p>
-                          {category.description && (
-                            <>
-                              <p className="text-sm text-gray-500 mt-2">{t.categoryDescription}</p>
-                              <p className="text-gray-700">{category.description}</p>
-                            </>
-                          )}
                         </div>
                       )}
                       {applicationSpecsOrdered.length > 0 ? (
@@ -1819,7 +1867,46 @@ const JobApplicationsDetail = () => {
                             </tbody>
                           </table>
                         </div>
-                      ) : category && (
+                      ) : categorySpecAnswerKeysOrdered.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="py-2 pr-4 text-sm font-semibold text-gray-700">{t.categoryField}</th>
+                                {Object.keys(jobSpecReqs).length > 0 && (
+                                  <th className="py-2 pr-4 text-sm font-semibold text-gray-700">{t.jobRequirement}</th>
+                                )}
+                                <th className="py-2 text-sm font-semibold text-gray-700">{t.applicantAnswer}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {categorySpecAnswerKeysOrdered.map((key) => {
+                                const jobReq = jobSpecReqs[key];
+                                const showJobCol = Object.keys(jobSpecReqs).length > 0;
+                                const jobReqDisplay = formatSpecValue(jobReq);
+                                const answerDisplay = formatSpecValue(categorySpecAnswers[key]);
+                                const label = prettySpecKey(key);
+                                return (
+                                  <tr key={key} className="border-b border-gray-100">
+                                    <td className="py-3 pr-4">
+                                      <p className="text-sm text-gray-600">{label}</p>
+                                      <p className="text-xs text-gray-400">{key}</p>
+                                    </td>
+                                    {showJobCol && (
+                                      <td className="py-3 pr-4">
+                                        <p className="font-medium text-gray-800">{jobReqDisplay}</p>
+                                      </td>
+                                    )}
+                                    <td className="py-3">
+                                      <p className="font-semibold text-gray-900">{answerDisplay}</p>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
                         <p className="text-sm text-gray-500">{t.notSpecified}</p>
                       )}
                     </Card>

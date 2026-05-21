@@ -7,6 +7,7 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Modal from '../../components/common/Modal';
+import { getDashboardDateLocale } from '../../utils/dashboardLocale';
 import {
   ArrowLeft,
   Edit2,
@@ -106,6 +107,49 @@ const translations = {
     completeWill4: 'Gli studenti vedranno le loro candidature non accettate come rifiutate',
     completeSuccess: 'Lavoro segnato come completato! Tutte le candidature non accettate sono state rifiutate.',
     completeFailed: 'Impossibile completare il lavoro',
+  },
+  ar: {
+    loading: 'جاري تحميل تفاصيل الوظيفة...',
+    jobNotFound: 'الوظيفة غير موجودة',
+    backToMyJobs: 'العودة لوظائفي',
+    posted: 'نُشرت',
+    deadline: 'الموعد النهائي:',
+    urgent: 'عاجل',
+    featured: 'مميّز',
+    open: 'مفتوحة',
+    inProgress: 'قيد التنفيذ',
+    completed: 'مكتملة',
+    cancelled: 'ملغاة',
+    budget: 'الميزانية',
+    duration: 'المدة',
+    applications: 'الطلبات',
+    jobDescription: 'وصف الوظيفة',
+    requiredSkills: 'المهارات المطلوبة',
+    category: 'التصنيف',
+    experienceLevel: 'مستوى الخبرة',
+    projectDuration: 'مدة المشروع',
+    editJob: 'تعديل الوظيفة',
+    viewApplications: 'عرض الطلبات',
+    markAsCompleted: 'وضع كمكتملة',
+    withdrawJob: 'سحب الوظيفة',
+    withdrawJobPost: 'سحب الإعلان',
+    withdrawConfirm: 'هل تريد سحب إعلان «{title}»؟',
+    thisWill: 'سيترتب على ذلك:',
+    withdrawWill1: 'إغلاق الوظيفة كملغاة',
+    withdrawWill2: 'وضع جميع طلبات هذه الوظيفة كمسحوبة',
+    withdrawWill3: 'سيرى الطلاب طلباتهم كمسحوبة',
+    actionCannotUndone: 'لا يمكن التراجع.',
+    cancel: 'إلغاء',
+    withdrawSuccess: 'سُحبت الوظيفة! وُسِمت الطلبات كمسحوبة.',
+    withdrawFailed: 'فشل سحب الوظيفة',
+    markJobCompleted: 'تعليم الوظيفة كمكتملة',
+    completeConfirm: 'تعليم «{title}» كمكتملة؟',
+    completeWill1: 'إغلاق الوظيفة كمكتملة',
+    completeWill2: 'رفض الطلبات المعلّقة وقيد المراجعة',
+    completeWill3: 'الإبقاء على المقبول',
+    completeWill4: 'سيرى الطلاب غير المقبولين رفضاً',
+    completeSuccess: 'وُسِمت كمكتملة! رُفضت الطلبات غير المقبولة.',
+    completeFailed: 'فشل الإكمال',
   },
 };
 
@@ -219,12 +263,12 @@ const JobDetails = () => {
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm sm:text-base text-gray-600">
               <span className="flex items-center gap-1">
                 <Calendar className="w-5 h-5" />
-                {t.posted} {new Date(job.createdAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                {t.posted} {new Date(job.createdAt).toLocaleDateString(getDashboardDateLocale(language))}
               </span>
               {job.deadline && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-5 h-5" />
-                  {t.deadline} {new Date(job.deadline).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US')}
+                  {t.deadline} {new Date(job.deadline).toLocaleDateString(getDashboardDateLocale(language))}
                 </span>
               )}
             </div>

@@ -48,6 +48,28 @@ const translations = {
     errorCode: 'Codice Errore:',
     includeCodeSupport: 'Includi questo codice se contatti il supporto',
   },
+  ar: {
+    paymentFailed: 'فشل الدفع',
+    missingIdError: 'فشل التحقق: معرّف المعاملة مفقود.',
+    transactionNotFound: 'المعاملة غير موجودة في نظامنا.',
+    paymentNotCompleted: 'لم يكتمل الدفع بنجاح.',
+    processingError: 'حدث خطأ أثناء معالجة الدفع.',
+    captureFailed:
+      'تعذر إكمال الدفع. إن خُصم مبلغ من بطاقتك فسيُرجع PayPal تلقائياً خلال أيام. أعد المحاولة أو راسل الدعم.',
+    invalidRequest: 'رابط دفع غير صالح. ابدأ الدفع من جديد.',
+    defaultError: 'تعذر إكمال الدفع. حاول مرة أخرى.',
+    commonReasons: 'أسباب شائعة لفشل الدفع:',
+    insufficientFunds: 'رصيد غير كافٍ',
+    incorrectCardDetails: 'بيانات البطاقة غير صحيحة',
+    cardDeclined: 'رفضت البنك العملية',
+    networkIssues: 'مشاكل في الشبكة',
+    paymentCanceled: 'ألغى المستخدم الدفع',
+    tryAgain: 'حاول مرة أخرى',
+    contactSupport: 'تواصل مع الدعم',
+    goBack: 'رجوع',
+    errorCode: 'رمز الخطأ:',
+    includeCodeSupport: 'اذكر هذا الرمز عند التواصل مع الدعم',
+  },
 };
 
 const PaymentFailed = () => {

@@ -193,6 +193,90 @@ const translations = {
     durationRequiredAlert: 'Seleziona una durata stimata.',
     availabilityRequiredAlert: 'Seleziona il tuo impegno di disponibilità.',
   },
+  ar: {
+    loading: 'جاري تحميل تفاصيل الوظيفة...',
+    jobNotFound: 'الوظيفة غير موجودة',
+    backToJobs: 'العودة للوظائف',
+    posted: 'تاريخ النشر',
+    budget: 'الميزانية',
+    duration: 'المدة',
+    applicants: 'المتقدمون',
+    description: 'الوصف',
+    skillsRequired: 'المهارات المطلوبة',
+    premiumMembersOnly: 'للأعضاء المميزين',
+    premium: 'مميز',
+    free: 'مجاني',
+    urgent: 'عاجل',
+    alreadyApplied: 'تقدّمتِ مسبقاً. حالة الطلب: {status}',
+    viewMyApplication: 'عرض طلبي',
+    allApplications: 'كل الطلبات',
+    applicationsThisMonth: 'طلبات هذا الشهر',
+    resetsOn: 'يُعاد التعيين في {date}',
+    usedApplications: 'استخدمتِ {used} من {limit} طلباً. رقي للمميز لـ١٠٠ طلب شهرياً!',
+    reachedLimit: 'بلغتِ الحد الشهري ({limit}). {message}',
+    limitResetMessage: 'يُعاد الحد في أول يوم من الشهر التالي.',
+    upgradeMessage: 'رقي للمميز لـ١٠٠ طلب شهرياً!',
+    applyForJob: 'قدّمي على الوظيفة',
+    applyForJobTitle: 'التقديم على الوظيفة',
+    applicationInfo: 'أكملي النموذج باستخدام الخيارات المتاحة فقط دون نص حر.',
+    proposalType: 'نوع العرض',
+    proposalTypeRequired: 'نوع العرض مطلوب',
+    standardProposal: 'عرض قياسي',
+    expressProposal: 'سريع (تسليم أسرع)',
+    premiumProposal: 'مميز (جودة عالية)',
+    customProposal: 'نهج مخصّص',
+    proposalMessage: 'رسالة العرض (اختياري)',
+    proposalMessagePlaceholder: 'رسالة للعميل عن سبب ملاءمتك للمشروع...',
+    proposalMessageMaxLength: 'النص أقل من ١٠٠٠ حرف',
+    proposalMessageInfo: 'بحد أقصى ١٠٠٠ حرف. تظهر للعميل.',
+    premiumOnly: 'للمميز فقط',
+    proposedBudgetAmount: 'المبلغ المقترح',
+    proposedBudgetRequired: 'المبلغ المقترح مطلوب',
+    budgetMin: 'المبلغ دولار واحد على الأقل',
+    currency: 'العملة',
+    currencyRequired: 'العملة مطلوبة',
+    estimatedDuration: 'المدة التقديرية',
+    durationRequired: 'المدة مطلوبة',
+    lessThan1Week: 'أقل من أسبوع',
+    oneToTwoWeeks: '١–٢ أسبوع',
+    twoToFourWeeks: '٢–٤ أسابيع',
+    oneToThreeMonths: '١–٣ أشهر',
+    moreThanThreeMonths: 'أكثر من ٣ أشهر',
+    methodology: 'المنهجية',
+    deliveryFrequency: 'وتيرة التسليم',
+    dailyUpdates: 'يومي',
+    weeklyUpdates: 'أسبوعي',
+    biWeeklyUpdates: 'كل أسبوعين',
+    monthlyUpdates: 'شهري',
+    uponCompletion: 'عند الإنجاز',
+    numberOfRevisions: 'عدد المراجعات (٠–١٠)',
+    communicationPreference: 'تفضيل التواصل',
+    emailOnly: 'بريد فقط',
+    chatPreferred: 'دردشة',
+    videoCallsAvailable: 'مكالمات فيديو',
+    flexible: 'مرن',
+    availabilityCommitment: 'الالتزام بالتوفر',
+    availabilityRequired: 'التوفر مطلوب',
+    fullTime: 'دوام كامل (٤٠+ ساعة/أسبوع)',
+    partTime20_40: 'دوام جزئي ٢٠–٤٠',
+    partTime10_20: 'دوام جزئي ١٠–٢٠',
+    weekendsOnly: 'عطلات فقط',
+    flexibleHours: 'ساعات مرنة',
+    relevantExperienceLevel: 'مستوى الخبرة',
+    firstProject: 'أول مشروع',
+    oneToThreeProjects: '١–٣ مشاريع',
+    threeToFiveProjects: '٣–٥ مشاريع',
+    fivePlusProjects: '٥+ مشاريع',
+    expertInField: 'خبيرة في المجال',
+    cancel: 'إلغاء',
+    submitApplication: 'إرسال الطلب',
+    applicationSuccess: 'تم إرسال الطلب! تُرى الوظيفة ضمن «قدّمتِ عليها».',
+    applicationFailed: 'فشل إرسال الطلب. حاولي مرة أخرى.',
+    jobIdMissing: 'معرّف الوظيفة مفقود. حدّثي الصفحة.',
+    validBudgetRequired: 'أدخلي ميزانية صالحة.',
+    durationRequiredAlert: 'اختر المدة.',
+    availabilityRequiredAlert: 'اختر التزام التوفر.',
+  },
 };
 
 const JobDetails = () => {
@@ -381,24 +465,23 @@ const JobDetails = () => {
     }
   }, [job?.categorySpecRequirements]);
 
-  // Initialize/lock answers based on job requirements and defaults
+  // Initialize answers: category default first, else job value as non-binding suggestion only
   useEffect(() => {
     if (!job || !category) return;
     setCategorySpecAnswers((prev) => {
       const next = { ...(prev || {}) };
       applicationSpecs.forEach((spec) => {
-        const isLocked =
-          spec.useInJobPost === true &&
-          jobRequirements &&
-          jobRequirements[spec.key] !== undefined;
+        if (next[spec.key] !== undefined) return;
 
-        if (isLocked) {
-          next[spec.key] = jobRequirements[spec.key];
+        if (spec.defaultValue !== undefined) {
+          next[spec.key] = spec.defaultValue;
           return;
         }
 
-        if (next[spec.key] === undefined && spec.defaultValue !== undefined) {
-          next[spec.key] = spec.defaultValue;
+        const jr = jobRequirements?.[spec.key];
+        if (jr !== undefined && jr !== null && jr !== '') {
+          if (Array.isArray(jr) && jr.length === 0) return;
+          next[spec.key] = jr;
         }
       });
       return next;
@@ -708,10 +791,6 @@ const JobDetails = () => {
 
               {applicationSpecs.map((spec) => {
                 const required = spec.requiredInApplication === true;
-                const locked =
-                  spec.useInJobPost === true &&
-                  jobRequirements &&
-                  jobRequirements[spec.key] !== undefined;
                 const value = categorySpecAnswers?.[spec.key];
 
                 if (spec.type === 'select') {
@@ -720,12 +799,11 @@ const JobDetails = () => {
                     <div key={spec.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
                       </label>
                       <select
                         className="input"
                         value={value ?? ''}
-                        disabled={locked || isSubmitting}
+                        disabled={isSubmitting}
                         onChange={(e) =>
                           setCategorySpecAnswers((prev) => ({
                             ...(prev || {}),
@@ -751,7 +829,6 @@ const JobDetails = () => {
                     <div key={spec.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {options.map((o) => {
@@ -761,7 +838,7 @@ const JobDetails = () => {
                               <input
                                 type="checkbox"
                                 checked={checked}
-                                disabled={locked || isSubmitting}
+                                disabled={isSubmitting}
                                 onChange={(e) => {
                                   setCategorySpecAnswers((prev) => {
                                     const prevArr = Array.isArray(prev?.[spec.key]) ? prev[spec.key] : [];
@@ -787,13 +864,12 @@ const JobDetails = () => {
                     <div key={spec.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked by job requirement)</span>}
                       </label>
                       <input
                         className="input"
                         type="number"
                         value={value ?? ''}
-                        disabled={locked || isSubmitting}
+                        disabled={isSubmitting}
                         min={spec.min ?? undefined}
                         max={spec.max ?? undefined}
                         onChange={(e) =>
@@ -813,7 +889,7 @@ const JobDetails = () => {
                       <input
                         type="checkbox"
                         checked={value === true}
-                        disabled={locked || isSubmitting}
+                        disabled={isSubmitting}
                         onChange={(e) =>
                           setCategorySpecAnswers((prev) => ({
                             ...(prev || {}),
@@ -824,7 +900,6 @@ const JobDetails = () => {
                       />
                       <span className="text-sm font-medium text-gray-700">
                         {spec.label} {required && <span className="text-red-500">*</span>}
-                        {locked && <span className="ml-2 text-xs text-gray-500">(locked)</span>}
                       </span>
                     </div>
                   );

@@ -11,6 +11,10 @@ const translations = {
     reviews: 'Recensioni',
     underConstruction: 'Questa pagina è in costruzione.',
   },
+  ar: {
+    reviews: 'التقييمات',
+    underConstruction: 'هذه الصفحة قيد الإنشاء.',
+  },
 };
 
 const Reviews = () => {

@@ -9,6 +9,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { ArrowLeft, Lock, CheckCircle, CreditCard, Tag, X } from 'lucide-react';
 import paymobImage from '../../assets/images/paymob.png';
+import { getPaymobPublicKey } from '../../config/paymob';
 
 const translations = {
   en: {
@@ -88,6 +89,45 @@ const translations = {
     paymentSuccessful: 'Pagamento completato con successo! Il tuo abbonamento Premium è ora attivo.',
     paymentProcessingError: 'Errore nell\'elaborazione del pagamento. Contatta il supporto.',
     paymentFailed: 'Pagamento fallito. Riprova.',
+  },
+  ar: {
+    noPaymentDetails: 'لا تفاصيل دفع',
+    goToSubscription: 'الاشتراك',
+    backToSubscription: 'عودة للاشتراك',
+    completePayment: 'إتمام الدفع',
+    securePaymentWithPaymob: 'دفع آمن عبر Paymob',
+    paymobRedirect: 'سيتم تحويلك لـ Paymob لإكمال الدفع. يدعم البطاقات والمحافظ.',
+    acceptedPaymentMethods: 'طرق الدفع:',
+    creditDebitCards: '💳 بطاقات',
+    cardsDescription: 'Visa، Mastercard، Meeza',
+    mobileWallets: '📱 محافظ',
+    walletsDescription: 'Vodafone، Etisalat، Orange',
+    yourPaymentIsSecure: 'دفعتك مؤمّنة',
+    secureDescription: 'المعاملات مشفّرة عبر Paymob ولا نخزّن بيانات البطاقة.',
+    paymentSummary: 'ملخص الدفع',
+    plan: 'الخطة',
+    premium: 'مميز',
+    billingCycle: 'الدورة',
+    monthly: 'شهري',
+    havePromoCode: 'لديك كود؟',
+    enterCode: 'الكود',
+    apply: 'تطبيق',
+    discount: 'خصم',
+    subtotal: 'الفرعي',
+    processingFee: 'رسوم معالجة',
+    total: 'الإجمالي',
+    whatYoullGet: 'ما ستحصلين عليه:',
+    jobApplicationsPerMonth: '١٠٠ طلب/شهر',
+    priorityInSearch: 'أولوية في البحث',
+    featuredProfileBadge: 'شارة مميّزة',
+    prioritySupport: 'دعم أولوية',
+    proceedToPayment: 'متابعة الدفع',
+    securePaymentPoweredBy: 'دفع عبر Paymob',
+    pleaseEnterCouponCode: 'أدخلي كود الكوبون',
+    invalidCouponCode: 'كود غير صالح',
+    paymentSuccessful: 'تم الدفع! اشتراكك المميز مفعّل.',
+    paymentProcessingError: 'خطأ في المعالجة. تواصلي مع الدعم.',
+    paymentFailed: 'فشل الدفع. أعيدي المحاولة.',
   },
 };
 
@@ -215,8 +255,13 @@ const Payment = () => {
 
         // Check if response contains Paymob client secret (for EGP payments)
         if (clientSecret) {
-          const publicKey = 'egy_pk_test_xgfkuiZo2us0viNDmSCVU1OvNnJQOUwv';
-          const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
+          const publicKey = getPaymobPublicKey();
+          if (!publicKey) {
+            console.error('VITE_PAYMOB_PUBLIC_KEY is not set; cannot open Paymob checkout.');
+            alert(t.paymentProcessingError);
+            return;
+          }
+          const paymobUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(clientSecret)}`;
 
           console.log('Client Secret received:', clientSecret);
           console.log('Redirecting to Paymob:', paymobUrl);

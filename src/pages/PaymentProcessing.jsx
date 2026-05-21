@@ -31,6 +31,19 @@ const translations = {
     redirecting: 'Reindirizzamento...',
     failedToCheckStatus: 'Impossibile verificare lo stato del pagamento',
   },
+  ar: {
+    processingPayment: 'جاري معالجة الدفع',
+    waitVerifyPayment: 'يرجى الانتباه بينما نتحقق من الدفع...',
+    paymentSuccessful: 'تم الدفع بنجاح!',
+    paymentConfirmed: 'تأكدنا من الدفع. جارٍ إعادة التوجيه...',
+    amount: 'المبلغ:',
+    status: 'الحالة:',
+    completed: 'مكتمل',
+    paymentFailed: 'فشل الدفع',
+    paymentNotCompleted: 'لم يُكمل الدفع.',
+    redirecting: 'جارٍ إعادة التوجيه...',
+    failedToCheckStatus: 'تعذر التحقق من حالة الدفع',
+  },
 };
 
 const PaymentProcessing = () => {

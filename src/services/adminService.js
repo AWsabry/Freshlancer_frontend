@@ -131,4 +131,23 @@ export const adminService = {
   getPlatformIncome: async (params = {}) => {
     return api.get('/admin/platform-income', { params });
   },
+
+  /**
+   * Admin email center (marketing campaigns via SendGrid API or SMTP relay)
+   */
+  previewAdminEmail: async (formData) => {
+    return api.post('/admin/emails/preview', formData);
+  },
+
+  sendAdminEmail: async (formData) => {
+    return api.post('/admin/emails/send', formData);
+  },
+
+  listAdminEmailCampaigns: async (params = {}) => {
+    return api.get('/admin/emails', { params });
+  },
+
+  getAdminEmailCampaign: async (id) => {
+    return api.get(`/admin/emails/${id}`);
+  },
 };

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { getContractComponentsT, milestoneStatusLabel } from '../../locales/contractComponentsLocales';
 
 const statusVariant = (status) => {
   switch (status) {
@@ -27,7 +28,9 @@ export default function MilestonesPanel({
   onFund,
   onSubmit,
   onApprove,
+  language = 'en',
 }) {
+  const t = useMemo(() => getContractComponentsT(language), [language]);
   const milestones = contract?.milestones || [];
   if (!milestones.length) return null;
 
@@ -39,7 +42,7 @@ export default function MilestonesPanel({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Milestones</h3>
+      <h3 className="text-sm font-semibold text-gray-900">{t.milestonesTitle}</h3>
 
       <div className="space-y-2">
         {milestones.map((m) => {
@@ -54,6 +57,7 @@ export default function MilestonesPanel({
           const platformFee = round2(principal * feeRates.platform);
           const transactionFee = round2(principal * feeRates.transaction);
           const total = round2(principal + platformFee + transactionFee);
+          const statusText = milestoneStatusLabel(t, status);
 
           const hasActiveAppeal = !!contract?.activeAppeal;
           const isCancelled = contract?.status === 'cancelled';
@@ -70,7 +74,7 @@ export default function MilestonesPanel({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-gray-900 truncate">{title}</p>
-                    <Badge variant={statusVariant(status)}>{status}</Badge>
+                    <Badge variant={statusVariant(status)}>{statusText}</Badge>
                   </div>
                   <p className="text-xs text-gray-600 mt-1">
                     {percent}% • {fmt(contract.currency, principal)}
@@ -88,49 +92,50 @@ export default function MilestonesPanel({
                         type="button"
                         onClick={() => setOpenFeeFor(openFeeFor === id ? null : id)}
                         className="p-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
-                        title="View fees"
+                        title={t.viewFees}
+                        aria-label={t.viewFees}
                       >
                         {openFeeFor === id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                       <Button size="sm" onClick={() => onFund?.(id)} loading={isBusy}>
-                        Fund
+                        {t.fund}
                       </Button>
                     </>
                   ) : role === 'client' && status === 'unfunded' && (hasActiveAppeal || isCancelled) ? (
                     <Button
                       size="sm"
                       disabled
-                      title={isCancelled ? 'Contract is cancelled' : 'Cannot fund milestone while appeal is active'}
+                      title={isCancelled ? t.titleContractCancelled : t.titleNoFundAppeal}
                     >
-                      Fund
+                      {t.fund}
                     </Button>
                   ) : null}
 
                   {role === 'student' && status === 'funded' && !hasActiveAppeal && !isCancelled ? (
                     <Button size="sm" onClick={() => onSubmit?.(id)} loading={isBusy}>
-                      Mark done
+                      {t.markDone}
                     </Button>
                   ) : role === 'student' && status === 'funded' && (hasActiveAppeal || isCancelled) ? (
                     <Button
                       size="sm"
                       disabled
-                      title={isCancelled ? 'Contract is cancelled' : 'Cannot submit milestone while appeal is active'}
+                      title={isCancelled ? t.titleContractCancelled : t.titleNoSubmitAppeal}
                     >
-                      Mark done
+                      {t.markDone}
                     </Button>
                   ) : null}
 
                   {role === 'client' && status === 'submitted' && !hasActiveAppeal && !isCancelled ? (
                     <Button size="sm" onClick={() => onApprove?.(id)} loading={isBusy}>
-                      Approve & release
+                      {t.approveRelease}
                     </Button>
                   ) : role === 'client' && status === 'submitted' && (hasActiveAppeal || isCancelled) ? (
                     <Button
                       size="sm"
                       disabled
-                      title={isCancelled ? 'Contract is cancelled' : 'Cannot approve milestone while appeal is active'}
+                      title={isCancelled ? t.titleContractCancelled : t.titleNoApproveAppeal}
                     >
-                      Approve & release
+                      {t.approveRelease}
                     </Button>
                   ) : null}
                 </div>
@@ -138,28 +143,26 @@ export default function MilestonesPanel({
 
               {canFund && openFeeFor === id ? (
                 <div className="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  <p className="text-xs font-semibold text-gray-900">Funding details</p>
+                  <p className="text-xs font-semibold text-gray-900">{t.fundingDetails}</p>
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-800">
                     <div className="flex items-center justify-between gap-3">
-                      <span>Escrow deposit (milestone)</span>
+                      <span>{t.escrowDeposit}</span>
                       <span className="font-medium">{fmt(contract.currency, principal)}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span>Platform fee (10%)</span>
+                      <span>{t.platformFee10}</span>
                       <span className="font-medium">{fmt(contract.currency, platformFee)}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span>Transaction fee (3%)</span>
+                      <span>{t.transactionFee3}</span>
                       <span className="font-medium">{fmt(contract.currency, transactionFee)}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="font-semibold">Total to pay now</span>
+                      <span className="font-semibold">{t.totalToPay}</span>
                       <span className="font-semibold">{fmt(contract.currency, total)}</span>
                     </div>
                   </div>
-                  <p className="text-[11px] text-gray-600 mt-2">
-                    Only the milestone amount is added to escrow; fees are charged on top.
-                  </p>
+                  <p className="text-[11px] text-gray-600 mt-2">{t.feeNote}</p>
                 </div>
               ) : null}
             </div>
@@ -169,4 +172,3 @@ export default function MilestonesPanel({
     </div>
   );
 }
-
