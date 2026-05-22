@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { profileService } from '../../services/profileService';
 import { getUniversityName } from '../../utils/universityHelpers';
 import Button from '../../components/common/Button';
@@ -8,6 +8,9 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Modal from '../../components/common/Modal';
+import ClientEducationBadgesCard from '../../components/client/ClientEducationBadgesCard';
+import ClientPlatformsCard from '../../components/client/ClientPlatformsCard';
 import {
   User,
   Mail,
@@ -29,6 +32,7 @@ import {
   ArrowLeft,
   ExternalLink,
   Crown,
+  Sparkles,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/env';
 
@@ -65,6 +69,25 @@ const translations = {
     languages: 'Languages',
     available: 'Available',
     busy: 'Busy',
+    educationPartners: 'Education partners',
+    educationPartnersSubtitle: 'Certificates awarded by partner institutions.',
+    noEducationBadges: 'No partner education certificates on this profile.',
+    certificateCount: '{count} certificate(s)',
+    awarded: 'Awarded',
+    connectedPlatforms: 'Connected platforms',
+    connectedPlatformsSubtitle: 'Coding profiles linked by the student (read-only).',
+    noPlatforms: 'No connected coding platforms.',
+    platformSynced: 'Synced',
+    platformConnected: 'Connected',
+    platformLinkOnly: 'Link only',
+    viewProfile: 'View profile',
+    platformBadges: 'Platform badges',
+    summarizeProfile: 'Summarize profile',
+    profileSummary: 'Profile summary',
+    generatingSummary: 'Generating summary…',
+    summaryFailed: 'Could not generate summary. Please try again.',
+    close: 'Close',
+    generatedAt: 'Generated',
   },
   it: {
     loading: 'Caricamento profilo studente...',
@@ -98,6 +121,25 @@ const translations = {
     languages: 'Lingue',
     available: 'Disponibile',
     busy: 'Occupato',
+    educationPartners: 'Partner formativi',
+    educationPartnersSubtitle: 'Certificati rilasciati da istituti partner.',
+    noEducationBadges: 'Nessun certificato partner su questo profilo.',
+    certificateCount: '{count} certificato/i',
+    awarded: 'Rilasciato',
+    connectedPlatforms: 'Piattaforme collegate',
+    connectedPlatformsSubtitle: 'Profili di coding collegati dallo studente (sola lettura).',
+    noPlatforms: 'Nessuna piattaforma collegata.',
+    platformSynced: 'Sincronizzato',
+    platformConnected: 'Collegato',
+    platformLinkOnly: 'Solo link',
+    viewProfile: 'Vedi profilo',
+    platformBadges: 'Badge piattaforme',
+    summarizeProfile: 'Riassumi profilo',
+    profileSummary: 'Riassunto profilo',
+    generatingSummary: 'Generazione riassunto…',
+    summaryFailed: 'Impossibile generare il riassunto. Riprova.',
+    close: 'Chiudi',
+    generatedAt: 'Generato',
   },
   ar: {
     loading: 'جاري تحميل ملف الطالب...',
@@ -131,6 +173,25 @@ const translations = {
     languages: 'اللغات',
     available: 'متاح',
     busy: 'مشغول',
+    educationPartners: 'شركاء التعليم',
+    educationPartnersSubtitle: 'شهادات من مؤسسات شريكة.',
+    noEducationBadges: 'لا توجد شهادات شركاء على هذا الملف.',
+    certificateCount: '{count} شهادة',
+    awarded: 'مُنحت',
+    connectedPlatforms: 'المنصات المتصلة',
+    connectedPlatformsSubtitle: 'ملفات البرمجة المرتبطة (للقراءة فقط).',
+    noPlatforms: 'لا توجد منصات متصلة.',
+    platformSynced: 'متزامن',
+    platformConnected: 'متصل',
+    platformLinkOnly: 'رابط فقط',
+    viewProfile: 'عرض الملف',
+    platformBadges: 'شارات المنصة',
+    summarizeProfile: 'تلخيص الملف',
+    profileSummary: 'ملخص الملف',
+    generatingSummary: 'جاري إنشاء الملخص…',
+    summaryFailed: 'تعذر إنشاء الملخص. حاول مرة أخرى.',
+    close: 'إغلاق',
+    generatedAt: 'تم الإنشاء',
   },
 };
 
@@ -191,6 +252,12 @@ const StudentProfileView = () => {
   // State for image error
   const [photoLoadError, setPhotoLoadError] = useState(false);
   const [downloadingCV, setDownloadingCV] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
+  const summaryMutation = useMutation({
+    mutationFn: () => profileService.generateStudentSummary(studentId),
+    onSuccess: () => setSummaryOpen(true),
+  });
 
   // Fetch student profile
   const { data: profileData, isLoading, error } = useQuery({
@@ -218,6 +285,9 @@ const StudentProfileView = () => {
   }
 
   const student = profileData?.data?.student;
+  const educationEntities = profileData?.data?.educationBadges?.entities || [];
+  const externalProfilesPublic = profileData?.data?.externalProfilesPublic;
+  const summary = summaryMutation.data?.data?.summary;
 
   if (!student) {
     return <Alert type="error" message={t.studentNotFound} />;
@@ -256,8 +326,15 @@ const StudentProfileView = () => {
     }
   };
 
+  const openSummaryModal = () => {
+    setSummaryOpen(true);
+    if (!summary && !summaryMutation.isPending && !summaryMutation.isError) {
+      summaryMutation.mutate();
+    }
+  };
+
   return (
-    <div className="space-y-6 px-4 sm:px-0">
+    <div className="space-y-6 px-4 sm:px-0 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="secondary" onClick={() => navigate('/client/applications')} className="w-full sm:w-auto">
@@ -568,6 +645,10 @@ const StudentProfileView = () => {
         </Card>
       )}
 
+      <ClientEducationBadgesCard entities={educationEntities} t={t} language={language} />
+
+      <ClientPlatformsCard externalProfilesPublic={externalProfilesPublic} t={t} />
+
       {/* Education */}
       {(profile.university || profile.graduationYear) && (
         <Card>
@@ -730,6 +811,71 @@ const StudentProfileView = () => {
           </div>
         </Card>
       )}
+
+      <button
+        type="button"
+        onClick={openSummaryModal}
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+        aria-label={t.summarizeProfile}
+      >
+        <Sparkles className="w-5 h-5" />
+        <span className="hidden sm:inline">{t.summarizeProfile}</span>
+      </button>
+
+      <Modal
+        isOpen={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+        title={t.profileSummary}
+        size="lg"
+      >
+        {summaryMutation.isPending && (
+          <Loading text={t.generatingSummary} />
+        )}
+        {summaryMutation.isError && !summaryMutation.isPending && (
+          <Alert
+            type="error"
+            message={`${t.summaryFailed} ${summaryMutation.error?.response?.data?.message || summaryMutation.error?.message || ''}`}
+          />
+        )}
+        {summary && !summaryMutation.isPending && (
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <p className="text-lg font-semibold text-gray-900">{summary.headline}</p>
+            {summary.generatedAt && (
+              <p className="text-xs text-gray-500">
+                {t.generatedAt}:{' '}
+                {new Date(summary.generatedAt).toLocaleString(
+                  language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-EG' : 'en-US'
+                )}
+              </p>
+            )}
+            {(summary.sections || []).map((section, idx) => (
+              <div key={idx}>
+                <h4 className="font-semibold text-gray-900 mb-2">{section.title}</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                  {(section.bullets || []).map((bullet, bi) => (
+                    <li key={bi}>{bullet}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div className="pt-2 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => summaryMutation.mutate()} loading={summaryMutation.isPending}>
+                {t.summarizeProfile}
+              </Button>
+              <Button variant="secondary" onClick={() => setSummaryOpen(false)}>
+                {t.close}
+              </Button>
+            </div>
+          </div>
+        )}
+        {!summary && !summaryMutation.isPending && summaryMutation.isError && (
+          <div className="pt-4 flex justify-end">
+            <Button variant="secondary" onClick={() => setSummaryOpen(false)}>
+              {t.close}
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

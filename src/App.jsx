@@ -93,6 +93,12 @@ import AdminWithdrawals from './pages/admin/Withdrawals';
 import AdminAppeals from './pages/admin/Appeals';
 import AdminPlatformFees from './pages/admin/PlatformFees';
 import AdminEmailCenter from './pages/admin/EmailCenter';
+import EducationPartners from './pages/admin/EducationPartners';
+import EducationBadgeGrants from './pages/admin/EducationBadgeGrants';
+import EducationBadgeRequests from './pages/admin/EducationBadgeRequests';
+import EducationBadgeAwards from './pages/admin/EducationBadgeAwards';
+import StudentEducationBadges from './pages/student/StudentEducationBadges';
+import RequestEducationBadge from './pages/student/RequestEducationBadge';
 
 function AppNavigationBridge() {
   const navigate = useNavigate();
@@ -177,6 +183,9 @@ function App() {
         <Route path="applications" element={<StudentApplications />} />
         <Route path="applications/:id" element={<StudentApplicationDetails />} />
         <Route path="cv-review/:uploadId" element={<CvReviewResult />} />
+        <Route path="education-badges" element={<StudentEducationBadges />} />
+        <Route path="education-badges/:entityId" element={<StudentEducationBadges />} />
+        <Route path="education-badges/request" element={<RequestEducationBadge />} />
         <Route path="contracts" element={<StudentContracts />} />
         <Route path="wallet" element={<StudentWallet />} />
         <Route path="appeals" element={<StudentAppeals />} />
@@ -255,6 +264,10 @@ function App() {
         <Route path="platform-fees" element={<AdminPlatformFees />} />
         <Route path="appeals" element={<AdminAppeals />} />
         <Route path="emails" element={<AdminEmailCenter />} />
+        <Route path="education-partners" element={<EducationPartners />} />
+        <Route path="education-badges/grants" element={<EducationBadgeGrants />} />
+        <Route path="education-badges/requests" element={<EducationBadgeRequests />} />
+        <Route path="education-badges/awards" element={<EducationBadgeAwards />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="logs" element={<AdminLogs />} />

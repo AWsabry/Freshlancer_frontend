@@ -36,6 +36,10 @@ export const profileService = {
     return api.get(`/profiles/student/${studentId}`);
   },
 
+  generateStudentSummary: async (studentId) => {
+    return api.post(`/profiles/student/${studentId}/summary`);
+  },
+
   // Get all unlocked students
   getUnlockedStudents: async () => {
     return api.get('/profiles/unlocked-students');

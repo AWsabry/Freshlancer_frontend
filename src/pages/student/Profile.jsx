@@ -18,7 +18,7 @@ import Select from '../../components/common/Select';
 import TagInput from '../../components/common/TagInput';
 import UniversitySelect from '../../components/common/UniversitySelect';
 import ConnectedPlatformsCard from '../../components/profile/ConnectedPlatformsCard';
-import PlatformBadgesCard from '../../components/profile/PlatformBadgesCard';
+import EducationBadgesCard from '../../components/profile/EducationBadgesCard';
 import {
   User,
   Mail,
@@ -1518,18 +1518,7 @@ const Profile = () => {
             </Card>
           )}
 
-          {/* Platform Badges (from connected platforms) */}
-          <PlatformBadgesCard
-            externalProfiles={externalProfiles}
-            iconMap={{
-              leetcode: '/LeetCode.png.webp',
-              hackerrank: '/hackerrank.svg',
-              codeforces: '/CodeForces.png.webp',
-              github: '/Github.svg',
-            }}
-            syncingAll={syncAllPlatformsMutation.isPending}
-            onSyncAll={() => syncAllPlatformsMutation.mutate({ force: false })}
-          />
+          <EducationBadgesCard />
         </div>
 
         {/* Right Column - Education, etc. */}
